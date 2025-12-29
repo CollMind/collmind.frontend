@@ -1,45 +1,103 @@
-**Edit a file, create a new file, and clone from Bitbucket in under 2 minutes**
+# CollMind TPM Frontend
 
-When you're done, you can delete the content in this README and update the file with details for others getting started with your repository.
+A modern React.js frontend application for the CollMind Trade Promotion Management (TPM) system.
 
-*We recommend that you open this README in another tab as you perform the tasks below. You can [watch our video](https://youtu.be/0ocf7u76WSo) for a full demo of all the steps in this tutorial. Open the video in a new tab to avoid leaving Bitbucket.*
+## Technology Stack
 
----
+- **Core Framework**: React 18.x with TypeScript 5.3+
+- **Build Tool**: Vite 5.x
+- **State Management**: Redux Toolkit 2.x (Global State) + TanStack Query 5.x (Server State)
+- **UI Components**: Tailwind CSS 3.x + shadcn/ui + Radix UI
+- **Forms**: React Hook Form 7.x + Zod 3.x
+- **HTTP Client**: Axios 1.x
+- **Testing**: Vitest 1.x + React Testing Library 14.x + MSW 2.x
+- **Routing**: React Router 6.x
 
-## Edit a file
+## Getting Started
 
-You’ll start by editing this README file to learn how to edit a file in Bitbucket.
+### Prerequisites
 
-1. Click **Source** on the left side.
-2. Click the README.md link from the list of files.
-3. Click the **Edit** button.
-4. Delete the following text: *Delete this line to make a change to the README from Bitbucket.*
-5. After making your change, click **Commit** and then **Commit** again in the dialog. The commit page will open and you’ll see the change you just made.
-6. Go back to the **Source** page.
+- Node.js 18+ and npm/yarn/pnpm
 
----
+### Installation
 
-## Create a file
+1. Install dependencies:
+```bash
+npm install
+```
 
-Next, you’ll add a new file to this repository.
+2. Set up environment variables:
+```bash
+cp .env.example .env
+```
 
-1. Click the **New file** button at the top of the **Source** page.
-2. Give the file a filename of **contributors.txt**.
-3. Enter your name in the empty file space.
-4. Click **Commit** and then **Commit** again in the dialog.
-5. Go back to the **Source** page.
+Edit `.env` and configure:
+```
+VITE_API_BASE_URL=http://localhost:3000
+VITE_APP_NAME=CollMind TPM
+VITE_APP_VERSION=1.0.0
+```
 
-Before you move on, go ahead and explore the repository. You've already seen the **Source** page, but check out the **Commits**, **Branches**, and **Settings** pages.
+3. Start development server:
+```bash
+npm run dev
+```
 
----
+The application will be available at `http://localhost:5173`
 
-## Clone a repository
+## Available Scripts
 
-Use these steps to clone from SourceTree, our client for using the repository command-line free. Cloning allows you to work on your files locally. If you don't yet have SourceTree, [download and install first](https://www.sourcetreeapp.com/). If you prefer to clone from the command line, see [Clone a repository](https://confluence.atlassian.com/x/4whODQ).
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run preview` - Preview production build
+- `npm test` - Run tests
+- `npm run test:ui` - Run tests with UI
+- `npm run test:coverage` - Run tests with coverage
+- `npm run lint` - Run ESLint
+- `npm run format` - Format code with Prettier
+- `npm run type-check` - Run TypeScript type checking
 
-1. You’ll see the clone button under the **Source** heading. Click that button.
-2. Now click **Check out in SourceTree**. You may need to create a SourceTree account or log in.
-3. When you see the **Clone New** dialog in SourceTree, update the destination path and name if you’d like to and then click **Clone**.
-4. Open the directory you just created to see your repository’s files.
+## Project Structure
 
-Now that you're more familiar with your Bitbucket repository, go ahead and add a new file locally. You can [push your change back to Bitbucket with SourceTree](https://confluence.atlassian.com/x/iqyBMg), or you can [add, commit,](https://confluence.atlassian.com/x/8QhODQ) and [push from the command line](https://confluence.atlassian.com/x/NQ0zDQ).
+```
+src/
+├── api/                    # API client and endpoints
+├── components/             # React components
+│   ├── ui/                # shadcn/ui components
+│   ├── layout/            # Layout components
+│   ├── features/          # Feature-specific components
+│   └── common/            # Common utility components
+├── store/                 # Redux store and slices
+├── services/              # TanStack Query services
+├── hooks/                 # Custom React hooks
+├── utils/                 # Utility functions
+├── lib/                   # Third-party configurations
+├── types/                 # TypeScript types
+├── schemas/               # Zod validation schemas
+└── routes/                # Route configuration
+```
+
+## Features
+
+- ✅ Authentication with JWT tokens
+- ✅ Protected routes with role-based access control
+- ✅ Modern, responsive UI with Tailwind CSS
+- ✅ Form validation with React Hook Form + Zod
+- ✅ State management with Redux Toolkit and TanStack Query
+- ✅ Type-safe API client with Axios
+- ✅ Testing infrastructure with Vitest and MSW
+
+## Development Guidelines
+
+See the comprehensive documentation in the project documentation for:
+- API endpoints documentation
+- Component architecture
+- State management patterns
+- Form management
+- UI/UX design system
+- Testing strategy
+
+## License
+
+Copyright © 2024 CollMind. All rights reserved.
+

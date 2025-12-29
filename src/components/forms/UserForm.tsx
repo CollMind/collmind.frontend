@@ -1,0 +1,308 @@
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
+import {
+  createUserSchema,
+  updateUserSchema,
+  CreateUserFormData,
+  UpdateUserFormData,
+} from '@/schemas/user.schema';
+import {
+  useCreateUser,
+  useUpdateUser,
+} from '@/services/users.service';
+import { UserRole, UserStatus, User } from '@/types/user.types';
+import { Loader2 } from 'lucide-react';
+import { EnumBadge } from '@/components/common/EnumBadge';
+
+interface UserFormProps {
+  user?: User;
+  onSuccess?: () => void;
+  onCancel?: () => void;
+}
+
+export function UserForm({ user, onSuccess, onCancel }: UserFormProps) {
+  const createMutation = useCreateUser();
+  const updateMutation = useUpdateUser();
+
+  const form = useForm<CreateUserFormData | UpdateUserFormData>({
+    resolver: zodResolver(user ? updateUserSchema : createUserSchema),
+    defaultValues: user
+      ? {
+          fullName: user.fullName,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          phoneNumber: user.phoneNumber,
+          department: user.department,
+          jobTitle: user.jobTitle,
+        }
+      : {
+          role: UserRole.PLANNER,
+          status: UserStatus.ACTIVE,
+          mustChangePassword: false,
+        },
+  });
+
+  const onSubmit = async (data: CreateUserFormData | UpdateUserFormData) => {
+    try {
+      if (user) {
+        await updateMutation.mutateAsync({ id: user.id, data: data as UpdateUserFormData });
+      } else {
+        await createMutation.mutateAsync(data as CreateUserFormData);
+      }
+      onSuccess?.();
+    } catch (error) {
+      console.error('Failed to save user:', error);
+    }
+  };
+
+  const isLoading = createMutation.isPending || updateMutation.isPending;
+
+  return (
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        {!user && (
+          <>
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email *</FormLabel>
+                  <FormControl>
+                    <Input {...field} type="email" placeholder="user@example.com" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Password *</FormLabel>
+                  <FormControl>
+                    <Input {...field} type="password" placeholder="Min 8 characters" />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </>
+        )}
+
+        <div className="grid grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="fullName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Full Name *</FormLabel>
+                <FormControl>
+                  <Input {...field} placeholder="John Doe" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {!user && (
+            <FormField
+              control={form.control}
+              name="role"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Role *</FormLabel>
+                  <Select
+                    onValueChange={field.onChange}
+                    defaultValue={field.value}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select role" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {Object.values(UserRole).map((role) => (
+                        <SelectItem key={role} value={role}>
+                          <div className="flex items-center gap-2">
+                            <EnumBadge value={role} type="role" />
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="firstName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>First Name</FormLabel>
+                <FormControl>
+                  <Input {...field} placeholder="John" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="lastName"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Last Name</FormLabel>
+                <FormControl>
+                  <Input {...field} placeholder="Doe" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        {!user && (
+          <FormField
+            control={form.control}
+            name="status"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Status</FormLabel>
+                <Select
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {Object.values(UserStatus).map((status) => (
+                      <SelectItem key={status} value={status}>
+                        <div className="flex items-center gap-2">
+                          <EnumBadge value={status} type="status" />
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        )}
+
+        <div className="grid grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="phoneNumber"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Phone Number</FormLabel>
+                <FormControl>
+                  <Input {...field} placeholder="+90 555 123 4567" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          <FormField
+            control={form.control}
+            name="department"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Department</FormLabel>
+                <FormControl>
+                  <Input {...field} placeholder="Sales" />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
+
+        <FormField
+          control={form.control}
+          name="jobTitle"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Job Title</FormLabel>
+              <FormControl>
+                <Input {...field} placeholder="Sales Manager" />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {!user && (
+          <FormField
+            control={form.control}
+            name="mustChangePassword"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                <FormControl>
+                  <Checkbox
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
+                <div className="space-y-1 leading-none">
+                  <FormLabel>Must Change Password</FormLabel>
+                </div>
+              </FormItem>
+            )}
+          />
+        )}
+
+        <div className="flex justify-end space-x-2 pt-4">
+          {onCancel && (
+            <Button type="button" variant="outline" onClick={onCancel}>
+              Cancel
+            </Button>
+          )}
+          <Button type="submit" disabled={isLoading}>
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                {user ? 'Updating...' : 'Creating...'}
+              </>
+            ) : (
+              user ? 'Update' : 'Create'
+            )}
+          </Button>
+        </div>
+      </form>
+    </Form>
+  );
+}
+
