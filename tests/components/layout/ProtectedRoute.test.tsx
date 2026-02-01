@@ -184,5 +184,77 @@ describe('ProtectedRoute', () => {
     // Should redirect, so content should not be visible
     expect(screen.queryByText('Admin Content')).not.toBeInTheDocument();
   });
+
+  it('allows ADMIN access to PLANNER-only routes', () => {
+    const store = createMockStore({
+      isAuthenticated: true,
+      user: mockUser, // ADMIN role
+      accessToken: 'access-token',
+    });
+
+    renderWithProviders(
+      <ProtectedRoute requiredRole={['PLANNER']}>
+        <div>Planner Content</div>
+      </ProtectedRoute>,
+      store
+    );
+
+    // Admin should have access to Planner routes
+    expect(screen.getByText('Planner Content')).toBeInTheDocument();
+  });
+
+  it('allows ADMIN access to APPROVER-only routes', () => {
+    const store = createMockStore({
+      isAuthenticated: true,
+      user: mockUser, // ADMIN role
+      accessToken: 'access-token',
+    });
+
+    renderWithProviders(
+      <ProtectedRoute requiredRole={['APPROVER']}>
+        <div>Approver Content</div>
+      </ProtectedRoute>,
+      store
+    );
+
+    // Admin should have access to Approver routes
+    expect(screen.getByText('Approver Content')).toBeInTheDocument();
+  });
+
+  it('allows ADMIN access to FINANCE-only routes', () => {
+    const store = createMockStore({
+      isAuthenticated: true,
+      user: mockUser, // ADMIN role
+      accessToken: 'access-token',
+    });
+
+    renderWithProviders(
+      <ProtectedRoute requiredRole={['FINANCE']}>
+        <div>Finance Content</div>
+      </ProtectedRoute>,
+      store
+    );
+
+    // Admin should have access to Finance routes
+    expect(screen.getByText('Finance Content')).toBeInTheDocument();
+  });
+
+  it('allows ADMIN access to multiple role routes', () => {
+    const store = createMockStore({
+      isAuthenticated: true,
+      user: mockUser, // ADMIN role
+      accessToken: 'access-token',
+    });
+
+    renderWithProviders(
+      <ProtectedRoute requiredRole={['PLANNER', 'APPROVER']}>
+        <div>Multi-Role Content</div>
+      </ProtectedRoute>,
+      store
+    );
+
+    // Admin should have access to routes requiring any role
+    expect(screen.getByText('Multi-Role Content')).toBeInTheDocument();
+  });
 });
 

@@ -4,6 +4,8 @@ import { useMe } from '@/services/users.service';
 import { setCredentials, logout } from '@/store/slices/auth.slice';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { useEffect } from 'react';
+import { hasRole } from '@/utils/roleUtils';
+import { UserRole } from '@/types/user.types';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -73,7 +75,8 @@ export function ProtectedRoute({
   }
 
   // Role-based access control
-  if (requiredRole && user && !requiredRole.includes(user.role)) {
+  // Admin has access to everything
+  if (requiredRole && user && !hasRole(user.role as UserRole, requiredRole as UserRole[])) {
     return <Navigate to="/dashboard" replace />;
   }
 

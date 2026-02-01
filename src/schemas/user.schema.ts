@@ -25,6 +25,7 @@ export const updateUserSchema = z.object({
   jobTitle: z.string().optional(),
 });
 
+// Schema for user changing their own password (requires current password)
 export const changePasswordSchema = z
   .object({
     currentPassword: z.string().min(1, 'Current password is required'),
@@ -36,7 +37,20 @@ export const changePasswordSchema = z
     path: ['confirmPassword'],
   });
 
+// Schema for admin changing user's password (current password not required)
+export const changeUserPasswordSchema = z
+  .object({
+    currentPassword: z.string().optional(), // Optional for admin
+    newPassword: z.string().min(8, 'Password must be at least 8 characters'),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ['confirmPassword'],
+  });
+
 export type CreateUserFormData = z.infer<typeof createUserSchema>;
 export type UpdateUserFormData = z.infer<typeof updateUserSchema>;
 export type ChangePasswordFormData = z.infer<typeof changePasswordSchema>;
+export type ChangeUserPasswordFormData = z.infer<typeof changeUserPasswordSchema>;
 

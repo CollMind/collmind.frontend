@@ -54,7 +54,7 @@ export interface UpdateUserDto {
 }
 
 export interface ChangePasswordDto {
-  currentPassword: string;
+  currentPassword?: string; // Optional for admin changing user's password
   newPassword: string;
 }
 

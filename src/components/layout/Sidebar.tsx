@@ -16,6 +16,13 @@ import {
   Package,
   UserCog,
   Wallet,
+  Upload,
+  TrendingUp,
+  Factory,
+  Boxes,
+  ClipboardList,
+  Target,
+  History,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAppSelector, useAppDispatch } from '@/store/hooks';
@@ -25,6 +32,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { useMe } from '@/services/users.service';
+import { hasAnyRole } from '@/utils/roleUtils';
+import { UserRole } from '@/types/user.types';
 
 interface NavItem {
   title: string;
@@ -35,7 +44,74 @@ interface NavItem {
   roles?: string[];
 }
 
-const navigation: NavItem[] = [
+// Admin navigation menu (as shown in the design)
+const adminNavigation: NavItem[] = [
+  {
+    title: 'Admin',
+    icon: Settings,
+    roles: ['ADMIN'],
+    children: [
+      {
+        title: 'Genel Bakış',
+        href: '/dashboard',
+        icon: LayoutDashboard,
+      },
+      {
+        title: 'Kullanıcılar',
+        href: '/users',
+        icon: Users,
+      },
+      {
+        title: 'Baseline Import',
+        href: '/baseline-import',
+        icon: Upload,
+      },
+      {
+        title: 'KPI Yönetimi',
+        href: '/kpi-management',
+        icon: TrendingUp,
+      },
+      {
+        title: 'FU Yönetimi',
+        href: '/fu-management',
+        icon: Factory,
+      },
+      {
+        title: 'SKU Listesi',
+        href: '/sku-list',
+        icon: Boxes,
+      },
+      {
+        title: 'Müşteri Listesi',
+        href: '/customers',
+        icon: UsersRound,
+      },
+      {
+        title: 'CPL Yönetimi',
+        href: '/cpl-management',
+        icon: ClipboardList,
+      },
+      {
+        title: 'Taktik Yönetimi',
+        href: '/tactical-management',
+        icon: Target,
+      },
+      {
+        title: 'Audit Log',
+        href: '/audit-log',
+        icon: History,
+      },
+      {
+        title: 'Konfigürasyon',
+        href: '/settings',
+        icon: Settings,
+      },
+    ],
+  },
+];
+
+// Non-admin navigation menu
+const defaultNavigation: NavItem[] = [
   {
     title: 'Dashboard',
     href: '/dashboard',
@@ -101,7 +177,13 @@ export function Sidebar() {
 
   const filterNavigation = (items: NavItem[]): NavItem[] => {
     return items
-      .filter((item) => !item.roles || (user?.role && item.roles.includes(user.role)))
+      .filter((item) => {
+        // If no role restriction, show to everyone
+        if (!item.roles) return true;
+        // Admin has access to everything
+        if (!user?.role) return false;
+        return hasAnyRole(user.role as UserRole, item.roles as UserRole[]);
+      })
       .map((item) => {
         if (item.children) {
           return {
@@ -114,9 +196,17 @@ export function Sidebar() {
       .filter((item) => !item.children || item.children.length > 0);
   };
 
+  // Select navigation based on user role
+  const navigation = useMemo(() => {
+    if (user?.role === 'ADMIN') {
+      return adminNavigation;
+    }
+    return defaultNavigation;
+  }, [user?.role]);
+
   const filteredNavigation = useMemo(
     () => filterNavigation(navigation),
-    [user?.role]
+    [navigation, user?.role]
   );
 
   const isActive = (href?: string) => {
@@ -129,11 +219,17 @@ export function Sidebar() {
     return item.children.some((child) => isActive(child.href) || hasActiveChild(child));
   };
 
-  // Auto-expand items with active children
+  // Auto-expand items with active children, and always expand Admin menu for ADMIN users
   useEffect(() => {
     if (!sidebarOpen) return;
     
     const newExpanded = new Set<string>();
+    
+    // Always expand Admin menu for ADMIN users
+    if (user?.role === 'ADMIN') {
+      newExpanded.add('Admin');
+    }
+    
     const checkAndExpand = (items: NavItem[]) => {
       items.forEach((item) => {
         if (item.children && hasActiveChild(item)) {
@@ -147,7 +243,7 @@ export function Sidebar() {
     
     checkAndExpand(filteredNavigation);
     setExpandedItems(newExpanded);
-  }, [location.pathname, sidebarOpen, filteredNavigation]);
+  }, [location.pathname, sidebarOpen, filteredNavigation, user?.role]);
 
   const toggleExpand = (title: string) => {
     setExpandedItems((prev) => {
@@ -168,25 +264,30 @@ export function Sidebar() {
     const active = item.href ? isActive(item.href) : false;
     const hasActive = hasActiveChild(item);
     const indentClass = level > 0 ? 'ml-6' : '';
+    const isAdminHeader = item.title === 'Admin' && user?.role === 'ADMIN';
 
     if (hasChildren) {
       return (
-        <div key={item.title} className="space-y-1">
+        <div key={item.title} className={cn('space-y-1', isAdminHeader && 'mb-1')}>
           <button
             onClick={() => sidebarOpen && toggleExpand(item.title)}
             className={cn(
-              'group flex items-center w-full rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
-              'hover:bg-gray-100 dark:hover:bg-gray-800',
-              hasActive
-                ? 'bg-primary-50 text-primary-700 dark:bg-primary-900/20 dark:text-primary-400'
-                : 'text-gray-700 dark:text-gray-300',
+              'group flex items-center w-full px-3 py-2.5 text-sm font-medium transition-colors',
+              isAdminHeader
+                ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400 rounded-none'
+                : hasActive
+                ? 'bg-primary-50 text-primary-700 dark:bg-primary-900/20 dark:text-primary-400 rounded-lg'
+                : 'text-gray-700 dark:text-gray-300 rounded-lg',
+              isAdminHeader ? '' : 'hover:bg-gray-100 dark:hover:bg-gray-800',
               indentClass
             )}
           >
             <Icon
               className={cn(
                 'mr-3 h-5 w-5 flex-shrink-0 transition-colors',
-                hasActive
+                isAdminHeader
+                  ? 'text-blue-600 dark:text-blue-400'
+                  : hasActive
                   ? 'text-primary-600 dark:text-primary-400'
                   : 'text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300'
               )}
@@ -204,7 +305,7 @@ export function Sidebar() {
             )}
           </button>
           {isExpanded && sidebarOpen && (
-            <div className="space-y-1 ml-2">
+            <div className="space-y-1">
               {item.children?.map((child) => renderNavItem(child, level + 1))}
             </div>
           )}
@@ -224,7 +325,7 @@ export function Sidebar() {
                 'group flex items-center rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
                 'hover:bg-gray-100 dark:hover:bg-gray-800',
                 active
-                  ? 'bg-primary-50 text-primary-700 dark:bg-primary-900/20 dark:text-primary-400'
+                  ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400'
                   : 'text-gray-700 dark:text-gray-300',
                 indentClass
               )}
@@ -233,7 +334,7 @@ export function Sidebar() {
                 className={cn(
                   'mr-3 h-5 w-5 flex-shrink-0 transition-colors',
                   active
-                    ? 'text-primary-600 dark:text-primary-400'
+                    ? 'text-blue-600 dark:text-blue-400'
                     : 'text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300'
                 )}
               />
@@ -257,52 +358,61 @@ export function Sidebar() {
     );
   };
 
-  const SidebarContent = () => (
-    <ScrollArea className="flex-1 px-3 py-4">
-      <nav className="space-y-1">
-        {filteredNavigation.map((item) => renderNavItem(item))}
-      </nav>
+  const SidebarContent = () => {
+    // For admin, settings is already in the Admin menu, so don't show it separately
+    const showSettingsSeparately = user?.role !== 'ADMIN';
 
-      <Separator className="my-4" />
+    return (
+      <ScrollArea className="flex-1 px-3 py-4">
+        <nav className="space-y-1">
+          {filteredNavigation.map((item) => renderNavItem(item))}
+        </nav>
 
-      {/* Settings Section */}
-      <nav className="space-y-1">
-        <TooltipProvider delayDuration={0}>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Link
-                to="/settings"
-                className={cn(
-                  'group flex items-center rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
-                  'hover:bg-gray-100 dark:hover:bg-gray-800',
-                  isActive('/settings')
-                    ? 'bg-primary-50 text-primary-700 dark:bg-primary-900/20 dark:text-primary-400'
-                    : 'text-gray-700 dark:text-gray-300'
-                )}
-              >
-                <Settings
-                  className={cn(
-                    'mr-3 h-5 w-5 flex-shrink-0 transition-colors',
-                    isActive('/settings')
-                      ? 'text-primary-600 dark:text-primary-400'
-                      : 'text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300'
+        {showSettingsSeparately && (
+          <>
+            <Separator className="my-4" />
+
+            {/* Settings Section */}
+            <nav className="space-y-1">
+              <TooltipProvider delayDuration={0}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Link
+                      to="/settings"
+                      className={cn(
+                        'group flex items-center rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
+                        'hover:bg-gray-100 dark:hover:bg-gray-800',
+                        isActive('/settings')
+                          ? 'bg-primary-50 text-primary-700 dark:bg-primary-900/20 dark:text-primary-400'
+                          : 'text-gray-700 dark:text-gray-300'
+                      )}
+                    >
+                      <Settings
+                        className={cn(
+                          'mr-3 h-5 w-5 flex-shrink-0 transition-colors',
+                          isActive('/settings')
+                            ? 'text-primary-600 dark:text-primary-400'
+                            : 'text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300'
+                        )}
+                      />
+                      <span className={cn('flex-1', !sidebarOpen && 'sr-only')}>
+                        Settings
+                      </span>
+                    </Link>
+                  </TooltipTrigger>
+                  {!sidebarOpen && (
+                    <TooltipContent side="right" className="ml-2">
+                      Settings
+                    </TooltipContent>
                   )}
-                />
-                <span className={cn('flex-1', !sidebarOpen && 'sr-only')}>
-                  Settings
-                </span>
-              </Link>
-            </TooltipTrigger>
-            {!sidebarOpen && (
-              <TooltipContent side="right" className="ml-2">
-                Settings
-              </TooltipContent>
-            )}
-          </Tooltip>
-        </TooltipProvider>
-      </nav>
-    </ScrollArea>
-  );
+                </Tooltip>
+              </TooltipProvider>
+            </nav>
+          </>
+        )}
+      </ScrollArea>
+    );
+  };
 
   return (
     <>
