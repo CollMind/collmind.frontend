@@ -135,3 +135,9 @@ export interface ImportResult {
   skipped: number;
   errors: ImportError[];
 }
+export interface CustomerStats {
+  totalOrders?: number;
+  totalRevenue?: number;
+  lastOrderDate?: string;
+  averageOrderValue?: number;
+}

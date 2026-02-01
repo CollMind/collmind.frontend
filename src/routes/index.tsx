@@ -1,5 +1,6 @@
 import { createBrowserRouter } from 'react-router-dom';
 import { Link } from 'react-router-dom';
+import { useState } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { ProtectedRoute } from '@/components/layout/ProtectedRoute';
 import { LoginPage } from '@/components/features/auth/LoginPage';
@@ -10,14 +11,15 @@ import { UsersPage } from '@/components/features/users/UsersPage';
 import { UserDetailPage } from '@/components/features/users/UserDetailPage';
 import { ProfilePage } from '@/components/features/users/ProfilePage';
 
-import { useState } from 'react';
-import { useCustomers, useDeleteCustomer, useActivateCustomer, useDeactivateCustomer, useCustomerImport } from '@/services/customers.service';
+import { CustomersPage } from '@/components/features/customers/CustomersPage';
+import { CustomerDetailPage } from '@/components/features/customers/CustomerDetailPage';
+import { CustomerCreatePage } from '@/components/features/customers/CustomerCreatePage';
+import { CustomerEditPage } from '@/components/features/customers/CustomerEditPage';
+import { CustomerImportPage } from '@/components/features/customers/CustomerImportPage';
 import { useMe } from '@/services/users.service';
 import { useTenants, useDeleteTenant, useActivateTenant, useSuspendTenant } from '@/services/tenants.service';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { EmptyState } from '@/components/common/EmptyState';
-import { CustomerForm } from '@/components/forms/CustomerForm';
-import { CustomerImportButton, CustomerImportResults } from '@/components/customers';
 import { TenantForm } from '@/components/forms/TenantForm';
 import { EnumBadge } from '@/components/common/EnumBadge';
 import { Button } from '@/components/ui/button';
@@ -36,236 +38,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, Edit, Trash2, CheckCircle, XCircle, Ban } from 'lucide-react';
-import { Customer } from '@/types/customer.types';
+import { MoreHorizontal, Edit, Trash2, CheckCircle, Ban } from 'lucide-react';
 import { Tenant } from '@/types/tenant.types';
 
-// Customers Page with real data
-const CustomersPage = () => {
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [customerToDelete, setCustomerToDelete] = useState<Customer | null>(null);
-  const { data: customers, isLoading, error } = useCustomers();
-  const deleteMutation = useDeleteCustomer();
-  const activateMutation = useActivateCustomer();
-  const deactivateMutation = useDeactivateCustomer();
-  const { importResult, showResults, setShowResults } = useCustomerImport();
-
-  if (isLoading) return <LoadingSpinner />;
-  if (error) {
-    console.error('Error loading customers:', error);
-    return (
-      <div className="text-red-600 p-4">
-        Error loading customers: {error instanceof Error ? error.message : 'Unknown error'}
-      </div>
-    );
-  }
-
-  // Ensure customers is an array - handle different response formats
-  let customersArray: Customer[] = [];
-  if (Array.isArray(customers)) {
-    customersArray = customers;
-  } else if (customers && typeof customers === 'object') {
-    // If response is wrapped in a data property
-    if (Array.isArray((customers as any).data)) {
-      customersArray = (customers as any).data;
-    } else if (Array.isArray((customers as any).customers)) {
-      customersArray = (customers as any).customers;
-    } else if (Array.isArray((customers as any).items)) {
-      customersArray = (customers as any).items;
-    }
-  }
-
-  const handleEdit = (customer: Customer) => {
-    setEditingCustomer(customer);
-    setIsDialogOpen(true);
-  };
-
-  const handleDeleteClick = (customer: Customer) => {
-    setCustomerToDelete(customer);
-    setDeleteDialogOpen(true);
-  };
-
-  const handleDeleteConfirm = async () => {
-    if (customerToDelete) {
-      await deleteMutation.mutateAsync(customerToDelete.id);
-      setDeleteDialogOpen(false);
-      setCustomerToDelete(null);
-    }
-  };
-
-  const handleActivate = async (customer: Customer) => {
-    await activateMutation.mutateAsync(customer.id);
-  };
-
-  const handleDeactivate = async (customer: Customer) => {
-    await deactivateMutation.mutateAsync(customer.id);
-  };
-
-  const handleDialogClose = () => {
-    setIsDialogOpen(false);
-    setEditingCustomer(null);
-  };
-  
-  const handleImportSuccess = () => {
-    // Import sonrası listeyi yenile (hook'ta zaten yapılıyor ama modal kapatıldığında da tetiklenebilir)
-  };
-
-  return (
-    <div>
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Customers</h1>
-        <div className="flex gap-2">
-          <CustomerImportButton />
-          <Button onClick={() => setIsDialogOpen(true)}>
-            Add Customer
-          </Button>
-        </div>
-      </div>
-
-      {/* Import sonuçları modal */}
-      {importResult && (
-        <CustomerImportResults
-          result={importResult}
-          isOpen={showResults}
-          onClose={() => {
-            setShowResults(false);
-            handleImportSuccess();
-          }}
-        />
-      )}
-
-      <Dialog open={isDialogOpen} onOpenChange={handleDialogClose}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{editingCustomer ? 'Edit Customer' : 'Add New Customer'}</DialogTitle>
-            <DialogDescription>
-              {editingCustomer ? 'Update customer information' : 'Create a new customer in the system'}
-            </DialogDescription>
-          </DialogHeader>
-          <CustomerForm
-            customer={editingCustomer || undefined}
-            onSuccess={handleDialogClose}
-            onCancel={handleDialogClose}
-          />
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Delete Customer</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete {customerToDelete?.name}? This action cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              onClick={handleDeleteConfirm}
-              disabled={deleteMutation.isPending}
-            >
-              {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {customersArray.length === 0 ? (
-        <EmptyState message="No customers found" />
-      ) : (
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Code
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Name
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Channel
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Şube Sayısı
-                </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {customersArray.map((customer) => (
-                <tr key={customer.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    {customer.code}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {customer.name}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <EnumBadge value={customer.channel} type="channel" />
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <EnumBadge value={customer.status} type="status" />
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {customer.numberOfBranches !== undefined
-                      ? customer.numberOfBranches
-                      : '-'}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleEdit(customer)}>
-                          <Edit className="mr-2 h-4 w-4" />
-                          Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        {customer.status === 'ACTIVE' ? (
-                          <DropdownMenuItem onClick={() => handleDeactivate(customer)}>
-                            <XCircle className="mr-2 h-4 w-4" />
-                            Deactivate
-                          </DropdownMenuItem>
-                        ) : (
-                          <DropdownMenuItem onClick={() => handleActivate(customer)}>
-                            <CheckCircle className="mr-2 h-4 w-4" />
-                            Activate
-                          </DropdownMenuItem>
-                        )}
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          onClick={() => handleDeleteClick(customer)}
-                          className="text-red-600"
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-    </div>
-  );
-};
 
 
 // Tenants Page with real data
@@ -541,6 +316,54 @@ export const router = createBrowserRouter([
         <AppLayout>
           <ErrorBoundary>
             <CustomersPage />
+          </ErrorBoundary>
+        </AppLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/customers/new',
+    element: (
+      <ProtectedRoute requiredRole={['ADMIN', 'PLANNER']}>
+        <AppLayout>
+          <ErrorBoundary>
+            <CustomerCreatePage />
+          </ErrorBoundary>
+        </AppLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/customers/:id',
+    element: (
+      <ProtectedRoute>
+        <AppLayout>
+          <ErrorBoundary>
+            <CustomerDetailPage />
+          </ErrorBoundary>
+        </AppLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/customers/:id/edit',
+    element: (
+      <ProtectedRoute requiredRole={['ADMIN', 'PLANNER']}>
+        <AppLayout>
+          <ErrorBoundary>
+            <CustomerEditPage />
+          </ErrorBoundary>
+        </AppLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/customers/import',
+    element: (
+      <ProtectedRoute requiredRole={['ADMIN', 'PLANNER']}>
+        <AppLayout>
+          <ErrorBoundary>
+            <CustomerImportPage />
           </ErrorBoundary>
         </AppLayout>
       </ProtectedRoute>

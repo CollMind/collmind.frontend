@@ -5,6 +5,7 @@ import {
   UpdateCustomerDto,
   CustomerFilterDto,
   ImportResult,
+  CustomerStats,
 } from '@/types/customer.types';
 
 export const customerEndpoints = {
@@ -44,7 +45,7 @@ export const customerEndpoints = {
   deactivate: (id: string) =>
     apiClient.post<Customer>(`/customers/${id}/deactivate`),
 
-  getStats: (id: string) => apiClient.get(`/customers/${id}/stats`),
+  getStats: (id: string) => apiClient.get<CustomerStats>(`/customers/${id}/stats`),
 
   import: (file: File) => {
     const formData = new FormData();

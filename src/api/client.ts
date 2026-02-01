@@ -65,8 +65,9 @@ apiClient.interceptors.response.use(
     // Handle 403 Forbidden - Yetkisiz erişim
     if (error.response?.status === 403) {
       // 403 hatası için kullanıcıya uygun mesaj göster
+      const errorData = error.response?.data as { message?: string } | undefined;
       const errorMessage =
-        error.response?.data?.message ||
+        errorData?.message ||
         'Bu işlem için yetkiniz bulunmamaktadır.';
       
       // Log technical error for debugging (kullanıcıya gösterilmez)
@@ -187,10 +188,11 @@ apiClient.interceptors.response.use(
       };
       
       // Log technical error for debugging
+      const errorData500 = error.response?.data as { message?: string } | undefined;
       console.error('500 Internal Server Error:', {
         url: originalRequest?.url,
         method: originalRequest?.method,
-        message: error.response?.data?.message || error.message,
+        message: errorData500?.message || error.message,
         timestamp: new Date().toISOString(),
       });
       
@@ -200,11 +202,12 @@ apiClient.interceptors.response.use(
     // Handle other errors (400, 404, etc.)
     // Log technical error for debugging
     if (error.response?.status >= 400) {
+      const errorData = error.response?.data as { message?: string } | undefined;
       console.error('API Error:', {
         status: error.response.status,
         url: originalRequest?.url,
         method: originalRequest?.method,
-        message: error.response?.data?.message || error.message,
+        message: errorData?.message || error.message,
         timestamp: new Date().toISOString(),
       });
     }

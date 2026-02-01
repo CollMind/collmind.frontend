@@ -6,6 +6,7 @@ import {
   UpdateCustomerDto,
   CustomerFilterDto,
   ImportResult,
+  CustomerStats,
 } from '@/types/customer.types';
 import { useToast } from '@/hooks/useToast';
 
@@ -40,17 +41,18 @@ export function useCustomers(filters?: CustomerFilterDto) {
         
         // If data is an object, check for common array properties
         if (data && typeof data === 'object') {
-          if (Array.isArray(data.data)) {
-            return data.data;
+          const dataObj = data as any;
+          if (Array.isArray(dataObj.data)) {
+            return dataObj.data;
           }
-          if (Array.isArray(data.customers)) {
-            return data.customers;
+          if (Array.isArray(dataObj.customers)) {
+            return dataObj.customers;
           }
-          if (Array.isArray(data.items)) {
-            return data.items;
+          if (Array.isArray(dataObj.items)) {
+            return dataObj.items;
           }
-          if (Array.isArray(data.results)) {
-            return data.results;
+          if (Array.isArray(dataObj.results)) {
+            return dataObj.results;
           }
         }
         
@@ -130,6 +132,22 @@ export function useDeactivateCustomer() {
       queryClient.invalidateQueries({ queryKey: customerKeys.detail(data.id) });
       queryClient.invalidateQueries({ queryKey: customerKeys.lists() });
     },
+  });
+}
+
+export function useSearchCustomers(query: string) {
+  return useQuery({
+    queryKey: customerKeys.search(query),
+    queryFn: () => customerEndpoints.search(query).then((res) => res.data),
+    enabled: query.length > 0,
+  });
+}
+
+export function useCustomerStats(id: string) {
+  return useQuery({
+    queryKey: [...customerKeys.detail(id), 'stats'],
+    queryFn: () => customerEndpoints.getStats(id).then((res) => res.data),
+    enabled: !!id,
   });
 }
 

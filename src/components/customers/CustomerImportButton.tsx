@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { useCustomerImport } from '@/services/customers.service';
+import { CustomerImportResults } from './CustomerImportResults';
 import { Upload, FileSpreadsheet, FileText, Loader2 } from 'lucide-react';
 import {
   Dialog,
@@ -11,11 +12,15 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 
-export function CustomerImportButton() {
+interface CustomerImportButtonProps {
+  onImportSuccess?: () => void;
+}
+
+export function CustomerImportButton({ onImportSuccess }: CustomerImportButtonProps = {}) {
   const [isOpen, setIsOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const importMutation = useCustomerImport();
+  const { importResult, showResults, setShowResults, ...importMutation } = useCustomerImport();
 
   const validateFile = (file: File): { valid: boolean; error?: string } => {
     // Dosya formatı kontrolü
@@ -67,6 +72,8 @@ export function CustomerImportButton() {
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
+      // Import başarılı olduğunda parent'a bildir
+      onImportSuccess?.();
     } catch (error) {
       // Error handling hook'ta yapılıyor
     }
@@ -178,6 +185,15 @@ export function CustomerImportButton() {
           </div>
         </div>
       </DialogContent>
+
+      {/* Import sonuçları modal */}
+      {importResult && (
+        <CustomerImportResults
+          result={importResult}
+          isOpen={showResults}
+          onClose={() => setShowResults(false)}
+        />
+      )}
     </Dialog>
   );
 }
