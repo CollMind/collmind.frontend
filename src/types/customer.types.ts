@@ -38,6 +38,7 @@ export interface Customer {
   contactEmail?: string;
   contactPhone?: string;
   customerTier?: string;
+  numberOfBranches?: number;
   isVip: boolean;
   tenantId: string;
   createdAt: Date;
@@ -75,6 +76,7 @@ export interface CreateCustomerDto {
   annualRevenue?: number;
   lastOrderDate?: string;
   firstOrderDate?: string;
+  numberOfBranches?: number;
   metadata?: {
     storeSize?: number;
     numberOfEmployees?: number;
@@ -109,3 +111,27 @@ export interface CustomerFilterDto {
   sortOrder?: 'ASC' | 'DESC';
 }
 
+export enum ImportErrorType {
+  MISSING_FIELD = 'MISSING_FIELD',
+  INVALID_DATE = 'INVALID_DATE',
+  INVALID_AMOUNT = 'INVALID_AMOUNT',
+  ALREADY_EXISTS = 'ALREADY_EXISTS',
+  DUPLICATE_IN_FILE = 'DUPLICATE_IN_FILE',
+  DATABASE_ERROR = 'DATABASE_ERROR',
+  INVALID_EMAIL = 'INVALID_EMAIL',
+}
+
+export interface ImportError {
+  row: number;
+  code: string;
+  error_type: ImportErrorType;
+  error_message: string;
+  original_row_data?: Record<string, any>;
+}
+
+export interface ImportResult {
+  total: number;
+  created: number;
+  skipped: number;
+  errors: ImportError[];
+}

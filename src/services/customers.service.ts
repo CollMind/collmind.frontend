@@ -1,10 +1,13 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
 import { customerEndpoints } from '@/api/endpoints/customers.endpoints';
 import {
   CreateCustomerDto,
   UpdateCustomerDto,
   CustomerFilterDto,
+  ImportResult,
 } from '@/types/customer.types';
+import { useToast } from '@/hooks/useToast';
 
 export const customerKeys = {
   all: ['customers'] as const,
@@ -130,3 +133,52 @@ export function useDeactivateCustomer() {
   });
 }
 
+export function useCustomerImport() {
+  const queryClient = useQueryClient();
+  const [importResult, setImportResult] = useState<ImportResult | null>(null);
+  const [showResults, setShowResults] = useState(false);
+  const toast = useToast();
+
+  const mutation = useMutation({
+    mutationFn: (file: File) =>
+      customerEndpoints.import(file).then((res) => res.data as ImportResult),
+    onSuccess: (data: ImportResult) => {
+      // Invalidate customer list to refresh after import
+      queryClient.invalidateQueries({ queryKey: customerKeys.lists() });
+      
+      setImportResult(data);
+      setShowResults(true);
+
+      const { total, created, skipped, errors } = data;
+      
+      if (created === total) {
+        toast.success(`Tüm ${total} müşteri başarıyla içe aktarıldı.`);
+      } else if (created > 0) {
+        toast.warning(
+          `${created} müşteri içe aktarıldı, ${skipped} müşteri atlandı. Detaylar için sonuçları kontrol edin.`
+        );
+      } else {
+        toast.error('Hiçbir müşteri içe aktarılamadı. Lütfen sonuçları kontrol edin.');
+      }
+
+      // Log errors for debugging
+      if (errors.length > 0) {
+        console.error('Import hataları:', errors);
+      }
+    },
+    onError: (error: any) => {
+      const errorMessage =
+        error.response?.data?.message ||
+        error.message ||
+        'Dosya yüklenirken bir hata oluştu';
+      toast.error(errorMessage);
+    },
+  });
+
+  return {
+    ...mutation,
+    importResult,
+    showResults,
+    setShowResults,
+  };
+}

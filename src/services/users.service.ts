@@ -35,9 +35,10 @@ export function useUser(id: string) {
   });
 }
 
-export function useMe() {
+export function useMe(options?: { enabled?: boolean }) {
   return useQuery({
     queryKey: userKeys.me(),
+    enabled: options?.enabled !== false,
     queryFn: () => userEndpoints.getMe().then((res) => res.data),
   });
 }
@@ -103,4 +104,3 @@ export function useDeactivateUser() {
     },
   });
 }
-

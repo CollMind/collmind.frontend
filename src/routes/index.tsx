@@ -5,15 +5,17 @@ import { ProtectedRoute } from '@/components/layout/ProtectedRoute';
 import { LoginPage } from '@/components/features/auth/LoginPage';
 import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 import { DashboardPage } from '@/components/features/dashboard/DashboardPage';
+import { BudgetPage } from '@/components/features/budget/BudgetPage';
 
 import { useState } from 'react';
-import { useCustomers, useDeleteCustomer, useActivateCustomer, useDeactivateCustomer } from '@/services/customers.service';
+import { useCustomers, useDeleteCustomer, useActivateCustomer, useDeactivateCustomer, useCustomerImport } from '@/services/customers.service';
 import { useUsers, useDeleteUser, useActivateUser, useDeactivateUser } from '@/services/users.service';
 import { useMe } from '@/services/users.service';
 import { useTenants, useDeleteTenant, useActivateTenant, useSuspendTenant } from '@/services/tenants.service';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { EmptyState } from '@/components/common/EmptyState';
 import { CustomerForm } from '@/components/forms/CustomerForm';
+import { CustomerImportButton, CustomerImportResults } from '@/components/customers';
 import { UserForm } from '@/components/forms/UserForm';
 import { TenantForm } from '@/components/forms/TenantForm';
 import { EnumBadge } from '@/components/common/EnumBadge';
@@ -48,6 +50,7 @@ const CustomersPage = () => {
   const deleteMutation = useDeleteCustomer();
   const activateMutation = useActivateCustomer();
   const deactivateMutation = useDeactivateCustomer();
+  const { importResult, showResults, setShowResults } = useCustomerImport();
 
   if (isLoading) return <LoadingSpinner />;
   if (error) {
@@ -105,14 +108,33 @@ const CustomersPage = () => {
     setEditingCustomer(null);
   };
   
+  const handleImportSuccess = () => {
+    // Import sonrası listeyi yenile (hook'ta zaten yapılıyor ama modal kapatıldığında da tetiklenebilir)
+  };
+
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Customers</h1>
-        <Button onClick={() => setIsDialogOpen(true)}>
-          Add Customer
-        </Button>
+        <div className="flex gap-2">
+          <CustomerImportButton />
+          <Button onClick={() => setIsDialogOpen(true)}>
+            Add Customer
+          </Button>
+        </div>
       </div>
+
+      {/* Import sonuçları modal */}
+      {importResult && (
+        <CustomerImportResults
+          result={importResult}
+          isOpen={showResults}
+          onClose={() => {
+            setShowResults(false);
+            handleImportSuccess();
+          }}
+        />
+      )}
 
       <Dialog open={isDialogOpen} onOpenChange={handleDialogClose}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -172,6 +194,9 @@ const CustomersPage = () => {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status
                 </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Şube Sayısı
+                </th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Actions
                 </th>
@@ -191,6 +216,11 @@ const CustomersPage = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <EnumBadge value={customer.status} type="status" />
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {customer.numberOfBranches !== undefined
+                      ? customer.numberOfBranches
+                      : '-'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <DropdownMenu>
@@ -796,6 +826,18 @@ export const router = createBrowserRouter([
         <AppLayout>
           <ErrorBoundary>
             <ProfilePage />
+          </ErrorBoundary>
+        </AppLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/budget',
+    element: (
+      <ProtectedRoute>
+        <AppLayout>
+          <ErrorBoundary>
+            <BudgetPage />
           </ErrorBoundary>
         </AppLayout>
       </ProtectedRoute>

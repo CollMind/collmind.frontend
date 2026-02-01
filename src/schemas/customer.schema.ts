@@ -36,6 +36,7 @@ export const createCustomerSchema = z.object({
   annualRevenue: z.number().positive().optional(),
   lastOrderDate: z.string().optional(),
   firstOrderDate: z.string().optional(),
+  numberOfBranches: z.number().int().min(0, 'Number of branches must be 0 or greater').optional(),
   metadata: z
     .object({
       storeSize: z.number().optional(),

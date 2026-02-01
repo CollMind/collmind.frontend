@@ -17,7 +17,8 @@ describe('RecentTransactions', () => {
 
   it('renders transaction types', () => {
     render(<RecentTransactions />);
-    expect(screen.getByText(/Invoice Approval/i)).toBeInTheDocument();
+    // Invoice Approval appears multiple times, use getAllByText
+    expect(screen.getAllByText(/Invoice Approval/i).length).toBeGreaterThan(0);
     expect(screen.getByText(/Invoice Rejection/i)).toBeInTheDocument();
     expect(screen.getByText(/Bulk Invoice Entry/i)).toBeInTheDocument();
   });

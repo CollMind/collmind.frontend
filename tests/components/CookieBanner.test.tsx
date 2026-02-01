@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { renderWithCookieProvider } from '@/tests/utils/cookie-test-utils';
+import { renderWithCookieProvider } from '../utils/cookie-test-utils';
 import { CookieBanner } from '@/components/CookieBanner';
 import { clearCookieConsent } from '@/utils/cookieStorage';
 

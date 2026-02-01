@@ -1,11 +1,21 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import React from 'react';
 import { ProtectedRoute } from '@/components/layout/ProtectedRoute';
 import authReducer from '@/store/slices/auth.slice';
 import { User } from '@/types/user.types';
+import { http, HttpResponse } from 'msw';
+import { server } from '../../setup';
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: { retry: false },
+  },
+});
 
 const createMockStore = (authState: any) => {
   return configureStore({
@@ -16,6 +26,16 @@ const createMockStore = (authState: any) => {
       auth: authState,
     },
   });
+};
+
+const renderWithProviders = (ui: React.ReactElement, store: any) => {
+  return render(
+    <Provider store={store}>
+      <QueryClientProvider client={queryClient}>
+        <BrowserRouter>{ui}</BrowserRouter>
+      </QueryClientProvider>
+    </Provider>
+  );
 };
 
 describe('ProtectedRoute', () => {
@@ -34,16 +54,14 @@ describe('ProtectedRoute', () => {
     const store = createMockStore({
       isAuthenticated: false,
       user: null,
+      accessToken: null,
     });
 
-    render(
-      <Provider store={store}>
-        <BrowserRouter>
-          <ProtectedRoute>
-            <div>Protected Content</div>
-          </ProtectedRoute>
-        </BrowserRouter>
-      </Provider>
+    renderWithProviders(
+      <ProtectedRoute>
+        <div>Protected Content</div>
+      </ProtectedRoute>,
+      store
     );
 
     // Should redirect, so protected content should not be visible
@@ -54,35 +72,91 @@ describe('ProtectedRoute', () => {
     const store = createMockStore({
       isAuthenticated: true,
       user: mockUser,
+      accessToken: 'access-token',
     });
 
-    render(
-      <Provider store={store}>
-        <BrowserRouter>
-          <ProtectedRoute>
-            <div>Protected Content</div>
-          </ProtectedRoute>
-        </BrowserRouter>
-      </Provider>
+    renderWithProviders(
+      <ProtectedRoute>
+        <div>Protected Content</div>
+      </ProtectedRoute>,
+      store
     );
 
     expect(screen.getByText('Protected Content')).toBeInTheDocument();
+  });
+
+  it('should fetch user when token exists but user is missing (page refresh scenario)', async () => {
+    const store = createMockStore({
+      isAuthenticated: false,
+      user: null,
+      accessToken: 'access-token',
+    });
+
+    renderWithProviders(
+      <ProtectedRoute>
+        <div>Protected Content</div>
+      </ProtectedRoute>,
+      store
+    );
+
+    // Should show loading initially, then fetch user and show content
+    await waitFor(() => {
+      expect(screen.getByText('Protected Content')).toBeInTheDocument();
+    });
+
+    // Verify user was fetched and stored
+    const finalState = store.getState();
+    expect(finalState.auth.user).toBeTruthy();
+    expect(finalState.auth.isAuthenticated).toBe(true);
+  });
+
+  it('should logout when token is invalid after page refresh', async () => {
+    // Mock /users/me to return 401
+    server.use(
+      http.get('http://localhost:3000/users/me', () => {
+        return HttpResponse.json(
+          { message: 'Unauthorized' },
+          { status: 401 }
+        );
+      })
+    );
+
+    const store = createMockStore({
+      isAuthenticated: false,
+      user: null,
+      accessToken: 'invalid-token',
+    });
+
+    renderWithProviders(
+      <ProtectedRoute>
+        <div>Protected Content</div>
+      </ProtectedRoute>,
+      store
+    );
+
+    // Should logout and redirect
+    await waitFor(() => {
+      const finalState = store.getState();
+      expect(finalState.auth.isAuthenticated).toBe(false);
+      expect(finalState.auth.accessToken).toBeNull();
+    });
+
+    // Protected content should not be visible
+    expect(screen.queryByText('Protected Content')).not.toBeInTheDocument();
   });
 
   it('allows access when user has required role', () => {
     const store = createMockStore({
       isAuthenticated: true,
       user: mockUser,
+      accessToken: 'access-token',
     });
 
-    render(
-      <Provider store={store}>
-        <BrowserRouter>
-          <ProtectedRoute requiredRole={['ADMIN']}>
-            <div>Admin Content</div>
-          </ProtectedRoute>
-        </BrowserRouter>
-      </Provider>
+    renderWithProviders(
+      <ProtectedRoute requiredRole={['ADMIN']}>
+        <div>Admin Content</div>
+      </ProtectedRoute>,
+      store
     );
 
     expect(screen.getByText('Admin Content')).toBeInTheDocument();
@@ -97,16 +171,14 @@ describe('ProtectedRoute', () => {
     const store = createMockStore({
       isAuthenticated: true,
       user: plannerUser,
+      accessToken: 'access-token',
     });
 
-    render(
-      <Provider store={store}>
-        <BrowserRouter>
-          <ProtectedRoute requiredRole={['ADMIN']}>
-            <div>Admin Content</div>
-          </ProtectedRoute>
-        </BrowserRouter>
-      </Provider>
+    renderWithProviders(
+      <ProtectedRoute requiredRole={['ADMIN']}>
+        <div>Admin Content</div>
+      </ProtectedRoute>,
+      store
     );
 
     // Should redirect, so content should not be visible

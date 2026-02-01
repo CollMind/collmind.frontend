@@ -10,7 +10,8 @@ export const store = configureStore({
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: {
-        ignoredActions: ['persist/PERSIST'],
+        ignoredActions: ['persist/PERSIST', 'auth/setCredentials'],
+        ignoredPaths: ['auth.user.createdAt', 'auth.user.updatedAt'],
       },
     }),
 });

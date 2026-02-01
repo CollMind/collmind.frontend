@@ -3,6 +3,8 @@ import authReducer, {
   setCredentials,
   logout,
   setLoading,
+  setError,
+  clearError,
 } from '@/store/slices/auth.slice';
 import { User } from '@/types/user.types';
 
@@ -75,6 +77,41 @@ describe('authSlice', () => {
 
     const newState = authReducer(state, setLoading(false));
     expect(newState.isLoading).toBe(false);
+  });
+
+  it('should handle setError', () => {
+    const state = authReducer(undefined, setError('Test error message'));
+    expect(state.error).toBe('Test error message');
+  });
+
+  it('should handle clearError', () => {
+    const stateWithError = authReducer(undefined, setError('Test error'));
+    expect(stateWithError.error).toBe('Test error');
+
+    const stateCleared = authReducer(stateWithError, clearError());
+    expect(stateCleared.error).toBeNull();
+  });
+
+  it('should clear error on setCredentials', () => {
+    const stateWithError = authReducer(undefined, setError('Test error'));
+    expect(stateWithError.error).toBe('Test error');
+
+    const credentials = {
+      user: mockUser,
+      accessToken: 'access-token',
+      refreshToken: 'refresh-token',
+    };
+
+    const state = authReducer(stateWithError, setCredentials(credentials));
+    expect(state.error).toBeNull();
+  });
+
+  it('should clear error on logout', () => {
+    const stateWithError = authReducer(undefined, setError('Test error'));
+    expect(stateWithError.error).toBe('Test error');
+
+    const state = authReducer(stateWithError, logout());
+    expect(state.error).toBeNull();
   });
 });
 

@@ -1,7 +1,7 @@
 import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { screen, fireEvent, waitFor } from '@testing-library/react';
-import { render } from '@/tests/utils/test-utils';
+import { render } from '../utils/test-utils';
 import { LoginForm } from '@/components/features/auth/LoginForm';
 import { useLogin } from '@/services/auth.service';
 import * as router from 'react-router-dom';

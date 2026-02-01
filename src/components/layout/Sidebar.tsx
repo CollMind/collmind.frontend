@@ -15,6 +15,7 @@ import {
   Calendar,
   Package,
   UserCog,
+  Wallet,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAppSelector, useAppDispatch } from '@/store/hooks';
@@ -63,6 +64,11 @@ const navigation: NavItem[] = [
         roles: ['ADMIN'],
       },
     ],
+  },
+  {
+    title: 'Budget',
+    href: '/budget',
+    icon: Wallet,
   },
   {
     title: 'Reports',

@@ -9,6 +9,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from '@/components/ui/form';
 import {
   Select,
@@ -62,6 +63,7 @@ export function CustomerForm({
           contactEmail: customer.contactEmail,
           contactPhone: customer.contactPhone,
           customerTier: customer.customerTier,
+          numberOfBranches: customer.numberOfBranches,
           isVip: customer.isVip,
         }
       : {
@@ -237,6 +239,34 @@ export function CustomerForm({
               <FormControl>
                 <Input {...field} type="email" placeholder="email@example.com" />
               </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="numberOfBranches"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Şube Sayısı</FormLabel>
+              <FormControl>
+                <Input
+                  type="number"
+                  min="0"
+                  step="1"
+                  placeholder="Örn: 5"
+                  {...field}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    field.onChange(value === '' ? undefined : parseInt(value, 10));
+                  }}
+                  value={field.value ?? ''}
+                />
+              </FormControl>
+              <FormDescription>
+                Müşterinin toplam şube sayısını girin
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}

@@ -15,6 +15,10 @@ import { loginSchema, LoginFormData } from '@/schemas/auth.schema';
 import { useLogin } from '@/services/auth.service';
 import { AlertCircle, Mail, Lock, Loader2 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { getClientIPAddress } from '@/utils/ipAddress';
+import { useEffect, useState } from 'react';
+import { useAppSelector, useAppDispatch } from '@/store/hooks';
+import { clearError } from '@/store/slices/auth.slice';
 
 interface LoginFormProps {
   onSwitchToRegister?: () => void;
@@ -25,7 +29,10 @@ export function LoginForm({
   onSwitchToRegister,
   onSwitchToForgotPassword,
 }: LoginFormProps) {
+  const dispatch = useAppDispatch();
   const loginMutation = useLogin();
+  const authError = useAppSelector((state) => state.auth.error);
+  const [ipAddress, setIpAddress] = useState<string | undefined>(undefined);
 
   const form = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
@@ -35,9 +42,35 @@ export function LoginForm({
     },
   });
 
+  // Form değiştiğinde veya başarılı login sonrası error'u temizle
+  useEffect(() => {
+    if (loginMutation.isSuccess) {
+      dispatch(clearError());
+    }
+  }, [loginMutation.isSuccess, dispatch]);
+
+  // Form alanları değiştiğinde error'u temizle
+  const handleFieldChange = () => {
+    if (authError) {
+      dispatch(clearError());
+    }
+  };
+
+  // IP adresini component mount olduğunda al
+  useEffect(() => {
+    getClientIPAddress().then(setIpAddress).catch(() => {
+      // Hata durumunda sessizce devam et (opsiyonel alan)
+    });
+  }, []);
+
   const onSubmit = async (data: LoginFormData) => {
     try {
-      await loginMutation.mutateAsync(data);
+      // IP adresini login data'sına ekle
+      const loginData = {
+        ...data,
+        ipAddress: ipAddress,
+      };
+      await loginMutation.mutateAsync(loginData);
     } catch (error) {
       // Error handling is done by mutation
     }
@@ -47,11 +80,11 @@ export function LoginForm({
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         {/* Error Alert */}
-        {loginMutation.isError && (
+        {(loginMutation.isError || authError) && (
           <Alert variant="destructive">
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
-              Invalid email or password. Please try again.
+              {authError || 'Invalid email or password. Please try again.'}
             </AlertDescription>
           </Alert>
         )}
@@ -72,6 +105,10 @@ export function LoginForm({
                     placeholder="you@example.com"
                     className="pl-10 h-12"
                     disabled={loginMutation.isPending}
+                    onChange={(e) => {
+                      field.onChange(e);
+                      handleFieldChange();
+                    }}
                   />
                 </div>
               </FormControl>
@@ -107,6 +144,10 @@ export function LoginForm({
                     placeholder="Enter your password"
                     className="pl-10 h-12"
                     disabled={loginMutation.isPending}
+                    onChange={(e) => {
+                      field.onChange(e);
+                      handleFieldChange();
+                    }}
                   />
                 </div>
               </FormControl>

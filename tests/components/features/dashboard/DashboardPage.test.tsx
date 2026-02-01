@@ -11,7 +11,8 @@ describe('DashboardPage', () => {
   it('renders metric cards', () => {
     render(<DashboardPage />);
     expect(screen.getByText(/Gross Sales/i)).toBeInTheDocument();
-    expect(screen.getByText(/Total Spending/i)).toBeInTheDocument();
+    // Total Spending appears multiple times, use getAllByText
+    expect(screen.getAllByText(/Total Spending/i).length).toBeGreaterThan(0);
     expect(screen.getByText(/Discount Rate/i)).toBeInTheDocument();
     expect(screen.getByText(/Pending Approval/i)).toBeInTheDocument();
   });
