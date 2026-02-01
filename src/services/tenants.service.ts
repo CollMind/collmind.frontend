@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { tenantEndpoints } from '@/api/endpoints/tenants.endpoints';
-import { CreateTenantDto, UpdateTenantDto } from '@/types/tenant.types';
+import { CreateTenantDto, UpdateTenantDto, TenantStats } from '@/types/tenant.types';
 
 export const tenantKeys = {
   all: ['tenants'] as const,
@@ -95,5 +95,13 @@ export function useSuspendTenant() {
       queryClient.invalidateQueries({ queryKey: tenantKeys.detail(data.id) });
       queryClient.invalidateQueries({ queryKey: tenantKeys.lists() });
     },
+  });
+}
+
+export function useTenantStats(id: string) {
+  return useQuery({
+    queryKey: [...tenantKeys.detail(id), 'stats'],
+    queryFn: () => tenantEndpoints.getStats(id).then((res) => res.data),
+    enabled: !!id,
   });
 }

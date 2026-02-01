@@ -1,5 +1,5 @@
 import apiClient from '../client';
-import { Tenant, CreateTenantDto, UpdateTenantDto } from '@/types/tenant.types';
+import { Tenant, CreateTenantDto, UpdateTenantDto, TenantStats } from '@/types/tenant.types';
 
 export const tenantEndpoints = {
   getAll: () => apiClient.get<Tenant[]>('/tenants'),
@@ -19,6 +19,6 @@ export const tenantEndpoints = {
   suspend: (id: string) =>
     apiClient.post<Tenant>(`/tenants/${id}/suspend`),
 
-  getStats: (id: string) => apiClient.get(`/tenants/${id}/stats`),
+  getStats: (id: string) => apiClient.get<TenantStats>(`/tenants/${id}/stats`),
 };
 

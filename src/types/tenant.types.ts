@@ -21,12 +21,23 @@ export interface Tenant {
   contactEmail?: string;
   contactPhone?: string;
   contactPerson?: string;
+  address?: string;
   city?: string;
   country?: string;
+  postalCode?: string;
+  taxNumber?: string;
+  companyRegistrationNumber?: string;
   industry?: string;
-  maxUsers: number;
-  maxStorageGB: number;
-  currentStorageGB: number;
+  settings?: {
+    defaultCurrency?: string;
+    fiscalYearStart?: string;
+    timezone?: string;
+    dateFormat?: string;
+    numberFormat?: string;
+  };
+  maxUsers?: number;
+  maxStorageGB?: number;
+  currentStorageGB?: number;
   subscriptionStartDate?: Date;
   subscriptionEndDate?: Date;
   createdAt: Date;
@@ -63,3 +74,9 @@ export interface CreateTenantDto {
 
 export interface UpdateTenantDto extends Partial<CreateTenantDto> {}
 
+export interface TenantStats {
+  totalUsers: number;
+  totalCustomers: number;
+  totalBudgetEnvelopes: number;
+  totalAgreements: number;
+}
