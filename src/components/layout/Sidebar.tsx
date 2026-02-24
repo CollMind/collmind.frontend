@@ -9,7 +9,6 @@ import {
   Settings,
   ChevronLeft,
   ChevronDown,
-  ChevronRight,
   FileText,
   BarChart3,
   Calendar,
@@ -23,6 +22,10 @@ import {
   ClipboardList,
   Target,
   History,
+  FileCheck,
+  DollarSign,
+  Receipt,
+  CheckCircle2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAppSelector, useAppDispatch } from '@/store/hooks';
@@ -44,8 +47,109 @@ interface NavItem {
   roles?: string[];
 }
 
-// Admin navigation menu (as shown in the design)
+// Admin navigation menu
 const adminNavigation: NavItem[] = [
+  {
+    title: 'Dashboard',
+    href: '/dashboard',
+    icon: LayoutDashboard,
+  },
+  {
+    title: 'Planlama',
+    icon: Target,
+    children: [
+      {
+        title: 'Planlar',
+        href: '/plans',
+        icon: FileText,
+      },
+      {
+        title: 'Plan Onayları',
+        href: '/plan-approvals',
+        icon: CheckCircle2,
+        badge: 1, // TODO: Get from API
+      },
+    ],
+  },
+  {
+    title: 'Anlaşmalar',
+    icon: FileCheck,
+    children: [
+      {
+        title: 'STA (Short-Term)',
+        href: '/agreements?type=STA',
+        icon: FileText,
+      },
+      {
+        title: 'LTA (Long-Term)',
+        href: '/agreements?type=LTA',
+        icon: FileText,
+      },
+    ],
+  },
+  {
+    title: 'Off-Invoice',
+    href: '/off-invoice',
+    icon: DollarSign,
+  },
+  {
+    title: 'On-Invoice',
+    href: '/on-invoice',
+    icon: Receipt,
+  },
+  {
+    title: 'Bütçe',
+    icon: Wallet,
+    children: [
+      {
+        title: 'Dashboard',
+        href: '/budget',
+        icon: LayoutDashboard,
+      },
+      {
+        title: 'Envelope Listesi',
+        href: '/budget?view=list',
+        icon: FileText,
+      },
+      {
+        title: 'Ledger (Read Only)',
+        href: '/budget/ledger',
+        icon: BarChart3,
+      },
+    ],
+  },
+  {
+    title: 'Raporlar',
+    icon: BarChart3,
+    children: [
+      {
+        title: 'Plan Performans',
+        icon: BarChart3,
+      },
+      {
+        title: 'ROI Dağılım Analizi',
+        icon: TrendingUp,
+      },
+      {
+        title: 'Trade Spend Özeti',
+        icon: DollarSign,
+      },
+      {
+        title: 'Bütçe Kullanım Raporu',
+        icon: Wallet,
+      },
+      {
+        title: 'Anlaşma Durum Raporu',
+        icon: FileCheck,
+      },
+    ],
+  },
+  {
+    title: 'Anlaşma Onayları',
+    href: '/agreement-approvals',
+    icon: CheckCircle2,
+    badge: 1, // TODO: Get from API
+  },
   {
     title: 'Admin',
     icon: Settings,
@@ -53,58 +157,327 @@ const adminNavigation: NavItem[] = [
     children: [
       {
         title: 'Genel Bakış',
-        href: '/dashboard',
+        href: '/admin/overview',
         icon: LayoutDashboard,
       },
       {
         title: 'Kullanıcılar',
-        href: '/users',
+        href: '/admin/users',
         icon: Users,
       },
       {
         title: 'Baseline Import',
-        href: '/baseline-import',
+        href: '/admin/baseline-import',
         icon: Upload,
       },
       {
         title: 'KPI Yönetimi',
-        href: '/kpi-management',
+        href: '/admin/kpi-management',
         icon: TrendingUp,
       },
       {
         title: 'FU Yönetimi',
-        href: '/fu-management',
+        href: '/admin/forecasting-unit-management',
         icon: Factory,
       },
       {
         title: 'SKU Listesi',
-        href: '/sku-list',
+        href: '/admin/sku-management',
         icon: Boxes,
       },
       {
         title: 'Müşteri Listesi',
-        href: '/customers',
+        href: '/admin/customers',
         icon: UsersRound,
       },
       {
         title: 'CPL Yönetimi',
-        href: '/cpl-management',
+        href: '/admin/cpl-management',
         icon: ClipboardList,
       },
       {
         title: 'Taktik Yönetimi',
-        href: '/tactical-management',
+        href: '/admin/tactic-management',
         icon: Target,
       },
       {
         title: 'Audit Log',
-        href: '/audit-log',
+        href: '/admin/audit-log',
         icon: History,
       },
       {
         title: 'Konfigürasyon',
-        href: '/settings',
+        href: '/admin/configuration',
         icon: Settings,
+      },
+    ],
+  },
+];
+
+// Planner navigation menu
+const plannerNavigation: NavItem[] = [
+  {
+    title: 'Dashboard',
+    href: '/dashboard',
+    icon: LayoutDashboard,
+  },
+  {
+    title: 'Planlama',
+    icon: Target,
+    children: [
+      {
+        title: 'Planlar',
+        href: '/plans',
+        icon: FileText,
+      },
+    ],
+  },
+  {
+    title: 'Anlaşmalar',
+    icon: FileCheck,
+    children: [
+      {
+        title: 'STA (Short-Term)',
+        href: '/agreements?type=STA',
+        icon: FileText,
+      },
+      {
+        title: 'LTA (Long-Term)',
+        href: '/agreements?type=LTA',
+        icon: FileText,
+      },
+    ],
+  },
+  {
+    title: 'Off-Invoice',
+    href: '/off-invoice',
+    icon: DollarSign,
+  },
+  {
+    title: 'On-Invoice',
+    href: '/on-invoice',
+    icon: Receipt,
+  },
+  {
+    title: 'Bütçe',
+    icon: Wallet,
+    children: [
+      {
+        title: 'Dashboard',
+        href: '/budget',
+        icon: LayoutDashboard,
+      },
+    ],
+  },
+  {
+    title: 'Raporlar',
+    icon: BarChart3,
+    children: [
+      {
+        title: 'Plan Performans',
+        icon: BarChart3,
+      },
+      {
+        title: 'ROI Dağılım Analizi',
+        icon: TrendingUp,
+      },
+      {
+        title: 'Trade Spend Özeti',
+        icon: DollarSign,
+      },
+      {
+        title: 'Bütçe Kullanım Raporu',
+        icon: Wallet,
+      },
+      {
+        title: 'Anlaşma Durum Raporu',
+        icon: FileCheck,
+      },
+    ],
+  },
+];
+
+// Category Manager navigation menu
+const categoryManagerNavigation: NavItem[] = [
+  {
+    title: 'Dashboard',
+    href: '/dashboard',
+    icon: LayoutDashboard,
+  },
+  {
+    title: 'Planlama',
+    icon: Target,
+    children: [
+      {
+        title: 'Planlar',
+        href: '/plans',
+        icon: FileText,
+      },
+      {
+        title: 'Plan Onayları',
+        href: '/plan-approvals',
+        icon: CheckCircle2,
+        badge: 1, // TODO: Get from API
+      },
+    ],
+  },
+  {
+    title: 'Anlaşmalar',
+    icon: FileCheck,
+    children: [
+      {
+        title: 'STA (Short-Term)',
+        href: '/agreements?type=STA',
+        icon: FileText,
+      },
+      {
+        title: 'LTA (Long-Term)',
+        href: '/agreements?type=LTA',
+        icon: FileText,
+      },
+    ],
+  },
+  {
+    title: 'Bütçe',
+    icon: Wallet,
+    children: [
+      {
+        title: 'Dashboard',
+        href: '/budget',
+        icon: LayoutDashboard,
+      },
+      {
+        title: 'Envelope Listesi',
+        href: '/budget?view=list',
+        icon: FileText,
+      },
+      {
+        title: 'Ledger (Read Only)',
+        href: '/budget/ledger',
+        icon: BarChart3,
+      },
+    ],
+  },
+  {
+    title: 'Raporlar',
+    icon: BarChart3,
+    children: [
+      {
+        title: 'Plan Performans',
+        icon: BarChart3,
+      },
+      {
+        title: 'ROI Dağılım Analizi',
+        icon: TrendingUp,
+      },
+      {
+        title: 'Planner Performans',
+        icon: Users,
+      },
+      {
+        title: 'Trade Spend Özeti',
+        icon: DollarSign,
+      },
+      {
+        title: 'Bütçe Kullanım Raporu',
+        icon: Wallet,
+      },
+      {
+        title: 'Anlaşma Durum Raporu',
+        icon: FileCheck,
+      },
+    ],
+  },
+];
+
+// Finance Manager navigation menu
+const financeManagerNavigation: NavItem[] = [
+  {
+    title: 'Dashboard',
+    href: '/dashboard',
+    icon: LayoutDashboard,
+  },
+  {
+    title: 'Planlama',
+    icon: Target,
+    children: [
+      {
+        title: 'Planlar',
+        href: '/plans',
+        icon: FileText,
+      },
+      {
+        title: 'Plan Onayları',
+        href: '/plan-approvals',
+        icon: CheckCircle2,
+        badge: 1, // TODO: Get from API
+      },
+    ],
+  },
+  {
+    title: 'Anlaşmalar',
+    icon: FileCheck,
+    children: [
+      {
+        title: 'STA (Short-Term)',
+        href: '/agreements?type=STA',
+        icon: FileText,
+      },
+      {
+        title: 'LTA (Long-Term)',
+        href: '/agreements?type=LTA',
+        icon: FileText,
+      },
+    ],
+  },
+  {
+    title: 'Bütçe',
+    icon: Wallet,
+    children: [
+      {
+        title: 'Dashboard',
+        href: '/budget',
+        icon: LayoutDashboard,
+      },
+      {
+        title: 'Envelope Listesi',
+        href: '/budget?view=list',
+        icon: FileText,
+      },
+      {
+        title: 'Ledger (Read Only)',
+        href: '/budget/ledger',
+        icon: BarChart3,
+      },
+    ],
+  },
+  {
+    title: 'Raporlar',
+    icon: BarChart3,
+    children: [
+      {
+        title: 'Plan Performans',
+        icon: BarChart3,
+      },
+      {
+        title: 'ROI Dağılım Analizi',
+        icon: TrendingUp,
+      },
+      {
+        title: 'Planner Performans',
+        icon: Users,
+      },
+      {
+        title: 'Trade Spend Özeti',
+        icon: DollarSign,
+      },
+      {
+        title: 'Bütçe Kullanım Raporu',
+        icon: Wallet,
+      },
+      {
+        title: 'Anlaşma Durum Raporu',
+        icon: FileCheck,
       },
     ],
   },
@@ -200,6 +573,15 @@ export function Sidebar() {
   const navigation = useMemo(() => {
     if (user?.role === 'ADMIN') {
       return adminNavigation;
+    }
+    if (user?.role === 'PLANNER') {
+      return plannerNavigation;
+    }
+    if (user?.role === 'CATEGORY_MANAGER') {
+      return categoryManagerNavigation;
+    }
+    if (user?.role === 'FINANCE_MANAGER' || user?.role === 'FINANCE') {
+      return financeManagerNavigation;
     }
     return defaultNavigation;
   }, [user?.role]);
@@ -313,7 +695,24 @@ export function Sidebar() {
       );
     }
 
-    if (!item.href) return null;
+    // If no href, render as disabled/non-clickable item (e.g., report items without links)
+    if (!item.href) {
+      return (
+        <div
+          key={item.title}
+          className={cn(
+            'group flex items-center rounded-lg px-3 py-2.5 text-sm font-medium',
+            'text-gray-400 dark:text-gray-500 cursor-not-allowed',
+            indentClass
+          )}
+        >
+          <Icon className="mr-3 h-5 w-5 flex-shrink-0" />
+          <span className={cn('flex-1', !sidebarOpen && 'sr-only')}>
+            {item.title}
+          </span>
+        </div>
+      );
+    }
 
     return (
       <TooltipProvider key={item.href} delayDuration={0}>
@@ -547,4 +946,3 @@ export function Sidebar() {
     </>
   );
 }
-

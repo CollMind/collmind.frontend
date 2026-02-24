@@ -23,6 +23,9 @@ export const customerEndpoints = {
   getByChannel: (channel: string) =>
     apiClient.get<Customer[]>(`/customers/channel/${channel}`),
 
+  getByChannelId: (channelId: string) =>
+    apiClient.get<Customer[]>(`/customers/channel-id/${channelId}`),
+
   getByCity: (city: string) =>
     apiClient.get<Customer[]>(`/customers/city/${city}`),
 
@@ -52,5 +55,10 @@ export const customerEndpoints = {
     formData.append('file', file);
     return apiClient.post<ImportResult>('/customers/import', formData);
   },
+
+  getCplList: (channel?: string, categoryId?: string) =>
+    apiClient.get<import('@/types/customer.types').CplListItem[]>('/customers/cpl/list', {
+      params: { channel, categoryId },
+    }),
 };
 

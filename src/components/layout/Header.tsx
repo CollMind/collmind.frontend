@@ -22,22 +22,21 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAppSelector, useAppDispatch } from '@/store/hooks';
 import { toggleSidebar, setTheme } from '@/store/slices/ui.slice';
-import { logout } from '@/store/slices/auth.slice';
 import { useMe } from '@/services/users.service';
+import { useLogout } from '@/services/auth.service';
 import { cn } from '@/lib/utils';
 import { CollMindLogo } from '@/components/common/CollMindLogo';
 import { NotificationCenter } from '@/components/notifications';
 
 export function Header() {
-  const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const sidebarOpen = useAppSelector((state) => state.ui.sidebarOpen);
   const theme = useAppSelector((state) => state.ui.theme);
   const { data: user } = useMe();
+  const logoutMutation = useLogout();
 
   const handleLogout = () => {
-    dispatch(logout());
-    navigate('/login');
+    logoutMutation.mutate();
   };
 
   const toggleTheme = () => {

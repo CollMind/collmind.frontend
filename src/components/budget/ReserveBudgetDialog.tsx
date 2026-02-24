@@ -9,7 +9,6 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { useReserveBudget } from '@/services/budget.service';
 import { BudgetEnvelope } from '@/types/budget.types';
 
@@ -25,8 +24,7 @@ export function ReserveBudgetDialog({
   onClose,
 }: ReserveBudgetDialogProps) {
   const [amount, setAmount] = useState('');
-  const [agreementName, setAgreementName] = useState('');
-  const [notes, setNotes] = useState('');
+  const [agreementId, setAgreementId] = useState('');
   const reserveBudget = useReserveBudget();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -37,6 +35,10 @@ export function ReserveBudgetDialog({
       return;
     }
 
+    if (!agreementId.trim()) {
+      return;
+    }
+
     if (amountNum > envelope.availableAmount) {
       // Error will be handled by the hook
       return;
@@ -44,15 +46,14 @@ export function ReserveBudgetDialog({
 
     await reserveBudget.mutateAsync({
       envelopeId: envelope.id,
+      agreementId: agreementId.trim(),
       amount: amountNum,
-      agreementName: agreementName || undefined,
-      notes: notes || undefined,
+      currency: envelope.currency,
     });
 
     onClose();
     setAmount('');
-    setAgreementName('');
-    setNotes('');
+    setAgreementId('');
   };
 
   return (
@@ -67,6 +68,17 @@ export function ReserveBudgetDialog({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <Label htmlFor="agreementId">Anlaşma ID *</Label>
+            <Input
+              id="agreementId"
+              value={agreementId}
+              onChange={(e) => setAgreementId(e.target.value)}
+              placeholder="Anlaşma ID'sini girin"
+              required
+            />
+          </div>
+
           <div>
             <Label htmlFor="amount">Tutar *</Label>
             <Input
@@ -84,32 +96,18 @@ export function ReserveBudgetDialog({
             </p>
           </div>
 
-          <div>
-            <Label htmlFor="agreementName">Anlaşma Adı</Label>
-            <Input
-              id="agreementName"
-              value={agreementName}
-              onChange={(e) => setAgreementName(e.target.value)}
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="notes">Notlar</Label>
-            <Textarea
-              id="notes"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              rows={3}
-            />
-          </div>
-
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={onClose}>
               İptal
             </Button>
             <Button
               type="submit"
-              disabled={reserveBudget.isPending || !amount || parseFloat(amount) <= 0}
+              disabled={
+                reserveBudget.isPending ||
+                !amount ||
+                !agreementId.trim() ||
+                parseFloat(amount) <= 0
+              }
             >
               {reserveBudget.isPending ? 'Rezerve Ediliyor...' : 'Rezerve Et'}
             </Button>

@@ -200,6 +200,9 @@ export function CustomerList({ onEdit, onCreate }: CustomerListProps) {
                   Kanal
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  CPL
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Durum
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -227,6 +230,9 @@ export function CustomerList({ onEdit, onCreate }: CustomerListProps) {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <EnumBadge value={customer.channel} type="channel" />
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    {customer.cpl?.name || '-'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <EnumBadge value={customer.status} type="status" />

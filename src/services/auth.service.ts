@@ -4,6 +4,7 @@ import { LoginDto } from '@/types/auth.types';
 import { setCredentials, logout, setError } from '@/store/slices/auth.slice';
 import { useAppDispatch } from '@/store/hooks';
 import { useNavigate } from 'react-router-dom';
+import { userKeys } from './users.service';
 
 /**
  * Login hook - Kullanıcı girişi için
@@ -30,7 +31,9 @@ export function useLogin() {
           refreshToken: data.refreshToken,
         })
       );
-      queryClient.invalidateQueries({ queryKey: ['user', 'me'] });
+      // Clear old user data and refetch new user data
+      queryClient.removeQueries({ queryKey: userKeys.me() });
+      queryClient.invalidateQueries({ queryKey: userKeys.me() });
       navigate('/dashboard');
     },
     onError: (error: any) => {
@@ -55,15 +58,19 @@ export function useLogin() {
 export function useLogout() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: () => authEndpoints.logout().then((res) => res.data),
     onSuccess: () => {
+      // Clear all user-related queries from cache
+      queryClient.removeQueries({ queryKey: userKeys.all });
       dispatch(logout());
       navigate('/login');
     },
     onError: () => {
-      // Even if logout fails, clear local state
+      // Even if logout fails, clear local state and cache
+      queryClient.removeQueries({ queryKey: userKeys.all });
       dispatch(logout());
       navigate('/login');
     },
@@ -100,7 +107,9 @@ export function useRefreshToken() {
           refreshToken: data.refreshToken,
         })
       );
-      queryClient.invalidateQueries({ queryKey: ['user', 'me'] });
+      // Clear old user data and refetch new user data
+      queryClient.removeQueries({ queryKey: userKeys.me() });
+      queryClient.invalidateQueries({ queryKey: userKeys.me() });
     },
     onError: (error: any) => {
       // Refresh token geçersizse logout yap

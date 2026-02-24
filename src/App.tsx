@@ -6,6 +6,7 @@ import { queryClient } from '@/lib/react-query';
 import { router } from '@/routes';
 import { CookieProvider } from '@/context/CookieContext';
 import { CookieBanner } from '@/components/CookieBanner';
+import { ToastContainer } from '@/components/common/ToastContainer';
 import './index.css';
 
 function App() {
@@ -15,6 +16,7 @@ function App() {
         <CookieProvider>
           <RouterProvider router={router} />
           <CookieBanner position="bottom" />
+          <ToastContainer />
         </CookieProvider>
       </QueryClientProvider>
     </Provider>

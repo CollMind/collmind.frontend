@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { BudgetEnvelope, BudgetEnvelopeStatus } from '@/types/budget.types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -30,6 +31,7 @@ const getStatusLabel = (status: BudgetEnvelopeStatus): string => {
 };
 
 export function BudgetEnvelopeCard({ envelope, onClick }: BudgetEnvelopeCardProps) {
+  const navigate = useNavigate();
   const consumptionPercent = envelope.allocatedAmount > 0
     ? (envelope.consumedAmount / envelope.allocatedAmount) * 100
     : 0;
@@ -37,12 +39,20 @@ export function BudgetEnvelopeCard({ envelope, onClick }: BudgetEnvelopeCardProp
   const isNearLimit = consumptionPercent >= 80;
   const isOverLimit = consumptionPercent >= 100;
 
+  const handleCardClick = () => {
+    if (onClick) {
+      onClick();
+    } else {
+      navigate(`/budget/${envelope.id}`);
+    }
+  };
+
   return (
     <Card
       className={`cursor-pointer hover:shadow-md transition-shadow ${
         isOverLimit ? 'border-red-300' : isNearLimit ? 'border-yellow-300' : ''
       }`}
-      onClick={onClick}
+      onClick={handleCardClick}
     >
       <CardHeader>
         <div className="flex justify-between items-start">

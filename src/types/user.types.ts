@@ -3,6 +3,8 @@ export enum UserRole {
   PLANNER = 'PLANNER',
   APPROVER = 'APPROVER',
   FINANCE = 'FINANCE',
+  FINANCE_MANAGER = 'FINANCE_MANAGER',
+  CATEGORY_MANAGER = 'CATEGORY_MANAGER',
 }
 
 export enum UserStatus {

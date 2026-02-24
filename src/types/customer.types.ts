@@ -43,6 +43,11 @@ export interface Customer {
   tenantId: string;
   createdAt: Date;
   updatedAt: Date;
+  cpl?: {
+    id: string;
+    code: string;
+    name: string;
+  };
 }
 
 export interface CreateCustomerDto {
@@ -95,7 +100,9 @@ export interface CreateCustomerDto {
   contractEndDate?: string;
 }
 
-export interface UpdateCustomerDto extends Partial<CreateCustomerDto> {}
+export interface UpdateCustomerDto extends Partial<CreateCustomerDto> {
+  cplId?: string;
+}
 
 export interface CustomerFilterDto {
   channel?: CustomerChannel;
@@ -140,4 +147,13 @@ export interface CustomerStats {
   totalRevenue?: number;
   lastOrderDate?: string;
   averageOrderValue?: number;
+}
+
+export interface CplListItem {
+  id: string;
+  code: string;
+  name: string;
+  channel: string;
+  customerCount: number;
+  activeAgreementCount: number;
 }

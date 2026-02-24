@@ -6,6 +6,16 @@ import { LoginPage } from '@/components/features/auth/LoginPage';
 import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 import { DashboardPage } from '@/components/features/dashboard/DashboardPage';
 import { BudgetPage } from '@/components/features/budget/BudgetPage';
+import { BudgetEnvelopeDetail } from '@/components/budget/BudgetEnvelopeDetail';
+import { BudgetLedgerPage } from '@/components/budget/BudgetLedgerPage';
+import { AgreementsPage } from '@/components/features/agreements/AgreementsPage';
+import { AgreementDetail } from '@/components/agreements/AgreementDetail';
+import { AgreementEditPage } from '@/components/features/agreements/AgreementEditPage';
+import { AgreementApprovalsPage } from '@/components/features/agreements/AgreementApprovalsPage';
+import { PlansPage } from '@/components/features/plans/PlansPage';
+import { PlanDetailPage } from '@/components/features/plans/PlanDetailPage';
+import { PlanApprovalsPage } from '@/components/features/plans/PlanApprovalsPage';
+import { FinanceDashboard } from '@/components/finance/FinanceDashboard';
 import { UsersPage } from '@/components/features/users/UsersPage';
 import { UserDetailPage } from '@/components/features/users/UserDetailPage';
 import { ProfilePage } from '@/components/features/users/ProfilePage';
@@ -18,6 +28,24 @@ import { CustomerImportPage } from '@/components/features/customers/CustomerImpo
 import { TenantsPage } from '@/components/features/tenants/TenantsPage';
 import { TenantDetailPage } from '@/components/features/tenants/TenantDetailPage';
 import { TenantCreatePage } from '@/components/features/tenants/TenantCreatePage';
+import { ChannelManagementPage } from '@/components/features/admin/ChannelManagementPage';
+import { CategoryManagementPage } from '@/components/features/admin/CategoryManagementPage';
+import { CplManagementPage } from '@/components/features/admin/CplManagementPage';
+import { BrandManagementPage } from '@/components/features/admin/BrandManagementPage';
+import { RegionManagementPage } from '@/components/features/admin/RegionManagementPage';
+import { TacticManagementPage } from '@/components/features/admin/TacticManagementPage';
+import { MechanicManagementPage } from '@/components/features/admin/MechanicManagementPage';
+import { GenericUnitManagementPage } from '@/components/features/admin/GenericUnitManagementPage';
+import { ForecastingUnitManagementPage } from '@/components/features/admin/ForecastingUnitManagementPage';
+import { SkuManagementPage } from '@/components/features/admin/SkuManagementPage';
+import { AdminOverviewPage } from '@/components/features/admin/AdminOverviewPage';
+import { BaselineImportPage } from '@/components/features/admin/BaselineImportPage';
+import { KpiManagementPage } from '@/components/features/admin/KpiManagementPage';
+import { AuditLogPage } from '@/components/features/admin/AuditLogPage';
+import { ConfigurationPage } from '@/components/features/admin/ConfigurationPage';
+import { OffInvoiceUploadPage } from '@/components/features/off-invoice/OffInvoiceUploadPage';
+import { OffInvoiceTransactionsPage } from '@/components/features/off-invoice/OffInvoiceTransactionsPage';
+import { OnInvoiceUploadPage } from '@/components/features/on-invoice/OnInvoiceUploadPage';
 import { useMe } from '@/services/users.service';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 
@@ -254,6 +282,390 @@ export const router = createBrowserRouter([
         <AppLayout>
           <ErrorBoundary>
             <BudgetPage />
+          </ErrorBoundary>
+        </AppLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/budget/:id',
+    element: (
+      <ProtectedRoute>
+        <AppLayout>
+          <ErrorBoundary>
+            <BudgetEnvelopeDetail />
+          </ErrorBoundary>
+        </AppLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/budget/ledger',
+    element: (
+      <ProtectedRoute>
+        <AppLayout>
+          <ErrorBoundary>
+            <BudgetLedgerPage />
+          </ErrorBoundary>
+        </AppLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/agreements',
+    element: (
+      <ProtectedRoute requiredRole={['ADMIN', 'PLANNER', 'APPROVER', 'FINANCE']}>
+        <AppLayout>
+          <ErrorBoundary>
+            <AgreementsPage />
+          </ErrorBoundary>
+        </AppLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/agreements/:id',
+    element: (
+      <ProtectedRoute requiredRole={['ADMIN', 'PLANNER', 'APPROVER', 'FINANCE']}>
+        <AppLayout>
+          <ErrorBoundary>
+            <AgreementDetail />
+          </ErrorBoundary>
+        </AppLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/agreements/:id/edit',
+    element: (
+      <ProtectedRoute requiredRole={['ADMIN', 'PLANNER']}>
+        <AppLayout>
+          <ErrorBoundary>
+            <AgreementEditPage />
+          </ErrorBoundary>
+        </AppLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/agreement-approvals',
+    element: (
+      <ProtectedRoute requiredRole={['ADMIN', 'APPROVER', 'FINANCE']}>
+        <AppLayout>
+          <ErrorBoundary>
+            <AgreementApprovalsPage />
+          </ErrorBoundary>
+        </AppLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/plans',
+    element: (
+      <ProtectedRoute requiredRole={['ADMIN', 'PLANNER', 'CATEGORY_MANAGER', 'FINANCE']}>
+        <AppLayout>
+          <ErrorBoundary>
+            <PlansPage />
+          </ErrorBoundary>
+        </AppLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/plans/:id',
+    element: (
+      <ProtectedRoute requiredRole={['ADMIN', 'PLANNER', 'CATEGORY_MANAGER', 'FINANCE']}>
+        <AppLayout>
+          <ErrorBoundary>
+            <PlanDetailPage />
+          </ErrorBoundary>
+        </AppLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/plan-approvals',
+    element: (
+      <ProtectedRoute requiredRole={['ADMIN', 'APPROVER']}>
+        <AppLayout>
+          <ErrorBoundary>
+            <PlanApprovalsPage />
+          </ErrorBoundary>
+        </AppLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/finance',
+    element: (
+      <ProtectedRoute requiredRole={['ADMIN', 'FINANCE', 'CATEGORY_MANAGER']}>
+        <AppLayout>
+          <ErrorBoundary>
+            <FinanceDashboard />
+          </ErrorBoundary>
+        </AppLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/off-invoice/upload',
+    element: (
+      <ProtectedRoute requiredRole={['ADMIN', 'FINANCE']}>
+        <AppLayout>
+          <ErrorBoundary>
+            <OffInvoiceUploadPage />
+          </ErrorBoundary>
+        </AppLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/off-invoice/transactions',
+    element: (
+      <ProtectedRoute requiredRole={['ADMIN', 'FINANCE', 'PLANNER']}>
+        <AppLayout>
+          <ErrorBoundary>
+            <OffInvoiceTransactionsPage />
+          </ErrorBoundary>
+        </AppLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/off-invoice',
+    element: (
+      <ProtectedRoute requiredRole={['ADMIN', 'FINANCE', 'PLANNER']}>
+        <AppLayout>
+          <ErrorBoundary>
+            <OffInvoiceTransactionsPage />
+          </ErrorBoundary>
+        </AppLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/on-invoice/upload',
+    element: (
+      <ProtectedRoute requiredRole={['ADMIN', 'FINANCE']}>
+        <AppLayout>
+          <ErrorBoundary>
+            <OnInvoiceUploadPage />
+          </ErrorBoundary>
+        </AppLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/on-invoice',
+    element: (
+      <ProtectedRoute requiredRole={['ADMIN', 'FINANCE']}>
+        <AppLayout>
+          <ErrorBoundary>
+            <OnInvoiceUploadPage />
+          </ErrorBoundary>
+        </AppLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/admin/channel-management',
+    element: (
+      <ProtectedRoute requiredRole={['ADMIN']}>
+        <AppLayout>
+          <ErrorBoundary>
+            <ChannelManagementPage />
+          </ErrorBoundary>
+        </AppLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/admin/category-management',
+    element: (
+      <ProtectedRoute requiredRole={['ADMIN']}>
+        <AppLayout>
+          <ErrorBoundary>
+            <CategoryManagementPage />
+          </ErrorBoundary>
+        </AppLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/admin/cpl-management',
+    element: (
+      <ProtectedRoute requiredRole={['ADMIN']}>
+        <AppLayout>
+          <ErrorBoundary>
+            <CplManagementPage />
+          </ErrorBoundary>
+        </AppLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/admin/brand-management',
+    element: (
+      <ProtectedRoute requiredRole={['ADMIN']}>
+        <AppLayout>
+          <ErrorBoundary>
+            <BrandManagementPage />
+          </ErrorBoundary>
+        </AppLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/admin/region-management',
+    element: (
+      <ProtectedRoute requiredRole={['ADMIN']}>
+        <AppLayout>
+          <ErrorBoundary>
+            <RegionManagementPage />
+          </ErrorBoundary>
+        </AppLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/admin/tactic-management',
+    element: (
+      <ProtectedRoute requiredRole={['ADMIN']}>
+        <AppLayout>
+          <ErrorBoundary>
+            <TacticManagementPage />
+          </ErrorBoundary>
+        </AppLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/admin/mechanic-management',
+    element: (
+      <ProtectedRoute requiredRole={['ADMIN']}>
+        <AppLayout>
+          <ErrorBoundary>
+            <MechanicManagementPage />
+          </ErrorBoundary>
+        </AppLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/admin/generic-unit-management',
+    element: (
+      <ProtectedRoute requiredRole={['ADMIN']}>
+        <AppLayout>
+          <ErrorBoundary>
+            <GenericUnitManagementPage />
+          </ErrorBoundary>
+        </AppLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/admin/forecasting-unit-management',
+    element: (
+      <ProtectedRoute requiredRole={['ADMIN']}>
+        <AppLayout>
+          <ErrorBoundary>
+            <ForecastingUnitManagementPage />
+          </ErrorBoundary>
+        </AppLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/admin/sku-management',
+    element: (
+      <ProtectedRoute requiredRole={['ADMIN']}>
+        <AppLayout>
+          <ErrorBoundary>
+            <SkuManagementPage />
+          </ErrorBoundary>
+        </AppLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/admin/overview',
+    element: (
+      <ProtectedRoute requiredRole={['ADMIN']}>
+        <AppLayout>
+          <ErrorBoundary>
+            <AdminOverviewPage />
+          </ErrorBoundary>
+        </AppLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/admin/users',
+    element: (
+      <ProtectedRoute requiredRole={['ADMIN']}>
+        <AppLayout>
+          <ErrorBoundary>
+            <UsersPage />
+          </ErrorBoundary>
+        </AppLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/admin/baseline-import',
+    element: (
+      <ProtectedRoute requiredRole={['ADMIN']}>
+        <AppLayout>
+          <ErrorBoundary>
+            <BaselineImportPage />
+          </ErrorBoundary>
+        </AppLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/admin/kpi-management',
+    element: (
+      <ProtectedRoute requiredRole={['ADMIN']}>
+        <AppLayout>
+          <ErrorBoundary>
+            <KpiManagementPage />
+          </ErrorBoundary>
+        </AppLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/admin/customers',
+    element: (
+      <ProtectedRoute requiredRole={['ADMIN']}>
+        <AppLayout>
+          <ErrorBoundary>
+            <CustomersPage />
+          </ErrorBoundary>
+        </AppLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/admin/audit-log',
+    element: (
+      <ProtectedRoute requiredRole={['ADMIN']}>
+        <AppLayout>
+          <ErrorBoundary>
+            <AuditLogPage />
+          </ErrorBoundary>
+        </AppLayout>
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: '/admin/configuration',
+    element: (
+      <ProtectedRoute requiredRole={['ADMIN']}>
+        <AppLayout>
+          <ErrorBoundary>
+            <ConfigurationPage />
           </ErrorBoundary>
         </AppLayout>
       </ProtectedRoute>

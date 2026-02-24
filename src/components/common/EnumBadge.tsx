@@ -57,6 +57,10 @@ const getRoleColor = (role: string): string => {
       return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 border-green-200 dark:border-green-800';
     case 'FINANCE':
       return 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400 border-orange-200 dark:border-orange-800';
+    case 'FINANCE_MANAGER':
+      return 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400 border-amber-200 dark:border-amber-800';
+    case 'CATEGORY_MANAGER':
+      return 'bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-400 border-teal-200 dark:border-teal-800';
     default:
       return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300 border-gray-200 dark:border-gray-700';
   }
@@ -145,7 +149,7 @@ export function EnumBadge({ value, type = 'auto', className }: EnumBadgeProps) {
     }
     // Check if it's a role
     else if (
-      ['ADMIN', 'PLANNER', 'APPROVER', 'FINANCE'].includes(valueUpper)
+      ['ADMIN', 'PLANNER', 'APPROVER', 'FINANCE', 'FINANCE_MANAGER', 'CATEGORY_MANAGER'].includes(valueUpper)
     ) {
       colorClass = getRoleColor(valueStr);
     }

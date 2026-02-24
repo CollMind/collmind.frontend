@@ -3,6 +3,8 @@ import { budgetEndpoints } from '@/api/endpoints/budget.endpoints';
 import {
   BudgetEnvelope,
   BudgetReservation,
+  BudgetTransaction,
+  ReservedAmountResponse,
   CreateBudgetEnvelopeDto,
   ReserveBudgetDto,
 } from '@/types/budget.types';
@@ -12,6 +14,8 @@ export const budgetKeys = {
   all: ['budget'] as const,
   envelopes: () => [...budgetKeys.all, 'envelopes'] as const,
   envelope: (id: string) => [...budgetKeys.envelopes(), id] as const,
+  reservedAmount: (id: string) => [...budgetKeys.envelope(id), 'reserved'] as const,
+  transactions: (id: string) => [...budgetKeys.envelope(id), 'transactions'] as const,
   reservations: (envelopeId: string) =>
     [...budgetKeys.all, 'reservations', envelopeId] as const,
 };
@@ -106,6 +110,30 @@ export const useBudgetReservations = (envelopeId: string) => {
     queryKey: budgetKeys.reservations(envelopeId),
     queryFn: () =>
       budgetEndpoints.getReservationsByEnvelope(envelopeId).then((res) => res.data),
+    enabled: !!envelopeId,
+  });
+};
+
+/**
+ * Rezerve edilmiş tutarı getiren hook
+ */
+export const useBudgetReservedAmount = (envelopeId: string) => {
+  return useQuery({
+    queryKey: budgetKeys.reservedAmount(envelopeId),
+    queryFn: () =>
+      budgetEndpoints.getReservedAmount(envelopeId).then((res) => res.data),
+    enabled: !!envelopeId,
+  });
+};
+
+/**
+ * Bütçe zarfı işlem geçmişini getiren hook
+ */
+export const useBudgetTransactions = (envelopeId: string) => {
+  return useQuery({
+    queryKey: budgetKeys.transactions(envelopeId),
+    queryFn: () =>
+      budgetEndpoints.getTransactions(envelopeId).then((res) => res.data),
     enabled: !!envelopeId,
   });
 };

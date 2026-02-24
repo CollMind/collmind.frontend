@@ -2,6 +2,8 @@ import apiClient from '../client';
 import {
   BudgetEnvelope,
   BudgetReservation,
+  BudgetTransaction,
+  ReservedAmountResponse,
   CreateBudgetEnvelopeDto,
   ReserveBudgetDto,
 } from '@/types/budget.types';
@@ -17,6 +19,14 @@ export const budgetEndpoints = {
   getEnvelopeById: (id: string) =>
     apiClient.get<BudgetEnvelope>(`/budget/envelopes/${id}`),
 
+  // Budget Reserved Amount
+  getReservedAmount: (id: string) =>
+    apiClient.get<ReservedAmountResponse>(`/budget/envelopes/${id}/reserved`),
+
+  // Budget Transactions
+  getTransactions: (id: string) =>
+    apiClient.get<BudgetTransaction[]>(`/budget/envelopes/${id}/transactions`),
+
   // Budget Reservations
   reserveBudget: (data: ReserveBudgetDto) =>
     apiClient.post<BudgetReservation>('/budget/reserve', data),
@@ -29,6 +39,18 @@ export const budgetEndpoints = {
 
   getReservationsByEnvelope: (envelopeId: string) =>
     apiClient.get<BudgetReservation[]>(`/budget/envelopes/${envelopeId}/reservations`),
+
+  getBudgetStatus: (channel: string, categoryId?: string, periodMonth?: string) =>
+    apiClient.get<{
+      totalAllocation: number;
+      available: number;
+      reserved: number;
+      consumed: number;
+      planned: number;
+      status: 'GREEN' | 'YELLOW' | 'RED';
+    }>('/budget/status', {
+      params: { channel, categoryId, periodMonth },
+    }),
 };
 
 

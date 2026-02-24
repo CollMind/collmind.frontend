@@ -1,0 +1,38 @@
+image: google/cloud-sdk:latest
+
+pipelines:
+  branches:
+    main:
+      - step:
+          name: Build and Deploy Frontend
+          services:
+            - docker
+          script:
+            # GCP Authentication
+            - echo $GCP_CREDENTIALS > /tmp/gcp-key.json
+            - gcloud auth activate-service-account --key-file=/tmp/gcp-key.json
+            - gcloud config set project $GCP_PROJECT_ID
+            - gcloud auth configure-docker europe-west1-docker.pkg.dev
+
+            # Build & Push
+            - export IMAGE="europe-west1-docker.pkg.dev/$GCP_PROJECT_ID/app-repo/frontend"
+            - docker build --build-arg REACT_APP_API_URL=$REACT_APP_API_URL -t $IMAGE:$BITBUCKET_COMMIT -t $IMAGE:latest .
+            - docker push $IMAGE:$BITBUCKET_COMMIT
+            - docker push $IMAGE:latest
+
+            # Deploy to Cloud Run
+            - |
+              gcloud run deploy frontend \
+                --image=$IMAGE:$BITBUCKET_COMMIT \
+                --region=europe-west1 \
+                --platform=managed \
+                --allow-unauthenticated \
+                --port=8080 \
+                --min-instances=0 \
+                --max-instances=3 \
+                --memory=256Mi
+
+definitions:
+  services:
+    docker:
+      memory: 2048

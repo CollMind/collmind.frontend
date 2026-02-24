@@ -5,6 +5,8 @@ import axios, {
 } from 'axios';
 import { store } from '@/store';
 import { logout, setCredentials } from '@/store/slices/auth.slice';
+import { addNotification } from '@/store/slices/ui.slice';
+import { getErrorMessage } from '@/utils/errorHandler';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
 
@@ -65,12 +67,9 @@ apiClient.interceptors.response.use(
     // Handle 403 Forbidden - Yetkisiz erişim
     if (error.response?.status === 403) {
       // 403 hatası için kullanıcıya uygun mesaj göster
-      const errorData = error.response?.data as { message?: string } | undefined;
-      const errorMessage =
-        errorData?.message ||
-        'Bu işlem için yetkiniz bulunmamaktadır.';
+      const errorMessage = getErrorMessage(error);
       
-      // Log technical error for debugging (kullanıcıya gösterilmez)
+      // Log technical error for debugging
       console.error('403 Forbidden Error:', {
         url: originalRequest?.url,
         method: originalRequest?.method,
@@ -78,8 +77,12 @@ apiClient.interceptors.response.use(
         timestamp: new Date().toISOString(),
       });
       
-      // 403 hatası için logout yapmıyoruz, sadece hata döndürüyoruz
-      // Component seviyesinde kullanıcıya uygun mesaj gösterilebilir
+      // Toast göster
+      store.dispatch(addNotification({
+        type: 'error',
+        message: errorMessage,
+      }));
+      
       return Promise.reject(error);
     }
 
@@ -143,6 +146,13 @@ apiClient.interceptors.response.use(
         // Refresh başarısız, queue'daki tüm istekleri reddet
         processQueue(refreshError, null);
         
+        // Toast göster
+        const refreshErrorMessage = getErrorMessage(refreshError);
+        store.dispatch(addNotification({
+          type: 'error',
+          message: refreshErrorMessage || 'Oturum süreniz dolmuş. Lütfen tekrar giriş yapın.',
+        }));
+        
         // Logout yap
         store.dispatch(logout());
         
@@ -163,8 +173,9 @@ apiClient.interceptors.response.use(
     // Handle Network Errors
     if (!error.response) {
       // Network error (no response from server)
+      const errorMessage = getErrorMessage(error);
       const networkError = {
-        message: 'Ağ bağlantı hatası. Lütfen internet bağlantınızı kontrol edin.',
+        message: errorMessage,
         isNetworkError: true,
         originalError: error,
       };
@@ -176,13 +187,20 @@ apiClient.interceptors.response.use(
         timestamp: new Date().toISOString(),
       });
       
+      // Toast göster
+      store.dispatch(addNotification({
+        type: 'error',
+        message: errorMessage,
+      }));
+      
       return Promise.reject(networkError);
     }
 
     // Handle 500 Internal Server Error
     if (error.response?.status === 500) {
+      const errorMessage = getErrorMessage(error);
       const serverError = {
-        message: 'Sunucu hatası oluştu. Lütfen daha sonra tekrar deneyin.',
+        message: errorMessage,
         statusCode: 500,
         originalError: error,
       };
@@ -196,12 +214,21 @@ apiClient.interceptors.response.use(
         timestamp: new Date().toISOString(),
       });
       
+      // Toast göster
+      store.dispatch(addNotification({
+        type: 'error',
+        message: errorMessage,
+      }));
+      
       return Promise.reject(serverError);
     }
 
     // Handle other errors (400, 404, etc.)
-    // Log technical error for debugging
-    if (error.response?.status >= 400) {
+    // 401 hatası için toast göstermiyoruz (logout yapılıyor)
+    if (error.response?.status >= 400 && error.response?.status !== 401) {
+      const errorMessage = getErrorMessage(error);
+      
+      // Log technical error for debugging
       const errorData = error.response?.data as { message?: string } | undefined;
       console.error('API Error:', {
         status: error.response.status,
@@ -210,6 +237,12 @@ apiClient.interceptors.response.use(
         message: errorData?.message || error.message,
         timestamp: new Date().toISOString(),
       });
+      
+      // Toast göster
+      store.dispatch(addNotification({
+        type: 'error',
+        message: errorMessage,
+      }));
     }
 
     return Promise.reject(error);
