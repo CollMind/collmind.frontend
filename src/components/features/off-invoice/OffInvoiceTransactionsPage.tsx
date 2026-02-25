@@ -11,7 +11,7 @@ type Tab = 'off' | 'on' | 'all';
 
 export function OffInvoiceTransactionsPage() {
   const navigate = useNavigate();
-  const { toast } = useToast();
+  const toast = useToast();
   const [transactions, setTransactions] = useState<AgreementTransaction[]>([]);
   const [onInvoiceEntries, setOnInvoiceEntries] = useState<OnInvoiceEntry[]>([]);
   const [summary, setSummary] = useState<TransactionSummary | null>(null);

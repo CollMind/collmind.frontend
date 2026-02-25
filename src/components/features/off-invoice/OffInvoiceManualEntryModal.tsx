@@ -21,7 +21,7 @@ export function OffInvoiceManualEntryModal({
   onClose,
   onSuccess,
 }: OffInvoiceManualEntryModalProps) {
-  const { toast } = useToast();
+  const toast = useToast();
   const [step, setStep] = useState(1);
   const [selectedAgreement, setSelectedAgreement] = useState<Agreement | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -125,9 +125,9 @@ export function OffInvoiceManualEntryModal({
   // Handle agreement selection
   const handleSelectAgreement = async (agreement: Agreement) => {
     setSelectedAgreement(agreement);
-    // Use periodMonth if available, otherwise derive from start date
-    let fiscalPeriod = agreement.periodMonth || '';
-    if (!fiscalPeriod && agreement.startDate) {
+    // Derive fiscal period from start date
+    let fiscalPeriod = '';
+    if (agreement.startDate) {
       const startDate = new Date(agreement.startDate);
       const year = startDate.getFullYear();
       const month = String(startDate.getMonth() + 1).padStart(2, '0');
@@ -142,8 +142,8 @@ export function OffInvoiceManualEntryModal({
   };
 
   // Generate month/year options for period dropdown
-  const generatePeriodOptions = () => {
-    const options = [];
+  const generatePeriodOptions = (): Array<{ value: string; label: string }> => {
+    const options: Array<{ value: string; label: string }> = [];
     const currentDate = new Date();
     const currentYear = currentDate.getFullYear();
     const currentMonth = currentDate.getMonth();

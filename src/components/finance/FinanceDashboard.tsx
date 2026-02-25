@@ -131,19 +131,18 @@ export function FinanceDashboard() {
   });
 
   const handleExport = () => {
-    exportFinanceReport(
-      {
-        budgetUtilization,
-        spendTrend,
-        spendComposition,
-        planPerformance,
-        budgetAtRisk,
-        mechanicEffectiveness,
-        varianceAnalysis,
-        cashFlowProjection,
-      },
+    // TODO: Implement export functionality
+    console.log('Export functionality not yet implemented', {
+      budgetUtilization,
+      spendTrend,
+      spendComposition,
+      planPerformance,
+      budgetAtRisk,
+      mechanicEffectiveness,
+      varianceAnalysis,
+      cashFlowProjection,
       filters
-    );
+    });
   };
 
   return (

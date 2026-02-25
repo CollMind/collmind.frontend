@@ -315,7 +315,7 @@ export function SkuManagementPage() {
         ? `${brandName} ve ${categoryName} için Generic Unit bulunamadı. Mevcut kombinasyonlar: ${availableCombinations}. Lütfen önce Generic Unit oluşturun.`
         : `${brandName} ve ${categoryName} için Generic Unit bulunamadı. Lütfen önce Generic Unit oluşturun.`;
       
-      toast.error(errorMessage, { duration: 5000 });
+      toast.error(errorMessage);
       console.log('Form submit iptal edildi - Generic Unit bulunamadı');
       return;
     }

@@ -9,7 +9,7 @@ export enum LedgerEntryDirection {
   CREDIT = 'CREDIT',
 }
 
-export enum SpendType {
+export enum LedgerSpendType {
   ON_INVOICE = 'ON_INVOICE',
   OFF_INVOICE = 'OFF_INVOICE',
   ADJUSTMENT = 'ADJUSTMENT',
@@ -33,7 +33,7 @@ export interface LedgerEntry {
   sourceId: string;
   agreementId?: string;
   budgetEnvelopeId?: string;
-  spendType: SpendType;
+  spendType: LedgerSpendType;
   entryDirection: LedgerEntryDirection;
   amount: number;
   currency: string;
@@ -75,7 +75,7 @@ export interface LedgerFilterDto {
   agreementId?: string;
   budgetEnvelopeId?: string;
   periodMonth?: string; // YYYY-MM
-  spendType?: SpendType;
+  spendType?: LedgerSpendType;
   search?: string; // Referans, Kullanıcı veya Kapsam ara
 }
 

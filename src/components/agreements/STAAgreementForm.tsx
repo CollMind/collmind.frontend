@@ -937,7 +937,7 @@ export function STAAgreementForm({
                 <div className="flex justify-between">
                   <span className="text-gray-600">Kanal / Kategori:</span>
                   <span className="font-medium">
-                    {channels.find(c => c.id === formData.channelId)?.name || '-'} / {getSelectedCategory()?.name || '-'}
+                    {channels.find((c: { id: string; name?: string }) => c.id === formData.channelId)?.name || '-'} / {getSelectedCategory()?.name || '-'}
                   </span>
                 </div>
                 <div className="flex justify-between">

@@ -18,7 +18,10 @@ interface VarianceAnalysisWidgetProps {
 export function VarianceAnalysisWidget({ filters }: VarianceAnalysisWidgetProps) {
   const { data, isLoading, error } = useQuery({
     queryKey: ['variance-analysis', filters],
-    queryFn: () => financeReportingEndpoints.getVarianceAnalysis(filters, 'budget_vs_actual'),
+    queryFn: async () => {
+      const res = await financeReportingEndpoints.getVarianceAnalysis(filters, 'budget_vs_actual');
+      return res.data;
+    },
     staleTime: 30000,
   });
 

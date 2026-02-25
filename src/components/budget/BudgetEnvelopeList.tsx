@@ -250,7 +250,7 @@ export function BudgetEnvelopeList({
               <SelectContent>
                 <SelectItem value="all">Kanal: Tümü</SelectItem>
                 {uniqueChannels.map((channel) => (
-                  <SelectItem key={channel} value={channel}>
+                  <SelectItem key={channel || ''} value={channel || ''}>
                     {channel}
                   </SelectItem>
                 ))}
@@ -263,7 +263,7 @@ export function BudgetEnvelopeList({
               <SelectContent>
                 <SelectItem value="all">Kategori: Tümü</SelectItem>
                 {uniqueCategories.map((category) => (
-                  <SelectItem key={category} value={category}>
+                  <SelectItem key={category || ''} value={category || ''}>
                     {category}
                   </SelectItem>
                 ))}

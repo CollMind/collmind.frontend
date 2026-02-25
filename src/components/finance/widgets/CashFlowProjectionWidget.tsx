@@ -17,7 +17,10 @@ interface CashFlowProjectionWidgetProps {
 export function CashFlowProjectionWidget({ filters }: CashFlowProjectionWidgetProps) {
   const { data, isLoading, error } = useQuery({
     queryKey: ['cash-flow-projection', filters],
-    queryFn: () => financeReportingEndpoints.getCashFlowProjection(filters, 12),
+    queryFn: async () => {
+      const res = await financeReportingEndpoints.getCashFlowProjection(filters, 12);
+      return res.data;
+    },
     staleTime: 30000,
   });
 

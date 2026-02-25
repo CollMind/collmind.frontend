@@ -28,7 +28,10 @@ export function PlanPerformanceWidget({ filters }: PlanPerformanceWidgetProps) {
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['plan-performance', filters, pagination],
-    queryFn: () => financeReportingEndpoints.getPlanPerformance(filters, pagination),
+    queryFn: async () => {
+      const res = await financeReportingEndpoints.getPlanPerformance(filters, pagination);
+      return res.data;
+    },
     staleTime: 30000,
   });
 

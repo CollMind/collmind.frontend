@@ -32,7 +32,7 @@ export function CplSelect({
       label={label}
       value={value}
       onChange={onChange}
-      options={cpls.map((cpl) => ({
+      options={cpls.map((cpl: { id: string; code: string; name: string }) => ({
         id: cpl.id,
         code: cpl.code,
         name: cpl.name,

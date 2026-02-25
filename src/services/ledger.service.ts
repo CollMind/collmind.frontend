@@ -27,11 +27,16 @@ export function useLedgerEntries(filters?: LedgerFilterDto) {
 
   return useQuery({
     queryKey: ledgerKeys.list(filters),
-    queryFn: () => ledgerEndpoints.getAll(filters).then((res) => res.data),
-    onError: (error: any) => {
-      toast.error(
-        error.response?.data?.message || 'Defter kayıtları yüklenemedi'
-      );
+    queryFn: async () => {
+      try {
+        const res = await ledgerEndpoints.getAll(filters);
+        return res.data;
+      } catch (error: any) {
+        toast.error(
+          error.response?.data?.message || 'Defter kayıtları yüklenemedi'
+        );
+        throw error;
+      }
     },
   });
 }
@@ -44,13 +49,18 @@ export function useLedgerEntry(id: string) {
 
   return useQuery({
     queryKey: ledgerKeys.detail(id),
-    queryFn: () => ledgerEndpoints.getById(id).then((res) => res.data),
-    enabled: !!id,
-    onError: (error: any) => {
-      toast.error(
-        error.response?.data?.message || 'Defter kaydı yüklenemedi'
-      );
+    queryFn: async () => {
+      try {
+        const res = await ledgerEndpoints.getById(id);
+        return res.data;
+      } catch (error: any) {
+        toast.error(
+          error.response?.data?.message || 'Defter kaydı yüklenemedi'
+        );
+        throw error;
+      }
     },
+    enabled: !!id,
   });
 }
 
@@ -62,13 +72,18 @@ export function useLedgerByAgreement(agreementId: string) {
 
   return useQuery({
     queryKey: ledgerKeys.byAgreement(agreementId),
-    queryFn: () => ledgerEndpoints.getByAgreement(agreementId).then((res) => res.data),
-    enabled: !!agreementId,
-    onError: (error: any) => {
-      toast.error(
-        error.response?.data?.message || 'Anlaşma defter kayıtları yüklenemedi'
-      );
+    queryFn: async () => {
+      try {
+        const res = await ledgerEndpoints.getByAgreement(agreementId);
+        return res.data;
+      } catch (error: any) {
+        toast.error(
+          error.response?.data?.message || 'Anlaşma defter kayıtları yüklenemedi'
+        );
+        throw error;
+      }
     },
+    enabled: !!agreementId,
   });
 }
 
@@ -80,13 +95,18 @@ export function useConsumedByAgreement(agreementId: string) {
 
   return useQuery({
     queryKey: ledgerKeys.consumedByAgreement(agreementId),
-    queryFn: () => ledgerEndpoints.getConsumedByAgreement(agreementId).then((res) => res.data),
-    enabled: !!agreementId,
-    onError: (error: any) => {
-      toast.error(
-        error.response?.data?.message || 'Tüketilen tutar yüklenemedi'
-      );
+    queryFn: async () => {
+      try {
+        const res = await ledgerEndpoints.getConsumedByAgreement(agreementId);
+        return res.data;
+      } catch (error: any) {
+        toast.error(
+          error.response?.data?.message || 'Tüketilen tutar yüklenemedi'
+        );
+        throw error;
+      }
     },
+    enabled: !!agreementId,
   });
 }
 
@@ -98,13 +118,18 @@ export function useLedgerByEnvelope(envelopeId: string) {
 
   return useQuery({
     queryKey: ledgerKeys.byEnvelope(envelopeId),
-    queryFn: () => ledgerEndpoints.getByEnvelope(envelopeId).then((res) => res.data),
-    enabled: !!envelopeId,
-    onError: (error: any) => {
-      toast.error(
-        error.response?.data?.message || 'Bütçe zarfı defter kayıtları yüklenemedi'
-      );
+    queryFn: async () => {
+      try {
+        const res = await ledgerEndpoints.getByEnvelope(envelopeId);
+        return res.data;
+      } catch (error: any) {
+        toast.error(
+          error.response?.data?.message || 'Bütçe zarfı defter kayıtları yüklenemedi'
+        );
+        throw error;
+      }
     },
+    enabled: !!envelopeId,
   });
 }
 
@@ -116,12 +141,17 @@ export function useConsumedByEnvelope(envelopeId: string) {
 
   return useQuery({
     queryKey: ledgerKeys.consumedByEnvelope(envelopeId),
-    queryFn: () => ledgerEndpoints.getConsumedByEnvelope(envelopeId).then((res) => res.data),
-    enabled: !!envelopeId,
-    onError: (error: any) => {
-      toast.error(
-        error.response?.data?.message || 'Tüketilen tutar yüklenemedi'
-      );
+    queryFn: async () => {
+      try {
+        const res = await ledgerEndpoints.getConsumedByEnvelope(envelopeId);
+        return res.data;
+      } catch (error: any) {
+        toast.error(
+          error.response?.data?.message || 'Tüketilen tutar yüklenemedi'
+        );
+        throw error;
+      }
     },
+    enabled: !!envelopeId,
   });
 }

@@ -15,7 +15,7 @@ export function BrandManagementPage() {
         { key: 'isActive', label: 'Aktif', type: 'checkbox' },
       ]}
       getDisplayValue={(item) => `${item.code} - ${item.name}`}
-      queryKey={['brands', false]}
+      queryKey={['brands']}
     />
   );
 }

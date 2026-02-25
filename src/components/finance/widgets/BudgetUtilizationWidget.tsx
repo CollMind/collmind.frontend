@@ -10,7 +10,10 @@ interface BudgetUtilizationWidgetProps {
 export function BudgetUtilizationWidget({ filters }: BudgetUtilizationWidgetProps) {
   const { data, isLoading, error } = useQuery({
     queryKey: ['budget-utilization', filters],
-    queryFn: () => financeReportingEndpoints.getBudgetUtilization(filters),
+    queryFn: async () => {
+      const res = await financeReportingEndpoints.getBudgetUtilization(filters);
+      return res.data;
+    },
     staleTime: 30000, // 30 seconds
   });
 

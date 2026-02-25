@@ -32,7 +32,7 @@ export function CategorySelect({
       label={label}
       value={value}
       onChange={onChange}
-      options={categories.map((category) => ({
+      options={categories.map((category: { id: string; code: string; name: string }) => ({
         id: category.id,
         code: category.code,
         name: category.name,

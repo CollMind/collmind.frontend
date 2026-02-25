@@ -11,7 +11,10 @@ interface BudgetAtRiskWidgetProps {
 export function BudgetAtRiskWidget({ filters }: BudgetAtRiskWidgetProps) {
   const { data, isLoading, error } = useQuery({
     queryKey: ['budget-at-risk', filters],
-    queryFn: () => financeReportingEndpoints.getBudgetAtRisk(filters),
+    queryFn: async () => {
+      const res = await financeReportingEndpoints.getBudgetAtRisk(filters);
+      return res.data;
+    },
     staleTime: 30000,
   });
 

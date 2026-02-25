@@ -17,7 +17,10 @@ interface MechanicEffectivenessWidgetProps {
 export function MechanicEffectivenessWidget({ filters }: MechanicEffectivenessWidgetProps) {
   const { data, isLoading, error } = useQuery({
     queryKey: ['mechanic-effectiveness', filters],
-    queryFn: () => financeReportingEndpoints.getMechanicEffectiveness(filters),
+    queryFn: async () => {
+      const res = await financeReportingEndpoints.getMechanicEffectiveness(filters);
+      return res.data;
+    },
     staleTime: 30000,
   });
 

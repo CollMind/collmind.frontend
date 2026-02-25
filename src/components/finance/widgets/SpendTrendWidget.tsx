@@ -10,7 +10,10 @@ interface SpendTrendWidgetProps {
 export function SpendTrendWidget({ filters }: SpendTrendWidgetProps) {
   const { data, isLoading, error } = useQuery({
     queryKey: ['spend-trend', filters],
-    queryFn: () => financeReportingEndpoints.getSpendTrend(filters, 'monthly'),
+    queryFn: async () => {
+      const res = await financeReportingEndpoints.getSpendTrend(filters, 'monthly');
+      return res.data;
+    },
     staleTime: 30000,
   });
 

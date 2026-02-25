@@ -68,15 +68,13 @@ function Calendar({
     }
   };
 
-  return (
-    <DayPicker
-      mode={mode === 'range' ? 'range' : 'single'}
-      numberOfMonths={numberOfMonths}
-      showOutsideDays={showOutsideDays}
-      selected={selectedValue}
-      onSelect={handleSelect}
-      className={cn('p-3', className)}
-      classNames={{
+  const commonProps = {
+    numberOfMonths,
+    showOutsideDays,
+    selected: selectedValue,
+    onSelect: handleSelect,
+    className: cn('p-3', className),
+    classNames: {
         months: 'flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0',
         month: 'space-y-4',
         caption: 'flex justify-center pt-1 relative items-center',
@@ -108,17 +106,21 @@ function Calendar({
           'aria-selected:bg-gray-100 aria-selected:text-gray-900',
         day_hidden: 'invisible',
         ...classNames,
-      }}
-      components={{
-        Chevron: ({ orientation, ...props }) => {
-          if (orientation === 'left') {
-            return <ChevronLeft className="h-4 w-4" />;
-          }
-          return <ChevronRight className="h-4 w-4" />;
-        },
-      }}
-      {...props}
-    />
+    },
+    components: {
+      Chevron: (props: { orientation?: 'left' | 'right' | 'up' | 'down' }) => {
+        if (props.orientation === 'left') {
+          return <ChevronLeft className="h-4 w-4" />;
+        }
+        return <ChevronRight className="h-4 w-4" />;
+      },
+    },
+  };
+
+  return mode === 'range' ? (
+    <DayPicker mode="range" {...(commonProps as any)} />
+  ) : (
+    <DayPicker mode="single" {...(commonProps as any)} />
   );
 }
 Calendar.displayName = 'Calendar';

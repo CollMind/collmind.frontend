@@ -45,7 +45,7 @@ export function AgreementForm({
     description: initialData?.description || '',
     agreementType: initialData?.agreementType || AgreementType.STA,
     cplId: initialData?.cplId || '',
-    channel: initialData?.channel || '',
+    channelId: initialData?.channelId || '',
     regionId: initialData?.regionId,
     categoryId: initialData?.categoryId,
     fuId: initialData?.fuId || '',
@@ -117,8 +117,8 @@ export function AgreementForm({
       if (!formData.agreementType) {
         newErrors.agreementType = 'Anlaşma tipi zorunludur';
       }
-      if (!formData.channel) {
-        newErrors.channel = 'Kanal zorunludur';
+      if (!formData.channelId) {
+        newErrors.channelId = 'Kanal zorunludur';
       }
     }
 
@@ -299,9 +299,9 @@ export function AgreementForm({
               <div>
                 <Label htmlFor="channel">Kanal *</Label>
                 <Select
-                  value={formData.channel}
+                  value={formData.channelId}
                   onValueChange={(value) =>
-                    setFormData({ ...formData, channel: value })
+                    setFormData({ ...formData, channelId: value })
                   }
                 >
                   <SelectTrigger id="channel">
@@ -458,8 +458,9 @@ export function AgreementForm({
                     <SelectValue placeholder="Seçiniz" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value={MechanicType.FIXED}>Sabit (FIXED)</SelectItem>
-                    <SelectItem value={MechanicType.PERCENTAGE}>Yüzde (PERCENTAGE)</SelectItem>
+                    <SelectItem value={MechanicType.AMOUNT}>Sabit (AMOUNT)</SelectItem>
+                    <SelectItem value={MechanicType.PERCENT}>Yüzde (PERCENT)</SelectItem>
+                    <SelectItem value={MechanicType.AMOUNT_PER_UNIT}>Birim Başına Tutar (AMOUNT_PER_UNIT)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -560,7 +561,7 @@ export function AgreementForm({
                   <SelectContent>
                     <SelectItem value={SpendType.OFF_INVOICE}>Off-Invoice</SelectItem>
                     <SelectItem value={SpendType.ON_INVOICE}>On-Invoice</SelectItem>
-                    <SelectItem value={SpendType.OTHER}>Other</SelectItem>
+                    <SelectItem value={SpendType.BOTH}>Both</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

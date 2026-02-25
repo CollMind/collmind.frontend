@@ -72,7 +72,7 @@ export function AgreementList({
 
       const matchesType = typeFilter === 'all' || agreement.agreementType === typeFilter;
       const matchesChannel =
-        channelFilter === 'all' || agreement.channel === channelFilter;
+        channelFilter === 'all' || agreement.channelId === channelFilter || agreement.channelName === channelFilter;
       const matchesStatus = statusFilter === 'all' || agreement.status === statusFilter;
       const matchesCategory =
         categoryFilter === 'all' || agreement.category === categoryFilter;
@@ -89,7 +89,7 @@ export function AgreementList({
 
   // Benzersiz değerler
   const uniqueChannels = useMemo(() => {
-    const channels = new Set(agreements.map((a) => a.channel).filter(Boolean));
+    const channels = new Set(agreements.map((a) => a.channelName || a.channelId).filter(Boolean));
     return Array.from(channels).sort();
   }, [agreements]);
 
@@ -229,7 +229,7 @@ export function AgreementList({
               <SelectContent>
                 <SelectItem value="all">Kategori: Tümü</SelectItem>
                 {uniqueCategories.map((category) => (
-                  <SelectItem key={category} value={category}>
+                  <SelectItem key={category || ''} value={category || ''}>
                     {category}
                   </SelectItem>
                 ))}
@@ -310,9 +310,9 @@ export function AgreementList({
                             <div className="text-sm font-medium text-gray-900">
                               {agreement.agreementName || '-'}
                             </div>
-                            {agreement.channel && agreement.category && (
+                            {agreement.channelName && agreement.category && (
                               <div className="text-xs text-gray-500">
-                                {agreement.channel} • {agreement.category}
+                                {agreement.channelName} • {agreement.category}
                               </div>
                             )}
                           </td>

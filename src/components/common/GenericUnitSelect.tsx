@@ -48,8 +48,8 @@ export function GenericUnitSelect({
       onChange={onChange}
       options={filteredUnits}
       placeholder={isLoading ? 'Yükleniyor...' : placeholder}
-      disabled={disabled || isLoading || (categoryId && !categoryId) || (brandId && !brandId)}
-      required={required}
+      disabled={disabled || isLoading}
+      required={!!required}
       error={error}
       id={id}
     />

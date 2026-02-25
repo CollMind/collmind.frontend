@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { financeReportingEndpoints, ReportFilters } from '@/api/endpoints/finance-reporting.endpoints';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
+import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
 
 interface SpendCompositionWidgetProps {
   filters: ReportFilters;
@@ -10,7 +12,10 @@ interface SpendCompositionWidgetProps {
 export function SpendCompositionWidget({ filters, type }: SpendCompositionWidgetProps) {
   const { data, isLoading, error } = useQuery({
     queryKey: ['spend-composition', filters],
-    queryFn: () => financeReportingEndpoints.getSpendComposition(filters),
+    queryFn: async () => {
+      const res = await financeReportingEndpoints.getSpendComposition(filters);
+      return res.data;
+    },
     staleTime: 30000,
   });
 

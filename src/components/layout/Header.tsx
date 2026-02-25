@@ -112,7 +112,7 @@ export function Header() {
                 className="flex items-center space-x-2 h-auto py-2 px-3 text-gray-300 hover:text-white hover:bg-gray-800"
               >
                 <Avatar className="h-8 w-8 ring-2 ring-primary-500/50">
-                  <AvatarImage src={user?.avatarUrl} alt={user?.fullName} />
+                  <AvatarImage src={(user as any)?.avatarUrl} alt={user?.fullName} />
                   <AvatarFallback className="bg-primary-600 text-white font-semibold">
                     {userInitials}
                   </AvatarFallback>

@@ -140,9 +140,7 @@ export function AgreementDetail() {
             <div>
               <p className="text-sm text-gray-600">Kanal</p>
               <p className="font-medium">
-                {typeof agreement.channel === 'object' && agreement.channel?.name
-                  ? agreement.channel.name
-                  : agreement.channelName || agreement.channelId || '-'}
+                {agreement.channelName || agreement.channelId || '-'}
               </p>
             </div>
           </CardContent>
@@ -156,9 +154,7 @@ export function AgreementDetail() {
             <div>
               <p className="text-sm text-gray-600">Müşteri</p>
               <p className="font-medium">
-                {typeof agreement.cpl === 'object' && agreement.cpl?.name
-                  ? agreement.cpl.name
-                  : agreement.customerName || agreement.cplName || agreement.cplId || '-'}
+                {agreement.customerName || agreement.cplName || agreement.cplId || '-'}
               </p>
             </div>
             {agreement.regionId && (
@@ -192,17 +188,13 @@ export function AgreementDetail() {
             <div>
               <p className="text-sm text-gray-600">Taktik</p>
               <p className="font-medium">
-                {typeof agreement.tactic === 'object' && agreement.tactic?.name
-                  ? agreement.tactic.name
-                  : agreement.tacticName || agreement.tacticId || '-'}
+                {agreement.tacticName || agreement.tacticId || '-'}
               </p>
             </div>
             <div>
               <p className="text-sm text-gray-600">Mekanik</p>
               <p className="font-medium">
-                {typeof agreement.mechanic === 'object' && agreement.mechanic?.name
-                  ? agreement.mechanic.name
-                  : agreement.mechanicName || agreement.mechanicId || '-'}
+                {agreement.mechanicName || agreement.mechanicId || '-'}
               </p>
             </div>
             {agreement.mechanicValue !== undefined && (
@@ -210,7 +202,7 @@ export function AgreementDetail() {
                 <p className="text-sm text-gray-600">Mekanik Değeri</p>
                 <p className="font-medium">
                   {agreement.mechanicValue}
-                  {agreement.mechanicType === 'PERCENTAGE' ? '%' : ' ' + (agreement.currency || 'TRY')}
+                  {agreement.mechanicType === 'PERCENT' ? '%' : ' ' + (agreement.currency || 'TRY')}
                 </p>
               </div>
             )}

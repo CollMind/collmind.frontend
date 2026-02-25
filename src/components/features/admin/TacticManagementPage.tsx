@@ -39,7 +39,7 @@ export function TacticManagementPage() {
         { key: 'isActive', label: 'Aktif', type: 'checkbox' },
       ]}
       getDisplayValue={(item) => `${item.code} - ${item.name}`}
-      queryKey={['tactics', false]}
+      queryKey={['tactics']}
     />
   );
 }

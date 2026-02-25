@@ -15,7 +15,7 @@ export function RegionManagementPage() {
         { key: 'isActive', label: 'Aktif', type: 'checkbox' },
       ]}
       getDisplayValue={(item) => `${item.code} - ${item.name}`}
-      queryKey={['regions', false]}
+      queryKey={['regions']}
     />
   );
 }

@@ -9,7 +9,7 @@ type Step = 'upload' | 'validation' | 'approval';
 
 export function OffInvoiceUploadPage() {
   const navigate = useNavigate();
-  const { toast } = useToast();
+  const toast = useToast();
   const [step, setStep] = useState<Step>('upload');
   const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);

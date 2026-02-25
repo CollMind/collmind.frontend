@@ -91,7 +91,7 @@ export function BudgetSummaryCard({
               </div>
             ) : (
               <p className="text-2xl font-bold text-yellow-700">
-                {effectiveReservedAmount.toLocaleString('tr-TR')} {envelope.currency}
+                {(effectiveReservedAmount || 0).toLocaleString('tr-TR')} {envelope.currency}
               </p>
             )}
           </div>

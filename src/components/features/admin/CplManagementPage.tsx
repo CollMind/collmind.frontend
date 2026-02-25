@@ -119,7 +119,7 @@ export function CplManagementPage() {
         const toRemove = previousCplCustomerIds.filter(id => !selectedCustomerIds.includes(id));
         const toAdd = selectedCustomerIds.filter(id => !previousCplCustomerIds.includes(id));
 
-        const promises = [];
+        const promises: Promise<any>[] = [];
         for (const id of toRemove) {
           promises.push(customerEndpoints.update(id, { cplId: null } as any));
         }

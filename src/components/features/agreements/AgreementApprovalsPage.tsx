@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { agreementEndpoints, Agreement } from '@/api/endpoints/agreements.endpoints';
+import { agreementEndpoints } from '@/api/endpoints/agreements.endpoints';
+import { Agreement } from '@/types/agreement.types';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -55,6 +56,7 @@ export function AgreementApprovalsPage() {
   const [selectedAgreement, setSelectedAgreement] = useState<Agreement | null>(null);
   const [approveAgreement, setApproveAgreement] = useState<Agreement | null>(null);
   const [rejectAgreement, setRejectAgreement] = useState<Agreement | null>(null);
+  const [approveComments, setApproveComments] = useState('');
 
   const { data: agreements, isLoading } = useQuery({
     queryKey: ['pending-approval-agreements'],
@@ -296,10 +298,11 @@ function AgreementApprovalCard({
   isApproving,
   isRejecting,
 }: AgreementApprovalCardProps) {
+  const createdBy = (agreement as any).createdBy;
   const { data: creatorUser } = useQuery({
-    queryKey: ['user', agreement.createdBy],
-    queryFn: () => userEndpoints.getById(agreement.createdBy!).then(res => res.data),
-    enabled: !!agreement.createdBy,
+    queryKey: ['user', createdBy],
+    queryFn: () => userEndpoints.getById(createdBy!).then(res => res.data),
+    enabled: !!createdBy,
   });
 
   const agreementCode = agreement.agreementCode || agreement.agreementNumber || 'N/A';
@@ -328,7 +331,7 @@ function AgreementApprovalCard({
         <div className="flex items-center gap-4 text-sm text-gray-600 mb-4">
           <div className="flex items-center gap-1">
             <User className="h-4 w-4" />
-            <span>{creatorUser?.fullName || agreement.createdBy || 'N/A'}</span>
+            <span>{creatorUser?.fullName || createdBy || 'N/A'}</span>
           </div>
           <div className="flex items-center gap-1">
             <Calendar className="h-4 w-4" />
