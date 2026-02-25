@@ -16,11 +16,12 @@ pipelines:
 
             # Build & Push
             - export IMAGE="europe-west3-docker.pkg.dev/collmind-tpm/collmind/frontend"
-            - docker build \
-              --build-arg VITE_API_BASE_URL=$VITE_API_BASE_URL \
-              -t $IMAGE:$BITBUCKET_COMMIT \
-              -t $IMAGE:latest
-              .
+            - |
+              docker build \
+                --build-arg VITE_API_BASE_URL=$VITE_API_BASE_URL \
+                -t $IMAGE:$BITBUCKET_COMMIT \
+                -t $IMAGE:latest \
+                .
             - docker push $IMAGE:$BITBUCKET_COMMIT
             - docker push $IMAGE:latest
 
