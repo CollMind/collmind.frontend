@@ -28,7 +28,7 @@ npm install
 
 2. Set up environment variables:
 ```bash
-cp .env.example .env
+cp env.example .env
 ```
 
 Edit `.env` and configure:
@@ -37,6 +37,12 @@ VITE_API_BASE_URL=http://localhost:3000
 VITE_APP_NAME=CollMind TPM
 VITE_APP_VERSION=1.0.0
 ```
+
+### Production Deployment (Cloud Run)
+
+- Set Bitbucket repository variable `VITE_API_BASE_URL` to your backend URL.
+- Current backend endpoint: `https://backend-315318338776.europe-west1.run.app`
+- Pipeline now fails fast when `VITE_API_BASE_URL` is missing to prevent deploying with an invalid API host.
 
 3. Start development server:
 ```bash

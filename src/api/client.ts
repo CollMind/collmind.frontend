@@ -8,7 +8,13 @@ import { logout, setCredentials } from '@/store/slices/auth.slice';
 import { addNotification } from '@/store/slices/ui.slice';
 import { getErrorMessage } from '@/utils/errorHandler';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL ||
+  (import.meta.env.DEV || import.meta.env.MODE === 'test' ? 'http://localhost:3000' : '');
+
+if (!API_BASE_URL) {
+  throw new Error('VITE_API_BASE_URL must be set for production builds.');
+}
 
 export const apiClient = axios.create({
   baseURL: API_BASE_URL,
