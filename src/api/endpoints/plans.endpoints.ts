@@ -1,5 +1,14 @@
 import apiClient from '../client';
 
+export interface CalculationResult {
+  kpiCode: string;
+  value: number | null;
+  displayFormat: 'number' | 'currency' | 'percentage';
+  decimalPlaces: number;
+  ragStatus?: 'RED' | 'AMBER' | 'GREEN' | null;
+  calculatedAt?: string;
+}
+
 export interface Plan {
   id: string;
   planCode: string;
@@ -20,8 +29,8 @@ export interface Plan {
   rejectedById?: string;
   rejectionReason?: string;
   comments?: string;
-  totalPlannedVolume: number;
-  totalSpend: number;
+  totalPlannedVolume: number | string;
+  totalSpend: number | string;
   totalGp: number;
   overallRoi?: number;
   ragStatus?: 'RED' | 'AMBER' | 'GREEN';
@@ -41,11 +50,12 @@ export interface PlanFu {
   planId: string;
   fuId: string;
   tactics?: Record<string, number>;
-  totalPlannedVolume: number;
-  totalSpend: number;
+  totalPlannedVolume: number | string;
+  totalSpend: number | string;
   totalGp: number;
   gpRoi?: number;
   ragStatus?: 'RED' | 'AMBER' | 'GREEN';
+  calculatedKpis?: Record<string, CalculationResult>;
   fu?: { id: string; name: string; code: string };
   planSkus?: PlanSku[];
   planMechanicValues?: PlanMechanicValue[];
@@ -63,6 +73,7 @@ export interface PlanSku {
   plannedGp: number;
   gpRoi?: number;
   ragStatus?: 'RED' | 'AMBER' | 'GREEN';
+  calculatedKpis?: Record<string, CalculationResult>;
   // LTA spend alanları
   baseLtaOnInvoiceSpend: number;
   baseLtaOffInvoiceSpend: number;

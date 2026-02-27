@@ -48,15 +48,20 @@ const formatPercentage = (val: number | null | undefined, decimals = 1) => {
 };
 
 const getRagBadge = (status?: string) => {
-  if (!status) return null;
-  const map: Record<string, { color: string; label: string }> = {
-    RED: { color: 'text-red-600', label: '● KRİTİK' },
-    AMBER: { color: 'text-amber-600', label: '● RİSKLİ' },
-    GREEN: { color: 'text-green-600', label: '● İYİ' },
+  if (!status) return <span className="text-gray-300">-</span>;
+  const map: Record<string, { dotColor: string; label: string }> = {
+    RED: { dotColor: 'bg-red-500', label: 'KRİTİK' },
+    AMBER: { dotColor: 'bg-amber-500', label: 'RİSKLİ' },
+    GREEN: { dotColor: 'bg-green-500', label: 'İYİ' },
   };
   const info = map[status];
-  if (!info) return null;
-  return <span className={`text-xs font-medium ${info.color}`}>{info.label}</span>;
+  if (!info) return <span className="text-gray-300">-</span>;
+  return (
+    <div className="flex items-center justify-center gap-1.5">
+      <span className={`w-2 h-2 rounded-full ${info.dotColor}`} />
+      <span className="text-xs font-medium text-gray-700">{info.label}</span>
+    </div>
+  );
 };
 
 const formatKpiValue = (
@@ -77,6 +82,12 @@ const formatKpiValue = (
 
 // Map KPI codes to known SKU fields
 const getSkuValueForKpi = (planSku: PlanSku, kpiCode: string): number | null => {
+  // ÖNCE: calculated_kpis'ten kontrol et
+  if (planSku.calculatedKpis?.[kpiCode]) {
+    return planSku.calculatedKpis[kpiCode].value;
+  }
+
+  // FALLBACK: Mevcut hardcoded mapping (geriye dönük uyumluluk)
   switch (kpiCode) {
     case 'BASE_VOL': return planSku.baseVolume ?? null;
     case 'PLAN_VOL': return planSku.plannedVolume ?? null;
@@ -97,6 +108,12 @@ const getSkuValueForKpi = (planSku: PlanSku, kpiCode: string): number | null => 
 
 // Map KPI codes to known FU fields
 const getFuValueForKpi = (planFu: PlanFu, kpiCode: string): number | null => {
+  // ÖNCE: calculated_kpis'ten kontrol et
+  if (planFu.calculatedKpis?.[kpiCode]) {
+    return planFu.calculatedKpis[kpiCode].value;
+  }
+
+  // FALLBACK: Mevcut hesaplama (geriye dönük uyumluluk)
   switch (kpiCode) {
     case 'BASE_VOL':
       return planFu.planSkus?.reduce((s, sku) => s + (Number(sku.baseVolume) || 0), 0) ?? null;
@@ -128,15 +145,22 @@ export function PlanningGrid({ plan, canEdit }: PlanningGridProps) {
   const toast = useToast();
   const queryClient = useQueryClient();
 
-  // Fetch dynamic KPI definitions for grid
+  // Fetch dynamic KPI definitions for grid (plan context-aware)
   const { data: gridKpis = [] } = useQuery({
-    queryKey: ['kpis', 'grid'],
+    queryKey: ['kpis', 'grid', plan.id],
     queryFn: async () => {
       try {
-        const res = await kpiEndpoints.getGridKpis();
+        // Yeni endpoint: plan bağlamına göre KPI'lar
+        const res = await kpiEndpoints.getGridKpisForPlan(plan.id);
         return res.data;
       } catch {
-        return [];
+        // Fallback: genel grid KPI'ları
+        try {
+          const res = await kpiEndpoints.getGridKpis();
+          return res.data;
+        } catch {
+          return [];
+        }
       }
     },
     staleTime: 60000,
@@ -145,31 +169,49 @@ export function PlanningGrid({ plan, canEdit }: PlanningGridProps) {
   // Static columns if no KPIs defined
   const hasKpiDefinitions = gridKpis.length > 0;
 
+  // Separate KPIs by calculation level (SKU vs FU)
+  const skuLevelKpis = gridKpis.filter(kpi => kpi.calculationLevel === 'sku');
+  const fuLevelKpis = gridKpis.filter(kpi => kpi.calculationLevel === 'fu');
+
+  // Base columns (always shown)
+  const baseColumns = [
+    { code: 'COGS', name: 'COGS', format: 'currency', decimals: 0, editable: false, isKpi: false, calculationLevel: null },
+    { code: 'BPTT', name: 'Liste Fiyatı', format: 'currency', decimals: 0, editable: false, isKpi: false, calculationLevel: null },
+  ];
+
+  // Static columns fallback
   const staticColumns = [
-    { code: 'COGS', name: 'COGS', format: 'currency', decimals: 0 },
-    { code: 'BPTT', name: 'Liste Fiyatı', format: 'currency', decimals: 0 },
-    { code: 'BASE_VOL', name: 'Base Volume', format: 'number', decimals: 0, editable: true },
-    { code: 'PLAN_VOL', name: 'Planned Volume', format: 'number', decimals: 0, editable: true },
-    { code: 'INCR_VOL', name: 'Incremental', format: 'number', decimals: 0 },
-    { code: 'PLAN_TURNOVER', name: 'Planned Turnover', format: 'currency', decimals: 0 },
-    { code: 'TACTIC_SPEND', name: 'Tactic Spend', format: 'currency', decimals: 0 },
-    { code: 'GP', name: 'Planned GP', format: 'currency', decimals: 0 },
-    { code: 'GP_ROI_PCT', name: 'GP ROI', format: 'percentage', decimals: 1 },
+    ...baseColumns,
+    { code: 'BASE_VOL', name: 'Base Volume', format: 'number', decimals: 0, editable: true, isKpi: false, calculationLevel: 'sku' },
+    { code: 'PLAN_VOL', name: 'Planned Volume', format: 'number', decimals: 0, editable: true, isKpi: false, calculationLevel: 'sku' },
+    { code: 'INCR_VOL', name: 'Incremental', format: 'number', decimals: 0, isKpi: false, calculationLevel: 'sku' },
+    { code: 'PLAN_TURNOVER', name: 'Planned Turnover', format: 'currency', decimals: 0, isKpi: false, calculationLevel: 'sku' },
+    { code: 'TACTIC_SPEND', name: 'Tactic Spend', format: 'currency', decimals: 0, isKpi: false, calculationLevel: 'fu' },
+    { code: 'GP', name: 'Planned GP', format: 'currency', decimals: 0, isKpi: false, calculationLevel: 'sku' },
+    { code: 'GP_ROI_PCT', name: 'GP ROI', format: 'percentage', decimals: 1, isKpi: false, calculationLevel: 'sku' },
   ];
 
   // Build dynamic columns from KPI definitions
+  // SKU level KPIs are shown in both SKU and FU rows (aggregated in FU)
+  // FU level KPIs are only shown in FU rows
+  const allKpisForColumns = hasKpiDefinitions
+    ? [...skuLevelKpis, ...fuLevelKpis]
+    : [];
+
   const dynamicColumns = hasKpiDefinitions
     ? [
-        { code: 'COGS', name: 'COGS', format: 'currency', decimals: 0, editable: false, isKpi: false },
-        { code: 'BPTT', name: 'Liste Fiyatı', format: 'currency', decimals: 0, editable: false, isKpi: false },
-        ...gridKpis.map(kpi => ({
-          code: kpi.kpiCode,
-          name: kpi.kpiName,
-          format: kpi.displayFormat,
-          decimals: kpi.decimalPlaces,
-          editable: kpi.formulaType === 'user_input' && canEdit,
-          isKpi: true,
-        })),
+        ...baseColumns,
+        ...allKpisForColumns
+          .sort((a, b) => (a.columnOrder || 999) - (b.columnOrder || 999))
+          .map(kpi => ({
+            code: kpi.kpiCode,
+            name: kpi.kpiName,
+            format: kpi.displayFormat,
+            decimals: kpi.decimalPlaces,
+            editable: kpi.formulaType === 'user_input' && canEdit,
+            isKpi: true,
+            calculationLevel: kpi.calculationLevel,
+          })),
       ]
     : staticColumns.map(c => ({ ...c, isKpi: false }));
 
@@ -279,8 +321,12 @@ export function PlanningGrid({ plan, canEdit }: PlanningGridProps) {
       case 'COGS': return formatCurrency(planSku.sku?.cogs || 0);
       case 'BPTT': return formatCurrency(planSku.sku?.unitPrice || 0);
       default: {
-        const val = getSkuValueForKpi(planSku, colCode);
+        // Only show SKU-level KPIs in SKU rows
         const col = dynamicColumns.find(c => c.code === colCode);
+        if (col?.calculationLevel === 'fu') {
+          return '-'; // FU-level KPIs are not shown in SKU rows
+        }
+        const val = getSkuValueForKpi(planSku, colCode);
         return formatKpiValue(val, col?.format || 'number', col?.decimals || 0);
       }
     }
@@ -292,6 +338,7 @@ export function PlanningGrid({ plan, canEdit }: PlanningGridProps) {
       case 'BPTT':
         return '-';
       default: {
+        // Show both SKU-level (aggregated) and FU-level KPIs in FU rows
         const val = getFuValueForKpi(planFu, colCode);
         const col = dynamicColumns.find(c => c.code === colCode);
         return formatKpiValue(val, col?.format || 'number', col?.decimals || 0);
@@ -349,13 +396,13 @@ export function PlanningGrid({ plan, canEdit }: PlanningGridProps) {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[200px] sticky left-0 bg-white z-10">ÜRÜN / FU</TableHead>
+                <TableHead className="w-[200px] sticky left-0 bg-white z-20 border-r border-gray-200 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)]">ÜRÜN / FU</TableHead>
                 {dynamicColumns.map(col => (
-                  <TableHead key={col.code} className="text-right whitespace-nowrap text-xs">
+                  <TableHead key={col.code} className="text-right whitespace-nowrap text-xs min-w-[100px]">
                     {col.name}
                   </TableHead>
                 ))}
-                <TableHead className="text-center text-xs">RAG</TableHead>
+                <TableHead className="text-center text-xs sticky right-0 bg-white z-20 border-l border-gray-200 shadow-[-2px_0_4px_-2px_rgba(0,0,0,0.1)] min-w-[80px]">RAG</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -438,7 +485,7 @@ function FuRow({
     <>
       {/* FU Summary Row */}
       <TableRow className="bg-gray-50 hover:bg-gray-100">
-        <TableCell className="sticky left-0 bg-gray-50 z-10">
+        <TableCell className="sticky left-0 bg-gray-50 z-20 border-r border-gray-200 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)]">
           <div className="flex items-center gap-2">
             <button onClick={onToggle} className="p-0.5 hover:bg-gray-200 rounded">
               {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
@@ -467,26 +514,36 @@ function FuRow({
             {getFuCellValue(planFu, col.code)}
           </TableCell>
         ))}
-        <TableCell className="text-center">{getRagBadge(planFu.ragStatus)}</TableCell>
+        <TableCell className="text-center sticky right-0 bg-gray-50 z-20 border-l border-gray-200 shadow-[-2px_0_4px_-2px_rgba(0,0,0,0.1)]">{getRagBadge(planFu.ragStatus)}</TableCell>
       </TableRow>
 
       {/* SKU Rows */}
       {isExpanded && planFu.planSkus?.map((planSku) => (
         <TableRow key={planSku.id} className="hover:bg-blue-50/50">
-          <TableCell className="pl-10 sticky left-0 bg-white z-10">
+          <TableCell className="pl-10 sticky left-0 bg-white z-20 border-r border-gray-200 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)]">
             <span className="text-sm text-gray-700">{planSku.sku?.name || 'N/A'}</span>
             <span className="text-xs text-gray-400 ml-1">({planSku.sku?.code})</span>
           </TableCell>
           {columns.map(col => {
+            // Skip FU-level KPIs in SKU rows
+            if (col.calculationLevel === 'fu') {
+              return (
+                <TableCell key={col.code} className="text-right text-sm text-gray-300">
+                  -
+                </TableCell>
+              );
+            }
+
             const isEditing = editingCell?.skuId === planSku.id && editingCell?.field === col.code;
-            const isEditable = col.editable && canEdit && (col.code === 'BASE_VOL' || col.code === 'PLAN_VOL');
+            const kpi = gridKpis.find(k => k.kpiCode === col.code);
+            const isEditable = col.editable && canEdit && (col.code === 'BASE_VOL' || col.code === 'PLAN_VOL' || kpi?.formulaType === 'user_input');
 
             if (isEditing) {
               const currentValue = col.code === 'BASE_VOL'
                 ? planSku.baseVolume ?? 0
                 : col.code === 'PLAN_VOL'
                   ? planSku.plannedVolume ?? 0
-                  : 0;
+                  : getSkuValueForKpi(planSku, col.code) ?? 0;
 
               return (
                 <TableCell key={col.code} className="text-right p-1">
@@ -519,7 +576,7 @@ function FuRow({
               </TableCell>
             );
           })}
-          <TableCell className="text-center">{getRagBadge(planSku.ragStatus)}</TableCell>
+          <TableCell className="text-center sticky right-0 bg-white z-20 border-l border-gray-200 shadow-[-2px_0_4px_-2px_rgba(0,0,0,0.1)]">{getRagBadge(planSku.ragStatus)}</TableCell>
         </TableRow>
       ))}
     </>

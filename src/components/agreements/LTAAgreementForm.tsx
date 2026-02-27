@@ -18,6 +18,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Plus, Save, Send, Info, Check, ChevronRight, Trash2 } from 'lucide-react';
+import { toNumber } from '@/utils/numberUtils';
 import { ChannelSelect } from '@/components/common/ChannelSelect';
 import { CategorySelect } from '@/components/common/CategorySelect';
 import { CplSelect } from '@/components/common/CplSelect';
@@ -187,7 +188,8 @@ export function LTAAgreementForm({
       }
     }
 
-    if (!formData.capTotalAmount || formData.capTotalAmount <= 0) {
+    const capAmount = typeof formData.capTotalAmount === 'number' ? formData.capTotalAmount : toNumber(formData.capTotalAmount);
+    if (!capAmount || capAmount <= 0) {
       newErrors.capTotalAmount = 'Bütçe cap değeri 0\'dan büyük olmalıdır';
     }
     
@@ -960,7 +962,7 @@ export function LTAAgreementForm({
             <div className="pt-4 border-t">
               <Label className="text-xs text-gray-500">Toplam Cap</Label>
               <p className="text-2xl font-bold text-purple-600 mt-1">
-                {formatCurrency(formData.capTotalAmount || 0)}
+                {formatCurrency(toNumber(formData.capTotalAmount))}
               </p>
             </div>
           </CardContent>

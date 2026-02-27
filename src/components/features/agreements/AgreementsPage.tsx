@@ -22,6 +22,7 @@ import {
 import { CreateAgreementDto, AgreementType, AgreementFilterDto, AgreementStatus } from '@/types/agreement.types';
 import { useCreateAgreement, useSubmitAgreement } from '@/services/agreements.service';
 import { FileText, Plus, Download, ChevronDown } from 'lucide-react';
+import { toNumber } from '@/utils/numberUtils';
 
 const formatCurrency = (amount: number, currency: string = 'TRY') => {
   return new Intl.NumberFormat('tr-TR', {
@@ -65,11 +66,7 @@ export function AgreementsPage() {
     const totalCap = agreementsArray.reduce((sum, a) => {
       let cap = 0;
       if (a.capTotalAmount != null) {
-        // String veya number olabilir, her iki durumu da handle et
-        const capValue = typeof a.capTotalAmount === 'string' 
-          ? parseFloat(a.capTotalAmount.replace(/,/g, '')) 
-          : Number(a.capTotalAmount);
-        cap = isNaN(capValue) ? 0 : capValue;
+        cap = toNumber(a.capTotalAmount);
       }
       return sum + cap;
     }, 0);

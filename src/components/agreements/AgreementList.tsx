@@ -18,6 +18,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { AgreementStatusBadge } from './AgreementStatusBadge';
 import { Search, Eye, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
+import { toNumber } from '@/utils/numberUtils';
 
 interface AgreementListProps {
   agreements: Agreement[];
@@ -127,9 +128,10 @@ export function AgreementList({
   };
 
   const getUsagePercentage = (agreement: Agreement): number => {
-    if (!agreement.capTotalAmount || agreement.capTotalAmount === 0) return 0;
+    const capAmount = toNumber(agreement.capTotalAmount);
+    if (!capAmount || capAmount === 0) return 0;
     const consumed = agreement.consumedAmount || 0;
-    return (consumed / agreement.capTotalAmount) * 100;
+    return (consumed / capAmount) * 100;
   };
 
   const getProgressColor = (percentage: number): string => {
@@ -329,9 +331,9 @@ export function AgreementList({
                             <div className="space-y-1">
                               <div className="text-sm text-gray-900">
                                 {formatCurrency(agreement.consumedAmount || 0, agreement.currency)} /{' '}
-                                {formatCurrency(agreement.capTotalAmount, agreement.currency)}
+                                {formatCurrency(toNumber(agreement.capTotalAmount), agreement.currency)}
                               </div>
-                              {agreement.capTotalAmount > 0 && (
+                              {toNumber(agreement.capTotalAmount) > 0 && (
                                 <div className="relative h-2 w-full overflow-hidden rounded-full bg-gray-200">
                                   <div
                                     className={`h-full transition-all duration-300 ${getProgressColor(usagePercent)}`}

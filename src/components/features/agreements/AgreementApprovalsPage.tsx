@@ -24,6 +24,7 @@ import { useToast } from '@/hooks/useToast';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { userEndpoints } from '@/api/endpoints/users.endpoints';
 import { useNavigate } from 'react-router-dom';
+import { toNumber } from '@/utils/numberUtils';
 
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('tr-TR', {
@@ -115,10 +116,7 @@ export function AgreementApprovalsPage() {
     ? agreements.reduce((sum, a) => {
         let cap = 0;
         if (a.capTotalAmount != null) {
-          const capValue = typeof a.capTotalAmount === 'string' 
-            ? parseFloat(a.capTotalAmount.replace(/,/g, '')) 
-            : Number(a.capTotalAmount);
-          cap = isNaN(capValue) ? 0 : capValue;
+          cap = toNumber(a.capTotalAmount);
         }
         return sum + cap;
       }, 0) / agreements.length
@@ -330,10 +328,7 @@ function AgreementApprovalCard({
   // Backend'den gelen decimal değeri number'a dönüştür
   let totalSpend = 0;
   if (agreement.capTotalAmount != null) {
-    const spendValue = typeof agreement.capTotalAmount === 'string' 
-      ? parseFloat(agreement.capTotalAmount.replace(/,/g, '')) 
-      : Number(agreement.capTotalAmount);
-    totalSpend = isNaN(spendValue) ? 0 : spendValue;
+    totalSpend = toNumber(agreement.capTotalAmount);
   }
   const isHighSpend = totalSpend > 100000;
   const agreementType = agreement.agreementType || 'N/A';

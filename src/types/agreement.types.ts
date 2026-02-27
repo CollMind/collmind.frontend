@@ -93,7 +93,7 @@ export interface Agreement {
   mechanicId: string;
   mechanicValue?: number;
   mechanicType?: MechanicType;
-  capTotalAmount: number;
+  capTotalAmount: number | string;
   spendType?: SpendType;
   startDate: string; // YYYY-MM-DD
   endDate: string; // YYYY-MM-DD
@@ -135,7 +135,7 @@ export interface CreateAgreementDto {
   mechanicId: string;
   mechanicValue?: number;
   mechanicType?: MechanicType;
-  capTotalAmount: number;
+  capTotalAmount: number | string;
   spendType?: SpendType;
   startDate: string; // YYYY-MM-DD
   endDate: string; // YYYY-MM-DD

@@ -65,6 +65,9 @@ export const kpiEndpoints = {
   getGridKpis: () =>
     apiClient.get<Kpi[]>(`${BASE}/grid`),
 
+  getGridKpisForPlan: (planId: string) =>
+    apiClient.get<Kpi[]>(`${BASE}/grid/${planId}`),
+
   create: (data: CreateKpiDto) =>
     apiClient.post<Kpi>(BASE, data),
 

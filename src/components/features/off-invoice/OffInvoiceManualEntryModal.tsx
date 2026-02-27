@@ -9,6 +9,7 @@ import { useToast } from '@/hooks/useToast';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { useQuery } from '@tanstack/react-query';
 import { X, Search, ChevronRight, ChevronLeft, Paperclip, FileText, Save, Check } from 'lucide-react';
+import { toNumber } from '@/utils/numberUtils';
 
 interface OffInvoiceManualEntryModalProps {
   isOpen: boolean;
@@ -116,9 +117,9 @@ export function OffInvoiceManualEntryModal({
   const getRemainingCap = async (agreement: Agreement): Promise<number> => {
     try {
       const total = await offInvoiceEndpoints.getTotalByAgreement(agreement.id);
-      return (agreement.capTotalAmount || 0) - total;
+      return toNumber(agreement.capTotalAmount) - total;
     } catch {
-      return agreement.capTotalAmount || 0;
+      return toNumber(agreement.capTotalAmount);
     }
   };
 
@@ -174,7 +175,7 @@ export function OffInvoiceManualEntryModal({
     if (!selectedAgreement || !formData.amount) {
       return null;
     }
-    const currentRemaining = (selectedAgreement.capTotalAmount || 0) - (agreementTotal || 0);
+    const currentRemaining = toNumber(selectedAgreement.capTotalAmount) - (agreementTotal || 0);
     const afterTransaction = currentRemaining - formData.amount;
     return {
       currentRemaining,
@@ -684,7 +685,7 @@ function AgreementCard({
 
   useEffect(() => {
     if (total !== undefined && agreement.capTotalAmount) {
-      setRemainingCap(agreement.capTotalAmount - total);
+      setRemainingCap(toNumber(agreement.capTotalAmount) - total);
     }
   }, [total, agreement.capTotalAmount]);
 
@@ -730,7 +731,7 @@ function AgreementCard({
           <div className="font-semibold text-blue-600">
             {remainingCap !== null
               ? formatCurrency(remainingCap)
-              : formatCurrency(agreement.capTotalAmount || 0)}
+              : formatCurrency(toNumber(agreement.capTotalAmount))}
           </div>
         </div>
       </div>

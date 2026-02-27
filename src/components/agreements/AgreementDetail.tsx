@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { AgreementStatusBadge } from './AgreementStatusBadge';
 import { AgreementActions } from './AgreementActions';
 import { ArrowLeft, Edit } from 'lucide-react';
+import { toNumber } from '@/utils/numberUtils';
 
 const formatCurrency = (amount: number, currency: string = 'TRY') => {
   return new Intl.NumberFormat('tr-TR', {
@@ -223,7 +224,7 @@ export function AgreementDetail() {
             <div>
               <p className="text-sm text-gray-600">Bütçe Tavanı</p>
               <p className="font-medium text-lg">
-                {formatCurrency(agreement.capTotalAmount, agreement.currency)}
+                {formatCurrency(toNumber(agreement.capTotalAmount), agreement.currency)}
               </p>
             </div>
             {agreement.spendType && (

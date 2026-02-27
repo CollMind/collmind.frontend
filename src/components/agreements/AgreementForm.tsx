@@ -21,6 +21,7 @@ import {
 } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
 import { ChevronRight, ChevronLeft, Check } from 'lucide-react';
+import { toNumber } from '@/utils/numberUtils';
 
 interface AgreementFormProps {
   onSubmit: (data: CreateAgreementDto) => Promise<void>;
@@ -144,7 +145,8 @@ export function AgreementForm({
     }
 
     if (step === 5) {
-      if (!formData.capTotalAmount || formData.capTotalAmount <= 0) {
+      const capAmount = typeof formData.capTotalAmount === 'number' ? formData.capTotalAmount : toNumber(formData.capTotalAmount);
+      if (!capAmount || capAmount <= 0) {
         newErrors.capTotalAmount = 'Bütçe tavanı 0\'dan büyük olmalıdır';
       }
       if (!formData.startDate) {
@@ -538,9 +540,9 @@ export function AgreementForm({
                   }
                   required
                 />
-                {formData.capTotalAmount > 0 && (
+                {toNumber(formData.capTotalAmount) > 0 && (
                   <p className="text-xs text-gray-500 mt-1">
-                    {formatCurrency(formData.capTotalAmount)}
+                    {formatCurrency(toNumber(formData.capTotalAmount))}
                   </p>
                 )}
                 {errors.capTotalAmount && (

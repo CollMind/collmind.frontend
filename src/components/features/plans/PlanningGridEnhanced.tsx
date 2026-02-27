@@ -19,6 +19,7 @@ import { planEndpoints } from '@/api/endpoints/plans.endpoints';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { BASE_COLUMNS, filterColumns, groupColumns, ColumnGroup, COLUMN_GROUPS, ColumnDefinition } from './column-definitions';
 import { EditableCell, CalculatedCell, InheritedCell, RAGCell } from './grid-cells';
+import { toNumber, toNumberOrNull } from '@/utils/numberUtils';
 
 interface PlanningGridProps {
   plan: Plan;
@@ -298,15 +299,17 @@ function getFuCellValue(planFu: PlanFu, colCode: string): number | null {
     case 'BASE_VOL':
       return skus.reduce((sum, sku) => sum + (sku.baseVolume ?? 0), 0);
     case 'PLAN_VOL':
-      return planFu.totalPlannedVolume ?? null;
+      return toNumberOrNull(planFu.totalPlannedVolume);
     case 'INCR_VOL': {
       const baseVol = skus.reduce((sum, sku) => sum + (sku.baseVolume ?? 0), 0);
-      return (planFu.totalPlannedVolume ?? 0) - baseVol;
+      const plannedVol = toNumber(planFu.totalPlannedVolume);
+      return plannedVol - baseVol;
     }
     case 'VOL_UPLIFT_PCT': {
       const baseVol = skus.reduce((sum, sku) => sum + (sku.baseVolume ?? 0), 0);
       if (!baseVol) return null;
-      return ((planFu.totalPlannedVolume ?? 0) - baseVol) / baseVol * 100;
+      const plannedVol = toNumber(planFu.totalPlannedVolume);
+      return (plannedVol - baseVol) / baseVol * 100;
     }
     
     // GSV - Aggregated
@@ -400,12 +403,12 @@ function getFuCellValue(planFu: PlanFu, colCode: string): number | null {
         return sum + (sku.plannedLtaOffInvoiceSpend ?? 0) + (sku.promoOffInvoiceSpend ?? 0);
       }, 0);
     case 'TOTAL_PLANNED_SPEND':
-      return planFu.totalSpend ?? null;
+      return toNumberOrNull(planFu.totalSpend);
     case 'INCREMENTAL_SPEND': {
       const baseTotal = skus.reduce((sum, sku) => {
         return sum + (sku.baseLtaOnInvoiceSpend ?? 0) + (sku.baseLtaOffInvoiceSpend ?? 0);
       }, 0);
-      const plannedTotal = planFu.totalSpend ?? 0;
+      const plannedTotal = toNumber(planFu.totalSpend);
       return plannedTotal - baseTotal;
     }
     
@@ -569,7 +572,7 @@ function getFuCellValue(planFu: PlanFu, colCode: string): number | null {
       const baseTotal = skus.reduce((sum, sku) => {
         return sum + (sku.baseLtaOnInvoiceSpend ?? 0) + (sku.baseLtaOffInvoiceSpend ?? 0);
       }, 0);
-      const plannedTotal = planFu.totalSpend ?? 0;
+      const plannedTotal = toNumber(planFu.totalSpend);
       const incrSpend = plannedTotal - baseTotal;
       if (!incrSpend || incrSpend <= 0) return null;
       const baseTo = skus.reduce((sum, sku) => {

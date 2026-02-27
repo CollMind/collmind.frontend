@@ -1,6 +1,7 @@
 import { Plan } from '@/api/endpoints/plans.endpoints';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { toNumber } from '@/utils/numberUtils';
 import {
   Table,
   TableBody,
@@ -138,7 +139,7 @@ export function PlanList({ plans, onPlanClick, onEdit, onCopy, onDelete }: PlanL
                       : '0.0%'}
                   </TableCell>
                   <TableCell className="text-right text-sm font-medium">
-                    {formatCurrency(plan.totalSpend || 0)}
+                    {formatCurrency(toNumber(plan.totalSpend))}
                   </TableCell>
                   <TableCell>{getRagStatus(plan.ragStatus)}</TableCell>
                   <TableCell>

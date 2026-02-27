@@ -36,6 +36,7 @@ import { budgetEndpoints } from '@/api/endpoints/budget.endpoints';
 import { agreementEndpoints } from '@/api/endpoints/agreements.endpoints';
 import { CustomerChannel } from '@/types/customer.types';
 import { CplListItem } from '@/types/customer.types';
+import { toNumber } from '@/utils/numberUtils';
 import { ChannelSelect } from '@/components/common/ChannelSelect';
 import { CategorySelect } from '@/components/common/CategorySelect';
 import { CplSelect } from '@/components/common/CplSelect';
@@ -240,7 +241,8 @@ export function STAAgreementForm({
       if (selectedTactics.length === 0) {
         newErrors.tactics = 'En az bir taktik seçilmelidir';
       }
-      if (!formData.capTotalAmount || formData.capTotalAmount <= 0) {
+      const capAmount = typeof formData.capTotalAmount === 'number' ? formData.capTotalAmount : toNumber(formData.capTotalAmount);
+      if (!capAmount || capAmount <= 0) {
         newErrors.capTotalAmount = 'Cap değeri 0\'dan büyük olmalıdır';
       }
     }
@@ -701,7 +703,7 @@ export function STAAgreementForm({
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-600">Planlanan (Bu STA)</span>
-                      <span className="font-medium">{formatCurrency(updatedBudgetStatus.planned)}</span>
+                      <span className="font-medium">{formatCurrency(toNumber(updatedBudgetStatus.planned))}</span>
                     </div>
                   </div>
                 </CardContent>
@@ -942,7 +944,7 @@ export function STAAgreementForm({
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Toplam Cap:</span>
-                  <span className="font-medium">{formatCurrency(formData.capTotalAmount || 0)}</span>
+                  <span className="font-medium">{formatCurrency(toNumber(formData.capTotalAmount))}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Taktik Sayısı:</span>

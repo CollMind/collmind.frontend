@@ -1,5 +1,6 @@
 import { Plan } from '@/api/endpoints/plans.endpoints';
 import { Card, CardContent } from '@/components/ui/card';
+import { toNumber } from '@/utils/numberUtils';
 
 interface GrandTotalsProps {
   plan: Plan;
@@ -36,14 +37,14 @@ export function GrandTotals({ plan }: GrandTotalsProps) {
   ) || 0;
 
   // PLANNED VOLUME: From plan.totalPlannedVolume (aggregated from all SKUs)
-  const plannedVolume = plan.totalPlannedVolume || 0;
+  const plannedVolume = toNumber(plan.totalPlannedVolume);
 
   // INCREMENTAL: Planned - Base
   const incremental = plannedVolume - baseVolume;
   const incrementalPercent = baseVolume > 0 ? ((incremental / baseVolume) * 100).toFixed(1) : '0.0';
 
   // TOTAL SPEND: From plan.totalSpend (aggregated from all tactics)
-  const totalSpend = plan.totalSpend || 0;
+  const totalSpend = toNumber(plan.totalSpend);
 
   // GP ROI: From plan.overallRoi (calculated as: (Incremental GP / Total Spend) * 100)
   const gpRoi = plan.overallRoi || 0;

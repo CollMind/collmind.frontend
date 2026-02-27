@@ -16,6 +16,7 @@ import {
   Layers
 } from 'lucide-react';
 import { userEndpoints } from '@/api/endpoints/users.endpoints';
+import { toNumber } from '@/utils/numberUtils';
 
 interface PlanApprovalDetailModalProps {
   plan: Plan;
@@ -87,7 +88,7 @@ export function PlanApprovalDetailModal({
     (sum, fu) => sum + (fu.planSkus?.reduce((s, sku) => s + (sku.baseVolume || 0), 0) || 0),
     0
   ) || 0;
-  const plannedVolume = planData.totalPlannedVolume || 0;
+  const plannedVolume = toNumber(planData.totalPlannedVolume);
   const incremental = plannedVolume - baseVolume;
   const incrementalPercent = baseVolume > 0 ? ((incremental / baseVolume) * 100) : 0;
   const incrementalGp = planData.totalGp - (baseVolume * 0); // Simplified - should calculate base GP properly
@@ -174,7 +175,7 @@ export function PlanApprovalDetailModal({
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">TOTAL SPEND:</span>
-                  <span className="font-medium">{formatCurrency(planData.totalSpend)}</span>
+                  <span className="font-medium">{formatCurrency(toNumber(planData.totalSpend))}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">INCR. GP:</span>
@@ -206,7 +207,7 @@ export function PlanApprovalDetailModal({
               <div className="grid grid-cols-3 gap-3">
                 {planData.planFus?.map((planFu) => {
                   const fuBaseVolume = planFu.planSkus?.reduce((sum, sku) => sum + (sku.baseVolume || 0), 0) || 0;
-                  const fuPlannedVolume = planFu.totalPlannedVolume || 0;
+                  const fuPlannedVolume = toNumber(planFu.totalPlannedVolume);
                   const fuIncremental = fuPlannedVolume - fuBaseVolume;
                   const fuUplift = fuBaseVolume > 0 ? ((fuIncremental / fuBaseVolume) * 100) : 0;
                   const fuRoi = planFu.gpRoi || 0;
@@ -227,7 +228,7 @@ export function PlanApprovalDetailModal({
                           </div>
                           <div className="flex justify-between">
                             <span className="text-gray-600">TACTIC SPEND</span>
-                            <span className="font-medium">{formatCurrency(planFu.totalSpend)}</span>
+                            <span className="font-medium">{formatCurrency(toNumber(planFu.totalSpend))}</span>
                           </div>
                           <div className="flex justify-between items-center">
                             <span className="text-gray-600">ROI</span>
@@ -267,7 +268,7 @@ export function PlanApprovalDetailModal({
                     <tbody className="divide-y divide-gray-200">
                       {planData.planFus?.map((planFu) => {
                         const fuBaseVolume = planFu.planSkus?.reduce((sum, sku) => sum + (sku.baseVolume || 0), 0) || 0;
-                        const fuPlannedVolume = planFu.totalPlannedVolume || 0;
+                        const fuPlannedVolume = toNumber(planFu.totalPlannedVolume);
                         const fuIncremental = fuPlannedVolume - fuBaseVolume;
                         const fuUplift = fuBaseVolume > 0 ? ((fuIncremental / fuBaseVolume) * 100) : 0;
                         const fuRoi = planFu.gpRoi || 0;
@@ -326,7 +327,7 @@ export function PlanApprovalDetailModal({
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-start gap-2">
             <AlertTriangle className="h-5 w-5 text-blue-600 mt-0.5" />
             <span className="text-sm text-blue-800">
-              Onaylandığında {formatCurrency(planData.totalSpend)} bütçe commit edilecektir. Bütçe durumu onay adımında kontrol edilecektir.
+              Onaylandığında {formatCurrency(toNumber(planData.totalSpend))} bütçe commit edilecektir. Bütçe durumu onay adımında kontrol edilecektir.
             </span>
           </div>
 
