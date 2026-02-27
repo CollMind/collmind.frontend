@@ -458,7 +458,7 @@ export const router = createBrowserRouter([
   {
     path: '/on-invoice',
     element: (
-      <ProtectedRoute requiredRole={['ADMIN', 'FINANCE']}>
+      <ProtectedRoute requiredRole={['ADMIN', 'FINANCE', 'PLANNER']}>
         <AppLayout>
           <ErrorBoundary>
             <OnInvoiceUploadPage />

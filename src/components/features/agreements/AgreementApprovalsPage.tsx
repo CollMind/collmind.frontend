@@ -109,10 +109,31 @@ export function AgreementApprovalsPage() {
   // Calculate summary statistics
   const pendingCount = agreements?.length || 0;
   const approvedTodayCount = 0; // TODO: Calculate from approved agreements
+  
+  // Backend'den gelen decimal değerleri number'a dönüştür
   const avgSpend = agreements && agreements.length > 0
-    ? agreements.reduce((sum, a) => sum + (a.capTotalAmount || 0), 0) / agreements.length
+    ? agreements.reduce((sum, a) => {
+        let cap = 0;
+        if (a.capTotalAmount != null) {
+          const capValue = typeof a.capTotalAmount === 'string' 
+            ? parseFloat(a.capTotalAmount.replace(/,/g, '')) 
+            : Number(a.capTotalAmount);
+          cap = isNaN(capValue) ? 0 : capValue;
+        }
+        return sum + cap;
+      }, 0) / agreements.length
     : 0;
-  const highSpendCount = agreements?.filter(a => (a.capTotalAmount || 0) > 100000).length || 0;
+  
+  const highSpendCount = agreements?.filter(a => {
+    let cap = 0;
+    if (a.capTotalAmount != null) {
+      const capValue = typeof a.capTotalAmount === 'string' 
+        ? parseFloat(a.capTotalAmount.replace(/,/g, '')) 
+        : Number(a.capTotalAmount);
+      cap = isNaN(capValue) ? 0 : capValue;
+    }
+    return cap > 100000;
+  }).length || 0;
 
   if (isLoading) return <LoadingSpinner />;
 
@@ -306,7 +327,14 @@ function AgreementApprovalCard({
   });
 
   const agreementCode = agreement.agreementCode || agreement.agreementNumber || 'N/A';
-  const totalSpend = agreement.capTotalAmount || 0;
+  // Backend'den gelen decimal değeri number'a dönüştür
+  let totalSpend = 0;
+  if (agreement.capTotalAmount != null) {
+    const spendValue = typeof agreement.capTotalAmount === 'string' 
+      ? parseFloat(agreement.capTotalAmount.replace(/,/g, '')) 
+      : Number(agreement.capTotalAmount);
+    totalSpend = isNaN(spendValue) ? 0 : spendValue;
+  }
   const isHighSpend = totalSpend > 100000;
   const agreementType = agreement.agreementType || 'N/A';
 

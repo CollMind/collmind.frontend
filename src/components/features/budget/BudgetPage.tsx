@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useBudgetEnvelopes, useCreateBudgetEnvelope } from '@/services/budget.service';
+import { useMe } from '@/services/users.service';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import {
   BudgetDashboard,
@@ -49,6 +50,8 @@ export function BudgetPage() {
   const [selectedEnvelope, setSelectedEnvelope] = useState<BudgetEnvelope | null>(null);
   const { data: envelopes, isLoading, error } = useBudgetEnvelopes();
   const createMutation = useCreateBudgetEnvelope();
+  const { data: user } = useMe();
+  const isPlanner = user?.role === 'PLANNER';
 
   if (isLoading) return <LoadingSpinner />;
   if (error) {
@@ -94,10 +97,12 @@ export function BudgetPage() {
             </p>
           </div>
         </div>
-        <Button onClick={() => setIsCreateDialogOpen(true)} className="gap-2">
-          <Plus className="h-4 w-4" />
-          Yeni Envelope
-        </Button>
+        {!isPlanner && (
+          <Button onClick={() => setIsCreateDialogOpen(true)} className="gap-2">
+            <Plus className="h-4 w-4" />
+            Yeni Envelope
+          </Button>
+        )}
       </div>
 
       {/* View Tabs */}

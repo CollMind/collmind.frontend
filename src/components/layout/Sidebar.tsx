@@ -26,6 +26,7 @@ import {
   DollarSign,
   Receipt,
   CheckCircle2,
+  Wrench,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAppSelector, useAppDispatch } from '@/store/hooks';
@@ -199,6 +200,11 @@ const adminNavigation: NavItem[] = [
         title: 'Taktik Yönetimi',
         href: '/admin/tactic-management',
         icon: Target,
+      },
+      {
+        title: 'Mekanik Yönetimi',
+        href: '/admin/mechanic-management',
+        icon: Wrench,
       },
       {
         title: 'Audit Log',

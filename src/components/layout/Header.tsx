@@ -119,6 +119,7 @@ export function Header() {
                 </Avatar>
                 <div className="hidden md:block text-left">
                   <div className="text-sm font-medium text-white">{user?.fullName}</div>
+                  <div className="text-xs text-gray-400">{user?.role}</div>
                 </div>
                 <ChevronDown className="hidden md:block h-4 w-4 text-gray-400" />
               </Button>

@@ -59,7 +59,20 @@ export function AgreementsPage() {
     const ltaCount = agreementsArray.filter((a) => a.agreementType === AgreementType.LTA).length;
     const activeCount = agreementsArray.filter((a) => a.status === AgreementStatus.ACTIVE).length;
     const pendingCount = agreementsArray.filter((a) => a.status === AgreementStatus.PENDING).length;
-    const totalCap = agreementsArray.reduce((sum, a) => sum + (a.capTotalAmount || 0), 0);
+    
+    // Backend'den gelen decimal değerleri number'a dönüştür
+    // TypeORM decimal değerleri string olarak döndürebilir
+    const totalCap = agreementsArray.reduce((sum, a) => {
+      let cap = 0;
+      if (a.capTotalAmount != null) {
+        // String veya number olabilir, her iki durumu da handle et
+        const capValue = typeof a.capTotalAmount === 'string' 
+          ? parseFloat(a.capTotalAmount.replace(/,/g, '')) 
+          : Number(a.capTotalAmount);
+        cap = isNaN(capValue) ? 0 : capValue;
+      }
+      return sum + cap;
+    }, 0);
 
     return {
       totalAgreements,

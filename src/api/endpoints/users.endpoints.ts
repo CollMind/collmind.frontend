@@ -31,5 +31,12 @@ export const userEndpoints = {
   deactivate: (id: string) => apiClient.post<User>(`/users/${id}/deactivate`),
 
   delete: (id: string) => apiClient.delete(`/users/${id}`),
+
+  getDashboardSummary: () => apiClient.get<{
+    activeOperations: number;
+    drafts: number;
+    managedBudget: number;
+    budgetUsage: number;
+  }>('/users/dashboard-summary'),
 };
 

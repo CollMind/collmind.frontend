@@ -62,8 +62,32 @@ export function PlansPage() {
     const draftCount = plansArray.filter((p) => p.status === 'DRAFT').length;
     const pendingCount = plansArray.filter((p) => p.status === 'PENDING_APPROVAL').length;
     const approvedCount = plansArray.filter((p) => p.status === 'APPROVED').length;
-    const totalSpend = plansArray.reduce((sum, p) => sum + (p.totalSpend || 0), 0);
-    const totalVolume = plansArray.reduce((sum, p) => sum + (p.totalPlannedVolume || 0), 0);
+    
+    // Backend'den gelen decimal değerleri number'a dönüştür
+    // TypeORM decimal değerleri string olarak döndürebilir
+    const totalSpend = plansArray.reduce((sum, p) => {
+      let spend = 0;
+      if (p.totalSpend != null) {
+        // String veya number olabilir, her iki durumu da handle et
+        const spendValue = typeof p.totalSpend === 'string' 
+          ? parseFloat(p.totalSpend.replace(/,/g, '')) 
+          : Number(p.totalSpend);
+        spend = isNaN(spendValue) ? 0 : spendValue;
+      }
+      return sum + spend;
+    }, 0);
+    
+    const totalVolume = plansArray.reduce((sum, p) => {
+      let volume = 0;
+      if (p.totalPlannedVolume != null) {
+        // String veya number olabilir, her iki durumu da handle et
+        const volumeValue = typeof p.totalPlannedVolume === 'string' 
+          ? parseFloat(p.totalPlannedVolume.replace(/,/g, '')) 
+          : Number(p.totalPlannedVolume);
+        volume = isNaN(volumeValue) ? 0 : volumeValue;
+      }
+      return sum + volume;
+    }, 0);
 
     return {
       totalPlans,

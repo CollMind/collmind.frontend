@@ -1,64 +1,16 @@
-import { useQuery } from '@tanstack/react-query';
-import { useUsers } from '@/services/users.service';
-import { agreementEndpoints } from '@/api/endpoints/agreements.endpoints';
-import { planEndpoints } from '@/api/endpoints/plans.endpoints';
-import { auditEndpoints } from '@/api/endpoints/audit.endpoints';
-import { Users, FileCheck, Target, Clock, CheckCircle2, AlertCircle } from 'lucide-react';
+import { useMe, useDashboardSummary } from '@/services/users.service';
+import { CheckCircle2, FileText, Wallet, TrendingUp, BarChart3, Building2, Clock } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
-import { useMe } from '@/services/users.service';
-
-interface Activity {
-  id: string;
-  type: 'plan' | 'agreement' | 'user' | 'system';
-  action: string;
-  user: string;
-  timestamp: Date;
-  status?: 'success' | 'pending' | 'error';
-}
+import { Link } from 'react-router-dom';
 
 export function DashboardPage() {
-  const { data: user } = useMe();
-  const isAdmin = user?.role === 'ADMIN';
+  const { data: user, isLoading: userLoading } = useMe();
+  const { data: dashboardData, isLoading: dashboardLoading } = useDashboardSummary();
 
-  // Kullanıcı verilerini getir
-  const { data: users, isLoading: usersLoading } = useUsers();
-  const totalUsers = Array.isArray(users) ? users.length : 0;
-
-  // Anlaşma verilerini getir
-  const { data: agreements, isLoading: agreementsLoading } = useQuery({
-    queryKey: ['agreements', 'all'],
-    queryFn: () => agreementEndpoints.getAll().then((res) => res.data),
-    enabled: isAdmin,
-  });
-  const agreementsArray = Array.isArray(agreements) ? agreements : [];
-  const totalAgreements = agreementsArray.length;
-  const pendingAgreements = agreementsArray.filter(
-    (a) => a.status === 'PENDING'
-  ).length;
-
-  // Plan verilerini getir
-  const { data: plans, isLoading: plansLoading } = useQuery({
-    queryKey: ['plans', 'all'],
-    queryFn: () => planEndpoints.getAll().then((res) => res.data),
-    enabled: isAdmin,
-  });
-  const plansArray = Array.isArray(plans) ? plans : [];
-  const totalPlans = plansArray.length;
-  const pendingPlans = plansArray.filter(
-    (p) => p.status === 'PENDING_APPROVAL'
-  ).length;
-
-  // Audit log verilerini getir
-  const { data: auditLogs, isLoading: auditLoading } = useQuery({
-    queryKey: ['audit-logs', 'recent'],
-    queryFn: () => auditEndpoints.getAll(20).then((res) => res.data),
-    enabled: isAdmin,
-  });
-
-  const isLoading = usersLoading || agreementsLoading || plansLoading || auditLoading;
+  const isLoading = userLoading || dashboardLoading;
 
   if (isLoading) {
     return (
@@ -68,198 +20,163 @@ export function DashboardPage() {
     );
   }
 
-  // Audit log'ları aktivite formatına dönüştür
-  const activities: Activity[] = (auditLogs || []).map((log) => {
-    let type: Activity['type'] = 'system';
-    let action = log.actionType;
-    
-    if (log.entityType === 'PLAN') {
-      type = 'plan';
-      action = `Plan ${log.actionType.toLowerCase()}`;
-    } else if (log.entityType === 'AGREEMENT') {
-      type = 'agreement';
-      action = `Anlaşma ${log.actionType.toLowerCase()}`;
-    } else if (log.entityType === 'USER') {
-      type = 'user';
-      action = `Kullanıcı ${log.actionType.toLowerCase()}`;
+  const formatCurrency = (amount: number) => {
+    if (amount >= 1000000) {
+      return `₺${(amount / 1000000).toFixed(1)}M`;
+    } else if (amount >= 1000) {
+      return `₺${(amount / 1000).toFixed(1)}K`;
     }
-
-    return {
-      id: log.id,
-      type,
-      action,
-      user: log.adminEmail,
-      timestamp: new Date(log.createdAt),
-      status: log.result === 'SUCCESS' ? 'success' : 'error',
-    };
-  });
-
-  const formatTimeAgo = (date: Date) => {
-    const now = new Date();
-    const diff = now.getTime() - date.getTime();
-    const minutes = Math.floor(diff / 60000);
-    const hours = Math.floor(minutes / 60);
-    const days = Math.floor(hours / 24);
-
-    if (days > 0) return `${days} gün önce`;
-    if (hours > 0) return `${hours} saat önce`;
-    if (minutes > 0) return `${minutes} dakika önce`;
-    return 'Az önce';
+    return `₺${amount.toFixed(0)}`;
   };
 
-  const getActivityIcon = (type: Activity['type']) => {
-    switch (type) {
-      case 'plan':
-        return Target;
-      case 'agreement':
-        return FileCheck;
-      case 'user':
-        return Users;
-      default:
-        return Clock;
-    }
-  };
-
-  const getActivityColor = (status?: Activity['status']) => {
-    switch (status) {
-      case 'success':
-        return 'text-green-600';
-      case 'pending':
-        return 'text-yellow-600';
-      case 'error':
-        return 'text-red-600';
-      default:
-        return 'text-gray-600';
-    }
-  };
-
-  if (!isAdmin) {
-    return (
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-600 mt-1">Overview and key metrics</p>
-        </div>
-        <div className="bg-white rounded-lg shadow p-6">
-          <p className="text-gray-500">Bu sayfa sadece Admin kullanıcıları için kullanılabilir.</p>
-        </div>
-      </div>
-    );
-  }
+  const activeOperations = dashboardData?.activeOperations || 0;
+  const drafts = dashboardData?.drafts || 0;
+  const managedBudget = dashboardData?.managedBudget || 0;
+  const budgetUsage = dashboardData?.budgetUsage || 0;
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-        <p className="text-gray-600 mt-2">Sistem genel durumu ve istatistikler</p>
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+        </div>
       </div>
 
-      {/* İstatistik Kartları */}
+      {/* Welcome Section */}
+      <div className="space-y-2">
+        <h2 className="text-2xl font-bold text-gray-900">
+          Hoş Geldin, {user?.fullName || 'Kullanıcı'} 👋
+        </h2>
+        <p className="text-gray-600">
+          Bugün planlamalarında yapman gerekenler aşağıda.
+        </p>
+      </div>
+
+      {/* Action Buttons */}
+      <div className="flex gap-4 justify-end">
+        <Link to="/agreements?new=true">
+          <Button variant="outline" className="bg-blue-50 text-blue-700 hover:bg-blue-100">
+            <FileText className="mr-2 h-4 w-4" />
+            Yeni Anlaşma
+          </Button>
+        </Link>
+        <Link to="/plans?new=true">
+          <Button className="bg-blue-600 text-white hover:bg-blue-700">
+            <span className="mr-2">+</span>
+            Yeni Plan
+          </Button>
+        </Link>
+      </div>
+
+      {/* KPI Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* Aktif İşlemler */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">AKTİF İŞLEMLER</CardTitle>
+            <CheckCircle2 className="h-5 w-5 text-green-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{activeOperations}</div>
+          </CardContent>
+        </Card>
+
+        {/* Taslaklar */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">TASLAKLAR</CardTitle>
+            <FileText className="h-5 w-5 text-gray-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{drafts}</div>
+          </CardContent>
+        </Card>
+
+        {/* Yönetilen Bütçe */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">YÖNETİLEN BÜTÇE</CardTitle>
+            <Wallet className="h-5 w-5 text-gray-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{formatCurrency(managedBudget)}</div>
+          </CardContent>
+        </Card>
+
+        {/* Bütçe Durumu (Q1) */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">BÜTÇE DURUMU (Q1)</CardTitle>
+            <TrendingUp className="h-5 w-5 text-gray-600" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">%{budgetUsage.toFixed(1)}</div>
+            <Progress value={budgetUsage} className="mt-2" />
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Navigation Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Kullanıcı Yönetimi */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Kullanıcı Yönetimi</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+        {/* Planlama Grid'i */}
+        <Card className="hover:shadow-lg transition-shadow">
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <BarChart3 className="h-6 w-6 text-blue-600" />
+              <CardTitle>Planlama Grid'i</CardTitle>
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalUsers}</div>
-            <p className="text-xs text-muted-foreground">Toplam kullanıcılar</p>
+            <p className="text-sm text-gray-600 mb-4">
+              Mevcut planlarını düzenle, kopyala veya detaylı analiz et.
+            </p>
+            <Link to="/plans">
+              <Button variant="link" className="p-0 text-blue-600">
+                Planlara Git →
+              </Button>
+            </Link>
           </CardContent>
         </Card>
 
-        {/* Anlaşmalar */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Anlaşmalar</CardTitle>
-            <FileCheck className="h-4 w-4 text-muted-foreground" />
+        {/* Anlaşmalarım */}
+        <Card className="hover:shadow-lg transition-shadow">
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <Building2 className="h-6 w-6 text-blue-600" />
+              <CardTitle>Anlaşmalarım</CardTitle>
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalAgreements}</div>
-            <p className="text-xs text-muted-foreground mb-2">Toplam anlaşmalar</p>
-            {pendingAgreements > 0 && (
-              <div className="flex items-center gap-2 mt-2">
-                <Badge variant="destructive" className="text-xs">
-                  {pendingAgreements}
-                </Badge>
-                <span className="text-xs text-muted-foreground">Onay bekleyen</span>
-              </div>
-            )}
+            <p className="text-sm text-gray-600 mb-4">
+              STA ve LTA anlaşmalarını yönet, durumlarını takip et.
+            </p>
+            <Link to="/agreements">
+              <Button variant="link" className="p-0 text-blue-600">
+                Anlaşmalara Git →
+              </Button>
+            </Link>
           </CardContent>
         </Card>
 
-        {/* Planlar */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Planlar</CardTitle>
-            <Target className="h-4 w-4 text-muted-foreground" />
+        {/* Performans Raporu */}
+        <Card className="hover:shadow-lg transition-shadow">
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <Clock className="h-6 w-6 text-blue-600" />
+              <CardTitle>Performans Raporu</CardTitle>
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalPlans}</div>
-            <p className="text-xs text-muted-foreground mb-2">Toplam planlar</p>
-            {pendingPlans > 0 && (
-              <div className="flex items-center gap-2 mt-2">
-                <Badge variant="destructive" className="text-xs">
-                  {pendingPlans}
-                </Badge>
-                <span className="text-xs text-muted-foreground">Onay bekleyen</span>
-              </div>
-            )}
+            <p className="text-sm text-gray-600 mb-4">
+              Planlarının gerçekleşen satış ve ROI performansını incele.
+            </p>
+            <Button variant="link" className="p-0 text-blue-600" disabled>
+              Rapora Git →
+            </Button>
           </CardContent>
         </Card>
       </div>
-
-      {/* Aktiviteler */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Aktiviteler</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ScrollArea className="h-[400px]">
-            <div className="space-y-4">
-              {activities.length === 0 ? (
-                <p className="text-sm text-gray-500 text-center py-8">Henüz aktivite bulunmuyor</p>
-              ) : (
-                activities.map((activity) => {
-                  const Icon = getActivityIcon(activity.type);
-                  const StatusIcon = activity.status === 'success' 
-                    ? CheckCircle2 
-                    : activity.status === 'pending' 
-                    ? Clock 
-                    : AlertCircle;
-
-                  return (
-                    <div
-                      key={activity.id}
-                      className="flex items-start gap-4 p-3 rounded-lg border border-gray-200 hover:bg-gray-50 transition-colors"
-                    >
-                      <div className={`p-2 rounded-full bg-gray-100 ${getActivityColor(activity.status)}`}>
-                        <Icon className="h-4 w-4" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <p className="text-sm font-medium text-gray-900">{activity.action}</p>
-                          {activity.status && (
-                            <StatusIcon
-                              className={`h-4 w-4 ${getActivityColor(activity.status)}`}
-                            />
-                          )}
-                        </div>
-                        <div className="flex items-center gap-2 text-xs text-gray-500">
-                          <span>{activity.user}</span>
-                          <span>•</span>
-                          <span>{formatTimeAgo(activity.timestamp)}</span>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-          </ScrollArea>
-        </CardContent>
-      </Card>
     </div>
   );
 }
-

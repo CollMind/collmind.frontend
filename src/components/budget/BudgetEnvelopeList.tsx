@@ -73,18 +73,30 @@ export function BudgetEnvelopeList({
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [ragFilter, setRagFilter] = useState<string>('all');
 
-  // Özet hesaplamaları
+  // Helper function to safely convert decimal values to number
+  const safeNumber = (value: any): number => {
+    if (value == null) return 0;
+    if (typeof value === 'string') {
+      const cleaned = value.replace(/,/g, '');
+      const parsed = parseFloat(cleaned);
+      return isNaN(parsed) ? 0 : parsed;
+    }
+    const num = Number(value);
+    return isNaN(num) ? 0 : num;
+  };
+
+  // Özet hesaplamaları - Backend'den gelen decimal değerleri güvenli şekilde number'a dönüştür
   const summary = useMemo(() => {
     const totalAllocated = envelopes.reduce(
-      (sum, env) => sum + (env.allocatedAmount || 0),
+      (sum, env) => sum + safeNumber(env.allocatedAmount),
       0
     );
     const totalReserved = envelopes.reduce(
-      (sum, env) => sum + (env.reservedAmount || 0),
+      (sum, env) => sum + safeNumber(env.reservedAmount),
       0
     );
     const totalConsumed = envelopes.reduce(
-      (sum, env) => sum + (env.consumedAmount || 0),
+      (sum, env) => sum + safeNumber(env.consumedAmount),
       0
     );
     const totalAvailable = totalAllocated - totalReserved - totalConsumed;
@@ -125,11 +137,12 @@ export function BudgetEnvelopeList({
       // RAG
       let matchesRAG = true;
       if (ragFilter !== 'all') {
+        const allocated = safeNumber(envelope.allocatedAmount);
+        const consumed = safeNumber(envelope.consumedAmount);
+        const reserved = safeNumber(envelope.reservedAmount);
         const utilization =
-          envelope.allocatedAmount > 0
-            ? ((envelope.consumedAmount + (envelope.reservedAmount || 0)) /
-                envelope.allocatedAmount) *
-              100
+          allocated > 0
+            ? ((consumed + reserved) / allocated) * 100
             : 0;
         const ragStatus = getRAGStatus(utilization);
         matchesRAG = ragFilter === ragStatus;
@@ -333,11 +346,13 @@ export function BudgetEnvelopeList({
                 </thead>
                 <tbody>
                   {filteredEnvelopes.map((envelope) => {
+                    const allocated = safeNumber(envelope.allocatedAmount);
+                    const consumed = safeNumber(envelope.consumedAmount);
+                    const reserved = safeNumber(envelope.reservedAmount);
+                    const available = safeNumber(envelope.availableAmount);
                     const utilization =
-                      envelope.allocatedAmount > 0
-                        ? ((envelope.consumedAmount + (envelope.reservedAmount || 0)) /
-                            envelope.allocatedAmount) *
-                          100
+                      allocated > 0
+                        ? ((consumed + reserved) / allocated) * 100
                         : 0;
                     const ragStatus = getRAGStatus(utilization);
 
@@ -347,16 +362,16 @@ export function BudgetEnvelopeList({
                         <td className="p-3">{envelope.category || '-'}</td>
                         <td className="p-3">{envelope.period}</td>
                         <td className="p-3 text-right">
-                          {formatCurrency(envelope.allocatedAmount, envelope.currency)}
+                          {formatCurrency(allocated, envelope.currency)}
                         </td>
                         <td className="p-3 text-right">
-                          {formatCurrency(envelope.reservedAmount || 0, envelope.currency)}
+                          {formatCurrency(reserved, envelope.currency)}
                         </td>
                         <td className="p-3 text-right">
-                          {formatCurrency(envelope.consumedAmount, envelope.currency)}
+                          {formatCurrency(consumed, envelope.currency)}
                         </td>
                         <td className="p-3 text-right text-green-600 font-medium">
-                          {formatCurrency(envelope.availableAmount, envelope.currency)}
+                          {formatCurrency(available, envelope.currency)}
                         </td>
                         <td className="p-3">
                           <div className="flex items-center gap-2">
@@ -401,7 +416,7 @@ export function BudgetEnvelopeList({
                             >
                               <Eye className="h-4 w-4" />
                             </Button>
-                            {onReserveClick && envelope.availableAmount > 0 && (
+                            {onReserveClick && safeNumber(envelope.availableAmount) > 0 && (
                               <Button
                                 variant="default"
                                 size="sm"

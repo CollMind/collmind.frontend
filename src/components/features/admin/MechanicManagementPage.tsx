@@ -31,6 +31,11 @@ interface Mechanic {
   name: string;
   description?: string;
   tacticId: string;
+  tactic?: {
+    id: string;
+    code: string;
+    name: string;
+  };
   mechanicType: 'PERCENT' | 'AMOUNT' | 'AMOUNT_PER_UNIT';
   isActive?: boolean;
 }
@@ -182,9 +187,14 @@ export function MechanicManagementPage() {
     }
   };
 
-  const getTacticName = (tacticId: string) => {
-    const tactic = tactics.find(t => t.id === tacticId);
-    return tactic ? `${tactic.code} - ${tactic.name}` : tacticId;
+  const getTacticName = (mechanic: Mechanic) => {
+    // Önce mechanic'in kendi tactic relation'ını kontrol et
+    if (mechanic.tactic) {
+      return `${mechanic.tactic.code} - ${mechanic.tactic.name}`;
+    }
+    // Fallback: tactics listesinden bul
+    const tactic = tactics.find(t => t.id === mechanic.tacticId);
+    return tactic ? `${tactic.code} - ${tactic.name}` : mechanic.tacticId;
   };
 
   return (
@@ -233,7 +243,14 @@ export function MechanicManagementPage() {
                 <TableRow key={mechanic.id}>
                   <TableCell className="font-medium">{mechanic.code}</TableCell>
                   <TableCell>{mechanic.name}</TableCell>
-                  <TableCell>{getTacticName(mechanic.tacticId)}</TableCell>
+                  <TableCell>
+                    <div className="flex flex-col">
+                      <span className="font-medium">{getTacticName(mechanic)}</span>
+                      {mechanic.tactic && (
+                        <span className="text-xs text-gray-500">Taktik ID: {mechanic.tactic.id}</span>
+                      )}
+                    </div>
+                  </TableCell>
                   <TableCell>{mechanic.mechanicType}</TableCell>
                   <TableCell>
                     <span className={`px-2 py-1 rounded text-xs ${

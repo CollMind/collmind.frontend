@@ -142,3 +142,10 @@ export function useChangeUserPassword() {
     },
   });
 }
+
+export function useDashboardSummary() {
+  return useQuery({
+    queryKey: [...userKeys.all, 'dashboard-summary'],
+    queryFn: () => userEndpoints.getDashboardSummary().then((res) => res.data),
+  });
+}

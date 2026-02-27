@@ -19,25 +19,37 @@ export function BudgetDashboard({ onCreateEnvelope }: BudgetDashboardProps) {
 
   const envelopesArray = Array.isArray(envelopes) ? envelopes : [];
 
-  // Özet hesaplamaları
+  // Helper function to safely convert decimal values to number
+  const safeNumber = (value: any): number => {
+    if (value == null) return 0;
+    if (typeof value === 'string') {
+      const cleaned = value.replace(/,/g, '');
+      const parsed = parseFloat(cleaned);
+      return isNaN(parsed) ? 0 : parsed;
+    }
+    const num = Number(value);
+    return isNaN(num) ? 0 : num;
+  };
+
+  // Özet hesaplamaları - Backend'den gelen decimal değerleri güvenli şekilde number'a dönüştür
   const totalAllocated = envelopesArray.reduce(
-    (sum, env) => sum + (env.allocatedAmount || 0),
+    (sum, env) => sum + safeNumber(env.allocatedAmount),
     0
   );
   const totalReserved = envelopesArray.reduce(
-    (sum, env) => sum + (env.reservedAmount || 0),
+    (sum, env) => sum + safeNumber(env.reservedAmount),
     0
   );
   const totalConsumed = envelopesArray.reduce(
-    (sum, env) => sum + (env.consumedAmount || 0),
+    (sum, env) => sum + safeNumber(env.consumedAmount),
     0
   );
   const totalOnInvConsumed = envelopesArray.reduce(
-    (sum, env) => sum + (env.onInvoiceConsumed || 0),
+    (sum, env) => sum + safeNumber(env.onInvoiceConsumed),
     0
   );
   const totalOffInvConsumed = envelopesArray.reduce(
-    (sum, env) => sum + (env.offInvoiceConsumed || 0),
+    (sum, env) => sum + safeNumber(env.offInvoiceConsumed),
     0
   );
   const totalAvailable = totalAllocated - totalReserved - totalConsumed;
@@ -203,28 +215,28 @@ export function BudgetDashboard({ onCreateEnvelope }: BudgetDashboardProps) {
                       <td className="p-3 font-medium">{formatCode(envelope)}</td>
                       <td className="p-3">{envelope.period}</td>
                       <td className="p-3 text-right">
-                        {formatCurrency(envelope.allocatedAmount, envelope.currency)}
+                        {formatCurrency(safeNumber(envelope.allocatedAmount), envelope.currency)}
                       </td>
                       <td className="p-3 text-right">
                         {formatCurrency(
-                          envelope.onInvoiceConsumed || 0,
+                          safeNumber(envelope.onInvoiceConsumed),
                           envelope.currency
                         )}
                       </td>
                       <td className="p-3 text-right">
                         {formatCurrency(
-                          envelope.offInvoiceConsumed || 0,
+                          safeNumber(envelope.offInvoiceConsumed),
                           envelope.currency
                         )}
                       </td>
                       <td className="p-3 text-right">
                         {formatCurrency(
-                          envelope.reservedAmount || 0,
+                          safeNumber(envelope.reservedAmount),
                           envelope.currency
                         )}
                       </td>
                       <td className="p-3 text-right text-green-600 font-medium">
-                        {formatCurrency(envelope.availableAmount, envelope.currency)}
+                        {formatCurrency(safeNumber(envelope.availableAmount), envelope.currency)}
                       </td>
                       <td className="p-3 text-center">
                         <div className="flex justify-center gap-2">
