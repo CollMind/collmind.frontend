@@ -426,6 +426,7 @@ export function PlanningGrid({ plan, canEdit }: PlanningGridProps) {
                       getFuCellValue={getFuCellValue}
                       onRemoveFu={handleRemoveFu}
                       isRemovingFu={removeFuMutation.isPending}
+                      gridKpis={gridKpis}
                     />
                   );
                 })
@@ -466,10 +467,11 @@ function FuRow({
   getFuCellValue,
   onRemoveFu,
   isRemovingFu,
+  gridKpis,
 }: {
   planFu: PlanFu;
   isExpanded: boolean;
-  columns: Array<{ code: string; name: string; format: string; decimals: number; editable?: boolean }>;
+  columns: Array<{ code: string; name: string; format: string; decimals: number; editable?: boolean; calculationLevel?: string | null; isKpi?: boolean }>;
   canEdit: boolean;
   editingCell: { skuId: string; field: string } | null;
   editInputRef: React.RefObject<HTMLInputElement>;
@@ -480,6 +482,7 @@ function FuRow({
   getFuCellValue: (planFu: PlanFu, colCode: string) => string;
   onRemoveFu: (fuId: string, fuName: string) => void;
   isRemovingFu: boolean;
+  gridKpis: Array<{ kpiCode: string; formulaType?: string; calculationLevel?: string }>;
 }) {
   return (
     <>
