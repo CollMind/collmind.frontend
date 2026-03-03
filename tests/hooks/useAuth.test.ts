@@ -1,11 +1,28 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { renderHook, waitFor } from '@testing-library/react';
+import { describe, it, expect, beforeEach } from 'vitest';
+import { renderHook } from '@testing-library/react';
 import React from 'react';
+import { Provider } from 'react-redux';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { BrowserRouter } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { render } from '../utils/test-utils';
 import { store } from '@/store';
-import { setCredentials, logout, clearError } from '@/store/slices/auth.slice';
+import { setCredentials, logout } from '@/store/slices/auth.slice';
 import { User } from '@/types/user.types';
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: { retry: false },
+    mutations: { retry: false },
+  },
+});
+
+const wrapper = ({ children }: { children: React.ReactNode }) => (
+  <Provider store={store}>
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>{children}</BrowserRouter>
+    </QueryClientProvider>
+  </Provider>
+);
 
 const mockUser: User = {
   id: '1',
@@ -25,9 +42,7 @@ describe('useAuth', () => {
   });
 
   it('should return initial state when not authenticated', () => {
-    const { result } = renderHook(() => useAuth(), {
-      wrapper: ({ children }) => render(children),
-    });
+    const { result } = renderHook(() => useAuth(), { wrapper });
 
     expect(result.current.isAuthenticated).toBe(false);
     expect(result.current.user).toBeNull();
@@ -44,9 +59,7 @@ describe('useAuth', () => {
       })
     );
 
-    const { result } = renderHook(() => useAuth(), {
-      wrapper: ({ children }) => render(children),
-    });
+    const { result } = renderHook(() => useAuth(), { wrapper });
 
     expect(result.current.isAuthenticated).toBe(true);
     expect(result.current.user).toEqual(mockUser);
@@ -54,25 +67,19 @@ describe('useAuth', () => {
   });
 
   it('should provide login function', () => {
-    const { result } = renderHook(() => useAuth(), {
-      wrapper: ({ children }) => render(children),
-    });
+    const { result } = renderHook(() => useAuth(), { wrapper });
 
     expect(typeof result.current.login).toBe('function');
   });
 
   it('should provide logout function', () => {
-    const { result } = renderHook(() => useAuth(), {
-      wrapper: ({ children }) => render(children),
-    });
+    const { result } = renderHook(() => useAuth(), { wrapper });
 
     expect(typeof result.current.logout).toBe('function');
   });
 
   it('should provide refreshToken function', () => {
-    const { result } = renderHook(() => useAuth(), {
-      wrapper: ({ children }) => render(children),
-    });
+    const { result } = renderHook(() => useAuth(), { wrapper });
 
     expect(typeof result.current.refreshToken).toBe('function');
   });
@@ -86,9 +93,7 @@ describe('useAuth', () => {
       })
     );
 
-    const { result } = renderHook(() => useAuth(), {
-      wrapper: ({ children }) => render(children),
-    });
+    const { result } = renderHook(() => useAuth(), { wrapper });
 
     expect(typeof result.current.clearError).toBe('function');
     
@@ -98,9 +103,7 @@ describe('useAuth', () => {
   });
 
   it('should return loading state correctly', () => {
-    const { result } = renderHook(() => useAuth(), {
-      wrapper: ({ children }) => render(children),
-    });
+    const { result } = renderHook(() => useAuth(), { wrapper });
 
     expect(result.current.isLoading).toBe(false);
     expect(result.current.isLoggingIn).toBe(false);

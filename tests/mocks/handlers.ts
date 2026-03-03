@@ -459,5 +459,505 @@ export const handlers = [
       ],
     }, { status: 201 });
   }),
+
+  // Tenant handlers
+  http.get(`${API_BASE_URL}/tenants`, () => {
+    return HttpResponse.json([
+      {
+        id: '1',
+        code: 'TENANT001',
+        name: 'Test Tenant',
+        status: 'ACTIVE',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+    ]);
+  }),
+
+  http.get(`${API_BASE_URL}/tenants/:id`, ({ params }) => {
+    return HttpResponse.json({
+      id: params.id as string,
+      code: 'TENANT001',
+      name: 'Test Tenant',
+      status: 'ACTIVE',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    });
+  }),
+
+  http.get(`${API_BASE_URL}/tenants/:id/stats`, () => {
+    return HttpResponse.json({
+      totalUsers: 10,
+      totalCustomers: 50,
+      totalAgreements: 20,
+      totalPlans: 15,
+    });
+  }),
+
+  http.post(`${API_BASE_URL}/tenants`, async ({ request }) => {
+    const body = await request.json() as any;
+    return HttpResponse.json({
+      id: '2',
+      ...body,
+      status: 'ACTIVE',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    }, { status: 201 });
+  }),
+
+  http.patch(`${API_BASE_URL}/tenants/:id`, async ({ params, request }) => {
+    const body = await request.json() as any;
+    return HttpResponse.json({
+      id: params.id as string,
+      code: 'TENANT001',
+      name: 'Test Tenant',
+      status: 'ACTIVE',
+      ...body,
+      updatedAt: new Date().toISOString(),
+    });
+  }),
+
+  http.delete(`${API_BASE_URL}/tenants/:id`, () => {
+    return new HttpResponse(null, { status: 204 });
+  }),
+
+  http.post(`${API_BASE_URL}/tenants/:id/activate`, ({ params }) => {
+    return HttpResponse.json({
+      id: params.id as string,
+      code: 'TENANT001',
+      name: 'Test Tenant',
+      status: 'ACTIVE',
+      updatedAt: new Date().toISOString(),
+    });
+  }),
+
+  http.post(`${API_BASE_URL}/tenants/:id/suspend`, ({ params }) => {
+    return HttpResponse.json({
+      id: params.id as string,
+      code: 'TENANT001',
+      name: 'Test Tenant',
+      status: 'SUSPENDED',
+      updatedAt: new Date().toISOString(),
+    });
+  }),
+
+  // Agreement handlers
+  http.get(`${API_BASE_URL}/agreements`, ({ request }) => {
+    const url = new URL(request.url);
+    const status = url.searchParams.get('status');
+    return HttpResponse.json([
+      {
+        id: '1',
+        code: 'AGR001',
+        name: 'Test Agreement',
+        status: status || 'DRAFT',
+        tenantId: 'tenant-1',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+    ]);
+  }),
+
+  http.get(`${API_BASE_URL}/agreements/:id`, ({ params }) => {
+    return HttpResponse.json({
+      id: params.id as string,
+      code: 'AGR001',
+      name: 'Test Agreement',
+      status: 'DRAFT',
+      tenantId: 'tenant-1',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    });
+  }),
+
+  http.post(`${API_BASE_URL}/agreements`, async ({ request }) => {
+    const body = await request.json() as any;
+    return HttpResponse.json({
+      id: '2',
+      ...body,
+      status: 'DRAFT',
+      tenantId: 'tenant-1',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    }, { status: 201 });
+  }),
+
+  http.patch(`${API_BASE_URL}/agreements/:id`, async ({ params, request }) => {
+    const body = await request.json() as any;
+    return HttpResponse.json({
+      id: params.id as string,
+      code: 'AGR001',
+      name: 'Test Agreement',
+      status: 'DRAFT',
+      ...body,
+      updatedAt: new Date().toISOString(),
+    });
+  }),
+
+  http.delete(`${API_BASE_URL}/agreements/:id`, () => {
+    return new HttpResponse(null, { status: 204 });
+  }),
+
+  http.post(`${API_BASE_URL}/agreements/:id/submit`, ({ params }) => {
+    return HttpResponse.json({
+      id: params.id as string,
+      code: 'AGR001',
+      name: 'Test Agreement',
+      status: 'PENDING',
+      tenantId: 'tenant-1',
+      updatedAt: new Date().toISOString(),
+    });
+  }),
+
+  http.post(`${API_BASE_URL}/agreements/:id/approve`, ({ params }) => {
+    return HttpResponse.json({
+      id: params.id as string,
+      code: 'AGR001',
+      name: 'Test Agreement',
+      status: 'APPROVED',
+      tenantId: 'tenant-1',
+      updatedAt: new Date().toISOString(),
+    });
+  }),
+
+  http.post(`${API_BASE_URL}/agreements/:id/reject`, ({ params }) => {
+    return HttpResponse.json({
+      id: params.id as string,
+      code: 'AGR001',
+      name: 'Test Agreement',
+      status: 'REJECTED',
+      tenantId: 'tenant-1',
+      updatedAt: new Date().toISOString(),
+    });
+  }),
+
+  http.post(`${API_BASE_URL}/agreements/:id/cancel`, ({ params }) => {
+    return HttpResponse.json({
+      id: params.id as string,
+      code: 'AGR001',
+      name: 'Test Agreement',
+      status: 'CANCELLED',
+      tenantId: 'tenant-1',
+      updatedAt: new Date().toISOString(),
+    });
+  }),
+
+  // Budget handlers
+  http.get(`${API_BASE_URL}/budget/envelopes`, () => {
+    return HttpResponse.json([
+      {
+        id: '1',
+        code: 'ENV001',
+        name: 'Test Envelope',
+        allocatedAmount: 100000,
+        consumedAmount: 50000,
+        reservedAmount: 20000,
+        availableAmount: 30000,
+        period: '2024-Q1',
+        tenantId: 'tenant-1',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+    ]);
+  }),
+
+  http.get(`${API_BASE_URL}/budget/envelopes/:id`, ({ params }) => {
+    return HttpResponse.json({
+      id: params.id as string,
+      code: 'ENV001',
+      name: 'Test Envelope',
+      allocatedAmount: 100000,
+      consumedAmount: 50000,
+      reservedAmount: 20000,
+      availableAmount: 30000,
+      period: '2024-Q1',
+      tenantId: 'tenant-1',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    });
+  }),
+
+  http.post(`${API_BASE_URL}/budget/envelopes`, async ({ request }) => {
+    const body = await request.json() as any;
+    return HttpResponse.json({
+      id: '2',
+      ...body,
+      tenantId: 'tenant-1',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    }, { status: 201 });
+  }),
+
+  http.post(`${API_BASE_URL}/budget/reserve`, async ({ request }) => {
+    const body = await request.json() as any;
+    return HttpResponse.json({
+      id: '1',
+      envelopeId: body.envelopeId,
+      amount: body.amount,
+      status: 'PENDING',
+      createdAt: new Date().toISOString(),
+    });
+  }),
+
+  http.post(`${API_BASE_URL}/budget/reservations/:id/approve`, ({ params }) => {
+    return HttpResponse.json({
+      id: params.id as string,
+      status: 'APPROVED',
+      updatedAt: new Date().toISOString(),
+    });
+  }),
+
+  http.post(`${API_BASE_URL}/budget/reservations/:id/reject`, ({ params }) => {
+    return HttpResponse.json({
+      id: params.id as string,
+      status: 'REJECTED',
+      updatedAt: new Date().toISOString(),
+    });
+  }),
+
+  http.get(`${API_BASE_URL}/budget/envelopes/:id/reservations`, () => {
+    return HttpResponse.json([
+      {
+        id: '1',
+        envelopeId: '1',
+        amount: 10000,
+        status: 'PENDING',
+        createdAt: new Date().toISOString(),
+      },
+    ]);
+  }),
+
+  http.get(`${API_BASE_URL}/budget/envelopes/:id/reserved-amount`, () => {
+    return HttpResponse.json({
+      reservedAmount: 20000,
+    });
+  }),
+
+  http.get(`${API_BASE_URL}/budget/envelopes/:id/transactions`, () => {
+    return HttpResponse.json([
+      {
+        id: '1',
+        envelopeId: '1',
+        type: 'RESERVATION',
+        amount: 10000,
+        createdAt: new Date().toISOString(),
+      },
+    ]);
+  }),
+
+  // Ledger handlers
+  http.get(`${API_BASE_URL}/ledger`, ({ request }) => {
+    const url = new URL(request.url);
+    const envelopeId = url.searchParams.get('envelopeId');
+    return HttpResponse.json([
+      {
+        id: '1',
+        envelopeId: envelopeId || 'envelope-1',
+        agreementId: 'agreement-1',
+        type: 'RESERVATION',
+        amount: 10000,
+        description: 'Test entry',
+        createdAt: new Date().toISOString(),
+      },
+    ]);
+  }),
+
+  http.get(`${API_BASE_URL}/ledger/:id`, ({ params }) => {
+    return HttpResponse.json({
+      id: params.id as string,
+      envelopeId: 'envelope-1',
+      agreementId: 'agreement-1',
+      type: 'RESERVATION',
+      amount: 10000,
+      description: 'Test entry',
+      createdAt: new Date().toISOString(),
+    });
+  }),
+
+  http.get(`${API_BASE_URL}/ledger/agreement/:id`, ({ params }) => {
+    return HttpResponse.json([
+      {
+        id: '1',
+        envelopeId: 'envelope-1',
+        agreementId: params.id as string,
+        type: 'RESERVATION',
+        amount: 10000,
+        createdAt: new Date().toISOString(),
+      },
+    ]);
+  }),
+
+  http.get(`${API_BASE_URL}/ledger/agreement/:id/consumed`, () => {
+    return HttpResponse.json({
+      consumedAmount: 50000,
+    });
+  }),
+
+  http.get(`${API_BASE_URL}/ledger/envelope/:id`, ({ params }) => {
+    return HttpResponse.json([
+      {
+        id: '1',
+        envelopeId: params.id as string,
+        agreementId: 'agreement-1',
+        type: 'RESERVATION',
+        amount: 10000,
+        createdAt: new Date().toISOString(),
+      },
+    ]);
+  }),
+
+  http.get(`${API_BASE_URL}/ledger/envelope/:id/consumed`, () => {
+    return HttpResponse.json({
+      consumedAmount: 75000,
+    });
+  }),
+
+  // Notification handlers
+  http.get(`${API_BASE_URL}/notifications`, ({ request }) => {
+    const url = new URL(request.url);
+    const limit = url.searchParams.get('limit');
+    return HttpResponse.json([
+      {
+        id: '1',
+        type: 'AGREEMENT_APPROVED',
+        title: 'Anlaşma Onaylandı',
+        message: 'Test anlaşması onaylandı',
+        read: false,
+        createdAt: new Date().toISOString(),
+      },
+    ]);
+  }),
+
+  http.get(`${API_BASE_URL}/notifications/unread`, () => {
+    return HttpResponse.json([
+      {
+        id: '1',
+        type: 'AGREEMENT_APPROVED',
+        title: 'Anlaşma Onaylandı',
+        message: 'Test anlaşması onaylandı',
+        read: false,
+        createdAt: new Date().toISOString(),
+      },
+    ]);
+  }),
+
+  http.patch(`${API_BASE_URL}/notifications/:id/read`, ({ params }) => {
+    return HttpResponse.json({
+      id: params.id as string,
+      type: 'AGREEMENT_APPROVED',
+      title: 'Anlaşma Onaylandı',
+      message: 'Test anlaşması onaylandı',
+      read: true,
+      updatedAt: new Date().toISOString(),
+    });
+  }),
+
+  // Master data handlers
+  http.get(`${API_BASE_URL}/master-data/channels`, ({ request }) => {
+    const url = new URL(request.url);
+    const activeOnly = url.searchParams.get('activeOnly');
+    return HttpResponse.json([
+      {
+        id: '1',
+        code: 'CH001',
+        name: 'Test Channel',
+        status: 'ACTIVE',
+      },
+    ]);
+  }),
+
+  http.get(`${API_BASE_URL}/master-data/categories`, () => {
+    return HttpResponse.json([
+      {
+        id: '1',
+        code: 'CAT001',
+        name: 'Test Category',
+        status: 'ACTIVE',
+      },
+    ]);
+  }),
+
+  http.get(`${API_BASE_URL}/master-data/cpls`, ({ request }) => {
+    const url = new URL(request.url);
+    const channelId = url.searchParams.get('channelId');
+    return HttpResponse.json([
+      {
+        id: '1',
+        code: 'CPL001',
+        name: 'Test CPL',
+        channelId: channelId || null,
+      },
+    ]);
+  }),
+
+  http.get(`${API_BASE_URL}/master-data/forecasting-units`, () => {
+    return HttpResponse.json([
+      {
+        id: '1',
+        code: 'FU001',
+        name: 'Test FU',
+      },
+    ]);
+  }),
+
+  http.get(`${API_BASE_URL}/master-data/generic-units`, () => {
+    return HttpResponse.json([
+      {
+        id: '1',
+        code: 'GU001',
+        name: 'Test GU',
+      },
+    ]);
+  }),
+
+  http.get(`${API_BASE_URL}/master-data/skus`, () => {
+    return HttpResponse.json([
+      {
+        id: '1',
+        code: 'SKU001',
+        name: 'Test SKU',
+      },
+    ]);
+  }),
+
+  http.get(`${API_BASE_URL}/master-data/tactics`, () => {
+    return HttpResponse.json([
+      {
+        id: '1',
+        code: 'TAC001',
+        name: 'Test Tactic',
+      },
+    ]);
+  }),
+
+  http.get(`${API_BASE_URL}/master-data/mechanics`, () => {
+    return HttpResponse.json([
+      {
+        id: '1',
+        code: 'MEC001',
+        name: 'Test Mechanic',
+      },
+    ]);
+  }),
+
+  http.get(`${API_BASE_URL}/master-data/brands`, () => {
+    return HttpResponse.json([
+      {
+        id: '1',
+        code: 'BRAND001',
+        name: 'Test Brand',
+      },
+    ]);
+  }),
+
+  http.get(`${API_BASE_URL}/master-data/regions`, () => {
+    return HttpResponse.json([
+      {
+        id: '1',
+        code: 'REG001',
+        name: 'Test Region',
+      },
+    ]);
+  }),
 ];
 

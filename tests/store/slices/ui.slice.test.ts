@@ -89,6 +89,9 @@ describe('uiSlice', () => {
       addNotification({ type: 'warning', message: 'Second' })
     );
 
+    // Ensure we have 2 notifications
+    expect(stateWithTwo.notifications).toHaveLength(2);
+
     const state = uiReducer(stateWithTwo, removeNotification(firstId));
 
     expect(state.notifications).toHaveLength(1);

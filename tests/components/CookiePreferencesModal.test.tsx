@@ -34,7 +34,8 @@ describe('CookiePreferencesModal', () => {
       expect(screen.getByText(/Cookie Preferences/i)).toBeInTheDocument();
     });
 
-    expect(screen.getByText(/Necessary Cookies/i)).toBeInTheDocument();
+    // Use getAllByText since "Necessary Cookies" appears multiple times
+    expect(screen.getAllByText(/Necessary Cookies/i).length).toBeGreaterThan(0);
     expect(screen.getByText(/Functional Cookies/i)).toBeInTheDocument();
     expect(screen.getByText(/Analytics Cookies/i)).toBeInTheDocument();
     expect(screen.getByText(/Marketing Cookies/i)).toBeInTheDocument();
@@ -48,7 +49,7 @@ describe('CookiePreferencesModal', () => {
     await user.click(openButton);
 
     await waitFor(() => {
-      expect(screen.getByText(/Necessary Cookies/i)).toBeInTheDocument();
+      expect(screen.getAllByText(/Necessary Cookies/i).length).toBeGreaterThan(0);
     });
 
     // Check all categories are present

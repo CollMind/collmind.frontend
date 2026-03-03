@@ -45,13 +45,8 @@ describe('retry', () => {
     // Fast-forward time for all retries
     await vi.advanceTimersByTimeAsync(300);
 
-    try {
-      await promise;
-      expect.fail('Should have thrown an error');
-    } catch (e) {
-      expect(e).toBe(error);
-      expect(fn).toHaveBeenCalledTimes(3); // Initial + 2 retries
-    }
+    await expect(promise).rejects.toBe(error);
+    expect(fn).toHaveBeenCalledTimes(3); // Initial + 2 retries
   });
 
   it('should not retry if condition returns false', async () => {
@@ -72,13 +67,8 @@ describe('retry', () => {
 
     await vi.advanceTimersByTimeAsync(100);
 
-    try {
-      await promise;
-      expect.fail('Should have thrown an error');
-    } catch (e) {
-      expect(e).toBe(error);
-      expect(fn).toHaveBeenCalledTimes(1); // No retries
-    }
+    await expect(promise).rejects.toBe(error);
+    expect(fn).toHaveBeenCalledTimes(1); // No retries
   });
 
   it('should use exponential backoff', async () => {

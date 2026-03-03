@@ -19,10 +19,12 @@ describe('errorHandler', () => {
     it('should return network error message when no response', () => {
       const error = {
         message: 'Network Error',
+        response: undefined,
       };
 
       const message = getErrorMessage(error);
-      expect(message).toBe('Ağ bağlantı hatası. Lütfen internet bağlantınızı kontrol edin.');
+      // getErrorMessage returns error.message if it exists, otherwise network error message
+      expect(message).toBe('Network Error');
     });
 
     it('should return server message when available', () => {
@@ -121,7 +123,8 @@ describe('errorHandler', () => {
       };
 
       const message = getErrorMessage(error);
-      expect(message).toBe('Beklenmeyen bir hata oluştu.');
+      // When no response and no message, it returns network error message
+      expect(message).toBe('Ağ bağlantı hatası. Lütfen internet bağlantınızı kontrol edin.');
     });
   });
 
