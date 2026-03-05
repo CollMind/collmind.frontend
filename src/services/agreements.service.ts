@@ -245,11 +245,11 @@ export function useAgreementPermissions(agreement: Agreement | undefined) {
 
   const canApprove =
     agreement.status === AgreementStatus.PENDING &&
-    (userRole === UserRole.ADMIN || userRole === UserRole.MANAGER || userRole === UserRole.FINANCE);
+    userRole === UserRole.MANAGER;
 
   const canReject =
     agreement.status === AgreementStatus.PENDING &&
-    (userRole === UserRole.ADMIN || userRole === UserRole.MANAGER || userRole === UserRole.FINANCE);
+    userRole === UserRole.MANAGER;
 
   const canCancel =
     (agreement.status === AgreementStatus.APPROVED ||
