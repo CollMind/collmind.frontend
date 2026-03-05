@@ -25,6 +25,8 @@ import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { userEndpoints } from '@/api/endpoints/users.endpoints';
 import { useNavigate } from 'react-router-dom';
 import { toNumber } from '@/utils/numberUtils';
+import { useMe } from '@/services/users.service';
+import { UserRole } from '@/types/user.types';
 
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('tr-TR', {
@@ -50,6 +52,7 @@ const formatDate = (dateString?: string) => {
 };
 
 export function AgreementApprovalsPage() {
+  const { data: user } = useMe();
   const toast = useToast();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -233,6 +236,7 @@ export function AgreementApprovalsPage() {
             <AgreementApprovalCard
               key={agreement.id}
               agreement={agreement}
+              userRole={user?.role}
               onReview={() => {
                 setSelectedAgreement(agreement);
                 navigate(`/agreements/${agreement.id}`);
@@ -302,6 +306,7 @@ export function AgreementApprovalsPage() {
 
 interface AgreementApprovalCardProps {
   agreement: Agreement;
+  userRole?: string;
   onReview: () => void;
   onApprove: () => void;
   onReject: () => void;
@@ -311,6 +316,7 @@ interface AgreementApprovalCardProps {
 
 function AgreementApprovalCard({
   agreement,
+  userRole,
   onReview,
   onApprove,
   onReject,
@@ -408,23 +414,27 @@ function AgreementApprovalCard({
             <Eye className="mr-2 h-4 w-4" />
             Detay İncele
           </Button>
-          <Button
-            variant="destructive"
-            onClick={onReject}
-            disabled={isRejecting || isApproving}
-            className="flex-1"
-          >
-            <X className="mr-2 h-4 w-4" />
-            Reddet
-          </Button>
-          <Button
-            onClick={onApprove}
-            disabled={isApproving || isRejecting}
-            className="flex-1 bg-green-600 hover:bg-green-700"
-          >
-            <Check className="mr-2 h-4 w-4" />
-            Onayla
-          </Button>
+          {userRole === UserRole.MANAGER && (
+            <>
+              <Button
+                variant="destructive"
+                onClick={onReject}
+                disabled={isRejecting || isApproving}
+                className="flex-1"
+              >
+                <X className="mr-2 h-4 w-4" />
+                Reddet
+              </Button>
+              <Button
+                onClick={onApprove}
+                disabled={isApproving || isRejecting}
+                className="flex-1 bg-green-600 hover:bg-green-700"
+              >
+                <Check className="mr-2 h-4 w-4" />
+                Onayla
+              </Button>
+            </>
+          )}
         </div>
       </CardContent>
     </Card>

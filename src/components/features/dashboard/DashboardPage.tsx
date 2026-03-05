@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { Link } from 'react-router-dom';
+import { isReadOnly } from '@/utils/roleUtils';
 
 export function DashboardPage() {
   const { data: user, isLoading: userLoading } = useMe();
@@ -54,20 +55,22 @@ export function DashboardPage() {
       </div>
 
       {/* Action Buttons */}
-      <div className="flex gap-4 justify-end">
-        <Link to="/agreements?new=true">
-          <Button variant="outline" className="bg-blue-50 text-blue-700 hover:bg-blue-100">
-            <FileText className="mr-2 h-4 w-4" />
-            Yeni Anlaşma
-          </Button>
-        </Link>
-        <Link to="/plans?new=true">
-          <Button className="bg-blue-600 text-white hover:bg-blue-700">
-            <span className="mr-2">+</span>
-            Yeni Plan
-          </Button>
-        </Link>
-      </div>
+      {!isReadOnly(user?.role) && (
+        <div className="flex gap-4 justify-end">
+          <Link to="/agreements?new=true">
+            <Button variant="outline" className="bg-blue-50 text-blue-700 hover:bg-blue-100">
+              <FileText className="mr-2 h-4 w-4" />
+              Yeni Anlaşma
+            </Button>
+          </Link>
+          <Link to="/plans?new=true">
+            <Button className="bg-blue-600 text-white hover:bg-blue-700">
+              <span className="mr-2">+</span>
+              Yeni Plan
+            </Button>
+          </Link>
+        </div>
+      )}
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

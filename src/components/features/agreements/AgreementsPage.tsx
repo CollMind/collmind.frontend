@@ -6,6 +6,8 @@ import { AgreementList } from '@/components/agreements';
 import { AgreementForm, LTAAgreementForm, STAAgreementForm } from '@/components/agreements';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { useMe } from '@/services/users.service';
+import { isReadOnly } from '@/utils/roleUtils';
 import {
   Dialog,
   DialogContent,
@@ -34,6 +36,7 @@ const formatCurrency = (amount: number, currency: string = 'TRY') => {
 };
 
 export function AgreementsPage() {
+  const { data: user } = useMe();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -141,33 +144,35 @@ export function AgreementsPage() {
             <Download className="h-4 w-4" />
             Download Excel
           </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button className="gap-2">
-                <Plus className="h-4 w-4" />
-                Yeni Anlaşma
-                <ChevronDown className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuItem
-                onClick={() => {
-                  setAgreementType(AgreementType.STA);
-                  setIsCreateDialogOpen(true);
-                }}
-              >
-                STA (Short-Term)
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={() => {
-                  setAgreementType(AgreementType.LTA);
-                  setIsCreateDialogOpen(true);
-                }}
-              >
-                LTA (Long-Term)
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {!isReadOnly(user?.role) && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button className="gap-2">
+                  <Plus className="h-4 w-4" />
+                  Yeni Anlaşma
+                  <ChevronDown className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem
+                  onClick={() => {
+                    setAgreementType(AgreementType.STA);
+                    setIsCreateDialogOpen(true);
+                  }}
+                >
+                  STA (Short-Term)
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => {
+                    setAgreementType(AgreementType.LTA);
+                    setIsCreateDialogOpen(true);
+                  }}
+                >
+                  LTA (Long-Term)
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
       </div>
 
