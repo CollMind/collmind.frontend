@@ -314,7 +314,7 @@ export const router = createBrowserRouter([
   {
     path: '/agreements',
     element: (
-      <ProtectedRoute requiredRole={['ADMIN', 'PLANNER', 'APPROVER', 'FINANCE']}>
+      <ProtectedRoute requiredRole={['ADMIN', 'PLANNER', 'MANAGER', 'FINANCE', 'READONLY']}>
         <AppLayout>
           <ErrorBoundary>
             <AgreementsPage />
@@ -326,7 +326,7 @@ export const router = createBrowserRouter([
   {
     path: '/agreements/:id',
     element: (
-      <ProtectedRoute requiredRole={['ADMIN', 'PLANNER', 'APPROVER', 'FINANCE']}>
+      <ProtectedRoute requiredRole={['ADMIN', 'PLANNER', 'MANAGER', 'FINANCE', 'READONLY']}>
         <AppLayout>
           <ErrorBoundary>
             <AgreementDetail />
@@ -350,7 +350,7 @@ export const router = createBrowserRouter([
   {
     path: '/agreement-approvals',
     element: (
-      <ProtectedRoute requiredRole={['ADMIN', 'APPROVER', 'FINANCE']}>
+      <ProtectedRoute requiredRole={['ADMIN', 'MANAGER', 'FINANCE', 'READONLY']}>
         <AppLayout>
           <ErrorBoundary>
             <AgreementApprovalsPage />
@@ -362,7 +362,7 @@ export const router = createBrowserRouter([
   {
     path: '/plans',
     element: (
-      <ProtectedRoute requiredRole={['ADMIN', 'PLANNER', 'CATEGORY_MANAGER', 'FINANCE']}>
+      <ProtectedRoute requiredRole={['ADMIN', 'PLANNER', 'CATEGORY_MANAGER', 'FINANCE', 'READONLY']}>
         <AppLayout>
           <ErrorBoundary>
             <PlansPage />
@@ -374,7 +374,7 @@ export const router = createBrowserRouter([
   {
     path: '/plans/:id',
     element: (
-      <ProtectedRoute requiredRole={['ADMIN', 'PLANNER', 'CATEGORY_MANAGER', 'FINANCE']}>
+      <ProtectedRoute requiredRole={['ADMIN', 'PLANNER', 'CATEGORY_MANAGER', 'FINANCE', 'READONLY']}>
         <AppLayout>
           <ErrorBoundary>
             <PlanDetailPage />
@@ -386,7 +386,7 @@ export const router = createBrowserRouter([
   {
     path: '/plan-approvals',
     element: (
-      <ProtectedRoute requiredRole={['ADMIN', 'APPROVER']}>
+      <ProtectedRoute requiredRole={['ADMIN', 'MANAGER', 'READONLY']}>
         <AppLayout>
           <ErrorBoundary>
             <PlanApprovalsPage />
@@ -398,7 +398,7 @@ export const router = createBrowserRouter([
   {
     path: '/finance',
     element: (
-      <ProtectedRoute requiredRole={['ADMIN', 'FINANCE', 'CATEGORY_MANAGER']}>
+      <ProtectedRoute requiredRole={['ADMIN', 'FINANCE', 'CATEGORY_MANAGER', 'READONLY']}>
         <AppLayout>
           <ErrorBoundary>
             <FinanceDashboard />
@@ -422,7 +422,7 @@ export const router = createBrowserRouter([
   {
     path: '/off-invoice/transactions',
     element: (
-      <ProtectedRoute requiredRole={['ADMIN', 'FINANCE', 'PLANNER']}>
+      <ProtectedRoute requiredRole={['ADMIN', 'FINANCE', 'PLANNER', 'READONLY']}>
         <AppLayout>
           <ErrorBoundary>
             <OffInvoiceTransactionsPage />
@@ -434,7 +434,7 @@ export const router = createBrowserRouter([
   {
     path: '/off-invoice',
     element: (
-      <ProtectedRoute requiredRole={['ADMIN', 'FINANCE', 'PLANNER']}>
+      <ProtectedRoute requiredRole={['ADMIN', 'FINANCE', 'PLANNER', 'READONLY']}>
         <AppLayout>
           <ErrorBoundary>
             <OffInvoiceTransactionsPage />
@@ -458,7 +458,7 @@ export const router = createBrowserRouter([
   {
     path: '/on-invoice',
     element: (
-      <ProtectedRoute requiredRole={['ADMIN', 'FINANCE', 'PLANNER']}>
+      <ProtectedRoute requiredRole={['ADMIN', 'FINANCE', 'PLANNER', 'READONLY']}>
         <AppLayout>
           <ErrorBoundary>
             <OnInvoiceUploadPage />

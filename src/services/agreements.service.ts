@@ -221,6 +221,18 @@ export function useAgreementPermissions(agreement: Agreement | undefined) {
   }
 
   const userRole = user.role as UserRole;
+
+  // READONLY users have no write permissions
+  if (userRole === UserRole.READONLY) {
+    return {
+      canEdit: false,
+      canSubmit: false,
+      canApprove: false,
+      canReject: false,
+      canCancel: false,
+      canDelete: false,
+    };
+  }
   const isOwner = agreement.tenantId === user.tenantId; // Basit kontrol, gerçekte createdBy kontrol edilmeli
 
   const canEdit =
@@ -233,11 +245,11 @@ export function useAgreementPermissions(agreement: Agreement | undefined) {
 
   const canApprove =
     agreement.status === AgreementStatus.PENDING &&
-    (userRole === 'ADMIN' || userRole === 'APPROVER' || userRole === 'FINANCE');
+    (userRole === UserRole.ADMIN || userRole === UserRole.MANAGER || userRole === UserRole.FINANCE);
 
   const canReject =
     agreement.status === AgreementStatus.PENDING &&
-    (userRole === 'ADMIN' || userRole === 'APPROVER' || userRole === 'FINANCE');
+    (userRole === UserRole.ADMIN || userRole === UserRole.MANAGER || userRole === UserRole.FINANCE);
 
   const canCancel =
     (agreement.status === AgreementStatus.APPROVED ||

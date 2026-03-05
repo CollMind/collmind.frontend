@@ -53,6 +53,8 @@ const getRoleColor = (role: string): string => {
       return 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400 border-purple-200 dark:border-purple-800';
     case 'PLANNER':
       return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 border-blue-200 dark:border-blue-800';
+    case 'MANAGER':
+      return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 border-green-200 dark:border-green-800';
     case 'APPROVER':
       return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 border-green-200 dark:border-green-800';
     case 'FINANCE':
@@ -61,6 +63,8 @@ const getRoleColor = (role: string): string => {
       return 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400 border-amber-200 dark:border-amber-800';
     case 'CATEGORY_MANAGER':
       return 'bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-400 border-teal-200 dark:border-teal-800';
+    case 'READONLY':
+      return 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border-slate-200 dark:border-slate-700';
     default:
       return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300 border-gray-200 dark:border-gray-700';
   }
@@ -149,7 +153,7 @@ export function EnumBadge({ value, type = 'auto', className }: EnumBadgeProps) {
     }
     // Check if it's a role
     else if (
-      ['ADMIN', 'PLANNER', 'APPROVER', 'FINANCE', 'FINANCE_MANAGER', 'CATEGORY_MANAGER'].includes(valueUpper)
+      ['ADMIN', 'PLANNER', 'MANAGER', 'APPROVER', 'FINANCE', 'FINANCE_MANAGER', 'CATEGORY_MANAGER', 'READONLY'].includes(valueUpper)
     ) {
       colorClass = getRoleColor(valueStr);
     }
