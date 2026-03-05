@@ -431,3 +431,19 @@ const MyForm = () => {
 ## 📄 Lisans
 
 Copyright © 2024 CollMind. All rights reserved.
+
+---
+
+## 🤖 AI-Assisted Development — SAFE PROMPT
+
+Bu projede tüm kod değişiklikleri **SAFE PROMPT** metodolojisiyle yönetilir.
+
+Standart ve tüm SAFE PROMPT dosyaları **collmind-backend** repo'sunda yaşar:
+- `docs/safe-prompt-standard-v2.md` — Tam standart tanımı
+- `docs/safe-prompts/` — Sprint bazında implementation prompt'ları
+
+**Bu repo için kritik kurallar:**
+- `staging` branch'ine direkt push yok — her zaman PR
+- Frontend enum'ları (`src/types/user.types.ts`) backend enum'larıyla senkron tutulur
+- İki repo kapsayan feature'larda **backend PR her zaman önce** merge edilir
+- Migration bu repo'yu ilgilendirmez — collmind-backend'de yönetilir

@@ -49,3 +49,13 @@ export function isRole(userRole: UserRole | undefined, role: UserRole): boolean 
   
   return userRole === role;
 }
+
+/**
+ * Returns true if the user has READONLY role.
+ * READONLY users can view all data but cannot perform any write actions.
+ * Use this to conditionally hide/disable edit buttons, forms, and action menus.
+ */
+export function isReadOnly(userRole: UserRole | undefined): boolean {
+  if (!userRole) return false;
+  return userRole === UserRole.READONLY;
+}
