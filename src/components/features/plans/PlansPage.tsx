@@ -6,6 +6,8 @@ import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { useMe } from '@/services/users.service';
+import { isReadOnly } from '@/utils/roleUtils';
 import {
   Dialog,
   DialogContent,
@@ -28,6 +30,7 @@ const formatCurrency = (amount: number, currency: string = 'TRY') => {
 };
 
 export function PlansPage() {
+  const { data: user } = useMe();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -229,10 +232,12 @@ export function PlansPage() {
             <Download className="mr-2 h-4 w-4" />
             Excel İndir
           </Button>
-          <Button onClick={() => setIsCreateDialogOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            Yeni Plan
-          </Button>
+          {!isReadOnly(user?.role) && (
+            <Button onClick={() => setIsCreateDialogOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Yeni Plan
+            </Button>
+          )}
         </div>
       </div>
 
