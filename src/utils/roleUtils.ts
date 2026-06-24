@@ -1,5 +1,21 @@
 import { UserRole } from '@/types/user.types';
 
+export type DashboardPersona = 'admin' | 'finance' | 'category' | 'planner' | 'readonly';
+
+/**
+ * Tek bir rolden dashboard persona'sını belirler.
+ * Öncelik sırası: READONLY > FINANCE / FINANCE_MANAGER > CATEGORY_MANAGER / MANAGER / APPROVER > ADMIN > PLANNER
+ */
+export function getPrimaryPersona(role: UserRole | undefined): DashboardPersona {
+  if (!role) return 'readonly';
+  if (role === UserRole.READONLY) return 'readonly';
+  if (role === UserRole.FINANCE || role === UserRole.FINANCE_MANAGER) return 'finance';
+  if (role === UserRole.CATEGORY_MANAGER || role === UserRole.MANAGER || role === UserRole.APPROVER)
+    return 'category';
+  if (role === UserRole.ADMIN) return 'admin';
+  return 'planner';
+}
+
 /**
  * Checks if a user has the required role(s)
  * Admin role has access to everything, so it always returns true

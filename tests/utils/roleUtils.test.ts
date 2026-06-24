@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { hasRole, hasAnyRole, isRole } from '@/utils/roleUtils';
+import { hasRole, hasAnyRole, isRole, getPrimaryPersona } from '@/utils/roleUtils';
 import { UserRole } from '@/types/user.types';
 
 describe('roleUtils', () => {
@@ -66,6 +66,40 @@ describe('roleUtils', () => {
 
     it('should return false when user role is undefined', () => {
       expect(isRole(undefined, UserRole.PLANNER)).toBe(false);
+    });
+  });
+
+  describe('getPrimaryPersona', () => {
+    it('should return readonly for READONLY role', () => {
+      expect(getPrimaryPersona(UserRole.READONLY)).toBe('readonly');
+    });
+
+    it('should return readonly for undefined role', () => {
+      expect(getPrimaryPersona(undefined)).toBe('readonly');
+    });
+
+    it('should return finance for FINANCE role', () => {
+      expect(getPrimaryPersona(UserRole.FINANCE)).toBe('finance');
+    });
+
+    it('should return finance for FINANCE_MANAGER role', () => {
+      expect(getPrimaryPersona(UserRole.FINANCE_MANAGER)).toBe('finance');
+    });
+
+    it('should return category for CATEGORY_MANAGER role', () => {
+      expect(getPrimaryPersona(UserRole.CATEGORY_MANAGER)).toBe('category');
+    });
+
+    it('should return category for MANAGER role', () => {
+      expect(getPrimaryPersona(UserRole.MANAGER)).toBe('category');
+    });
+
+    it('should return admin for ADMIN role', () => {
+      expect(getPrimaryPersona(UserRole.ADMIN)).toBe('admin');
+    });
+
+    it('should return planner for PLANNER role', () => {
+      expect(getPrimaryPersona(UserRole.PLANNER)).toBe('planner');
     });
   });
 });
