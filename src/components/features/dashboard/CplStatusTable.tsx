@@ -9,7 +9,10 @@ interface CplStatusTableProps {
   canCreateAgreement: boolean;
 }
 
-export function CplStatusTable({ items, canCreateAgreement }: CplStatusTableProps) {
+export function CplStatusTable({
+  items,
+  canCreateAgreement,
+}: CplStatusTableProps) {
   const [query, setQuery] = useState('');
 
   const filteredItems = useMemo(() => {

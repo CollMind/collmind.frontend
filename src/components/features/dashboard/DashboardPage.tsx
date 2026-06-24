@@ -70,14 +70,19 @@ export function DashboardPage() {
   const [selectedPeriod, setSelectedPeriod] = useState(DEFAULT_PERIODS[0]);
 
   const { data: user, isLoading: userLoading } = useMe();
-  const { data: summary, isLoading: summaryLoading, isError: summaryError } =
-    useDashboardSummaryV2(selectedPeriod);
-  const { data: tasks, isLoading: tasksLoading, isError: tasksError } =
-    usePendingTasks(selectedPeriod, false);
+  const {
+    data: summary,
+    isLoading: summaryLoading,
+    isError: summaryError,
+  } = useDashboardSummaryV2(selectedPeriod);
+  const {
+    data: tasks,
+    isLoading: tasksLoading,
+    isError: tasksError,
+  } = usePendingTasks(selectedPeriod, false);
   const { data: cplStatus, isLoading: cplLoading } = useCplStatus();
 
-  const isLoading =
-    userLoading || summaryLoading || tasksLoading || cplLoading;
+  const isLoading = userLoading || summaryLoading || tasksLoading || cplLoading;
 
   if (isLoading && !summary) {
     return (

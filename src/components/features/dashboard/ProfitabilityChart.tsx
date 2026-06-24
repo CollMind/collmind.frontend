@@ -8,10 +8,30 @@ interface ChartData {
 }
 
 const dummyData: ChartData[] = [
-  { category: 'Migros', netSales: 1000000, totalSpending: 200000, percentage: 40.0 },
-  { category: 'Yerel', netSales: 1100000, totalSpending: 100000, percentage: 30.0 },
-  { category: 'Gratis', netSales: 700000, totalSpending: 100000, percentage: 30.0 },
-  { category: 'Mopaş', netSales: 300000, totalSpending: 100000, percentage: 50.0 },
+  {
+    category: 'Migros',
+    netSales: 1000000,
+    totalSpending: 200000,
+    percentage: 40.0,
+  },
+  {
+    category: 'Yerel',
+    netSales: 1100000,
+    totalSpending: 100000,
+    percentage: 30.0,
+  },
+  {
+    category: 'Gratis',
+    netSales: 700000,
+    totalSpending: 100000,
+    percentage: 30.0,
+  },
+  {
+    category: 'Mopaş',
+    netSales: 300000,
+    totalSpending: 100000,
+    percentage: 50.0,
+  },
   { category: 'Diğer', netSales: 0, totalSpending: 0, percentage: 0.0 },
   { category: 'Marmara', netSales: 0, totalSpending: 0, percentage: 0.0 },
 ];
@@ -38,7 +58,9 @@ export function ProfitabilityChart() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg font-medium">CPL-Based Profitability (Revenue vs Spending)</CardTitle>
+        <CardTitle className="text-lg font-medium">
+          CPL-Based Profitability (Revenue vs Spending)
+        </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-6">
@@ -94,8 +116,10 @@ export function ProfitabilityChart() {
 
                 {dummyData.map((item, index) => {
                   const totalValue = item.netSales + item.totalSpending;
-                  const netSalesHeight = (item.netSales / maxValue) * chartHeight;
-                  const spendingHeight = (item.totalSpending / maxValue) * chartHeight;
+                  const netSalesHeight =
+                    (item.netSales / maxValue) * chartHeight;
+                  const spendingHeight =
+                    (item.totalSpending / maxValue) * chartHeight;
                   const totalHeight = netSalesHeight + spendingHeight;
 
                   return (
@@ -159,4 +183,3 @@ export function ProfitabilityChart() {
     </Card>
   );
 }
-

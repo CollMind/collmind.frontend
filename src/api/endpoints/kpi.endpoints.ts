@@ -6,7 +6,12 @@ export interface Kpi {
   kpiName: string;
   kpiGroup: string;
   kpiDescription?: string;
-  formulaType: 'expression' | 'conditional' | 'user_input' | 'external' | 'javascript';
+  formulaType:
+    | 'expression'
+    | 'conditional'
+    | 'user_input'
+    | 'external'
+    | 'javascript';
   formulaText: string;
   dependsOnKpis?: string[];
   calculationOrder: number;
@@ -29,7 +34,12 @@ export interface CreateKpiDto {
   kpiName: string;
   kpiGroup: string;
   kpiDescription?: string;
-  formulaType: 'expression' | 'conditional' | 'user_input' | 'external' | 'javascript';
+  formulaType:
+    | 'expression'
+    | 'conditional'
+    | 'user_input'
+    | 'external'
+    | 'javascript';
   formulaText: string;
   dependsOnKpis?: string[];
   calculationOrder: number;
@@ -57,29 +67,29 @@ const BASE = '/master-data/kpis';
 
 export const kpiEndpoints = {
   getAll: (activeOnly?: boolean) =>
-    apiClient.get<Kpi[]>(BASE, { params: activeOnly ? { activeOnly: true } : undefined }),
+    apiClient.get<Kpi[]>(BASE, {
+      params: activeOnly ? { activeOnly: true } : undefined,
+    }),
 
-  getById: (id: string) =>
-    apiClient.get<Kpi>(`${BASE}/${id}`),
+  getById: (id: string) => apiClient.get<Kpi>(`${BASE}/${id}`),
 
-  getGridKpis: () =>
-    apiClient.get<Kpi[]>(`${BASE}/grid`),
+  getGridKpis: () => apiClient.get<Kpi[]>(`${BASE}/grid`),
 
   getGridKpisForPlan: (planId: string) =>
     apiClient.get<Kpi[]>(`${BASE}/grid/${planId}`),
 
-  create: (data: CreateKpiDto) =>
-    apiClient.post<Kpi>(BASE, data),
+  create: (data: CreateKpiDto) => apiClient.post<Kpi>(BASE, data),
 
   update: (id: string, data: UpdateKpiDto) =>
     apiClient.patch<Kpi>(`${BASE}/${id}`, data),
 
-  delete: (id: string) =>
-    apiClient.delete(`${BASE}/${id}`),
+  delete: (id: string) => apiClient.delete(`${BASE}/${id}`),
 
   validateFormula: (formula: string, formulaType: string) =>
-    apiClient.post<FormulaValidationResult>(`${BASE}/validate-formula`, { formula, formulaType }),
+    apiClient.post<FormulaValidationResult>(`${BASE}/validate-formula`, {
+      formula,
+      formulaType,
+    }),
 
-  seedDefaults: () =>
-    apiClient.post<Kpi[]>(`${BASE}/seed-defaults`),
+  seedDefaults: () => apiClient.post<Kpi[]>(`${BASE}/seed-defaults`),
 };

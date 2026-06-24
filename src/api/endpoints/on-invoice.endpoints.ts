@@ -59,7 +59,13 @@ export interface CompletionResponseDto {
 export interface OnInvoiceBatch {
   id: string;
   batchCode: string;
-  status: 'PENDING' | 'VALIDATING' | 'VALIDATED' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
+  status:
+    | 'PENDING'
+    | 'VALIDATING'
+    | 'VALIDATED'
+    | 'PROCESSING'
+    | 'COMPLETED'
+    | 'FAILED';
   fiscalPeriod: string;
   totalRows: number;
   validRows: number;
@@ -203,9 +209,12 @@ export const onInvoiceEndpoints = {
     invoiceDateTo?: string;
     status?: string;
   }): Promise<OnInvoiceEntry[]> => {
-    const response = await apiClient.get<OnInvoiceEntry[]>('/on-invoice/entries', {
-      params: filters,
-    });
+    const response = await apiClient.get<OnInvoiceEntry[]>(
+      '/on-invoice/entries',
+      {
+        params: filters,
+      }
+    );
     return response.data;
   },
 

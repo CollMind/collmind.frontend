@@ -1,5 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
-import { financeReportingEndpoints, ReportFilters } from '@/api/endpoints/finance-reporting.endpoints';
+import {
+  financeReportingEndpoints,
+  ReportFilters,
+} from '@/api/endpoints/finance-reporting.endpoints';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import {
   Table,
@@ -15,11 +18,16 @@ interface VarianceAnalysisWidgetProps {
   filters: ReportFilters;
 }
 
-export function VarianceAnalysisWidget({ filters }: VarianceAnalysisWidgetProps) {
+export function VarianceAnalysisWidget({
+  filters,
+}: VarianceAnalysisWidgetProps) {
   const { data, isLoading, error } = useQuery({
     queryKey: ['variance-analysis', filters],
     queryFn: async () => {
-      const res = await financeReportingEndpoints.getVarianceAnalysis(filters, 'budget_vs_actual');
+      const res = await financeReportingEndpoints.getVarianceAnalysis(
+        filters,
+        'budget_vs_actual'
+      );
       return res.data;
     },
     staleTime: 30000,
@@ -30,7 +38,9 @@ export function VarianceAnalysisWidget({ filters }: VarianceAnalysisWidgetProps)
   }
 
   if (error || !data) {
-    return <div className="text-red-500 text-sm">Veri yüklenirken hata oluştu</div>;
+    return (
+      <div className="text-red-500 text-sm">Veri yüklenirken hata oluştu</div>
+    );
   }
 
   const formatCurrency = (amount: number) => {
@@ -51,7 +61,10 @@ export function VarianceAnalysisWidget({ filters }: VarianceAnalysisWidgetProps)
   return (
     <div className="space-y-4">
       <div className="text-sm text-gray-500">
-        Comparison: <span className="font-semibold text-gray-900">{data.comparisonType.replace('_', ' ')}</span>
+        Comparison:{' '}
+        <span className="font-semibold text-gray-900">
+          {data.comparisonType.replace('_', ' ')}
+        </span>
       </div>
 
       <div className="overflow-x-auto">
@@ -68,10 +81,18 @@ export function VarianceAnalysisWidget({ filters }: VarianceAnalysisWidgetProps)
           <TableBody>
             {data.variances.map((variance) => (
               <TableRow key={variance.category}>
-                <TableCell className="font-medium">{variance.category}</TableCell>
-                <TableCell className="text-right">{formatCurrency(variance.planned)}</TableCell>
-                <TableCell className="text-right">{formatCurrency(variance.actual)}</TableCell>
-                <TableCell className={`text-right font-semibold ${getVarianceColor(variance.variance)}`}>
+                <TableCell className="font-medium">
+                  {variance.category}
+                </TableCell>
+                <TableCell className="text-right">
+                  {formatCurrency(variance.planned)}
+                </TableCell>
+                <TableCell className="text-right">
+                  {formatCurrency(variance.actual)}
+                </TableCell>
+                <TableCell
+                  className={`text-right font-semibold ${getVarianceColor(variance.variance)}`}
+                >
                   {formatCurrency(variance.variance)}
                 </TableCell>
                 <TableCell className="text-right">
@@ -98,7 +119,9 @@ export function VarianceAnalysisWidget({ filters }: VarianceAnalysisWidgetProps)
         <div className="flex items-center justify-between">
           <span className="font-semibold">Total Variance:</span>
           <div className="flex items-center gap-2">
-            <span className={`text-lg font-bold ${getVarianceColor(data.totalVariance)}`}>
+            <span
+              className={`text-lg font-bold ${getVarianceColor(data.totalVariance)}`}
+            >
               {formatCurrency(data.totalVariance)}
             </span>
             <Badge

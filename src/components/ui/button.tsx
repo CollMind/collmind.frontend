@@ -9,12 +9,10 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default: 'bg-primary-600 text-white hover:bg-primary-700',
-        destructive:
-          'bg-error-600 text-white hover:bg-error-700',
+        destructive: 'bg-error-600 text-white hover:bg-error-700',
         outline:
           'border border-gray-300 bg-white hover:bg-gray-50 hover:text-gray-900',
-        secondary:
-          'bg-secondary-100 text-secondary-900 hover:bg-secondary-200',
+        secondary: 'bg-secondary-100 text-secondary-900 hover:bg-secondary-200',
         ghost: 'hover:bg-gray-100 hover:text-gray-900',
         link: 'text-primary-600 underline-offset-4 hover:underline',
       },
@@ -33,7 +31,8 @@ const buttonVariants = cva(
 );
 
 export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
+  extends
+    React.ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof buttonVariants> {
   asChild?: boolean;
 }
@@ -53,4 +52,3 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 Button.displayName = 'Button';
 
 export { Button, buttonVariants };
-

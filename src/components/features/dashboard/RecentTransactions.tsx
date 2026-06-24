@@ -76,7 +76,9 @@ export function RecentTransactions() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg font-medium">Recent Transactions</CardTitle>
+        <CardTitle className="text-lg font-medium">
+          Recent Transactions
+        </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
@@ -106,4 +108,3 @@ export function RecentTransactions() {
     </Card>
   );
 }
-

@@ -1,6 +1,10 @@
 import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { financeReportingEndpoints, ReportFilters, PaginationParams } from '@/api/endpoints/finance-reporting.endpoints';
+import {
+  financeReportingEndpoints,
+  ReportFilters,
+  PaginationParams,
+} from '@/api/endpoints/finance-reporting.endpoints';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import {
   Table,
@@ -29,7 +33,10 @@ export function PlanPerformanceWidget({ filters }: PlanPerformanceWidgetProps) {
   const { data, isLoading, error } = useQuery({
     queryKey: ['plan-performance', filters, pagination],
     queryFn: async () => {
-      const res = await financeReportingEndpoints.getPlanPerformance(filters, pagination);
+      const res = await financeReportingEndpoints.getPlanPerformance(
+        filters,
+        pagination
+      );
       return res.data;
     },
     staleTime: 30000,
@@ -40,7 +47,9 @@ export function PlanPerformanceWidget({ filters }: PlanPerformanceWidgetProps) {
   }
 
   if (error || !data) {
-    return <div className="text-red-500 text-sm">Veri yüklenirken hata oluştu</div>;
+    return (
+      <div className="text-red-500 text-sm">Veri yüklenirken hata oluştu</div>
+    );
   }
 
   const formatCurrency = (amount: number) => {
@@ -69,7 +78,8 @@ export function PlanPerformanceWidget({ filters }: PlanPerformanceWidgetProps) {
     setPagination((prev) => ({
       ...prev,
       sortBy: field,
-      sortOrder: prev.sortBy === field && prev.sortOrder === 'ASC' ? 'DESC' : 'ASC',
+      sortOrder:
+        prev.sortBy === field && prev.sortOrder === 'ASC' ? 'DESC' : 'ASC',
     }));
   };
 
@@ -83,7 +93,6 @@ export function PlanPerformanceWidget({ filters }: PlanPerformanceWidgetProps) {
   }, [data.rows, visibleRange, useLazyLoading]);
 
   const TableContent = () => {
-
     return (
       <div className="overflow-x-auto">
         <Table>
@@ -181,7 +190,9 @@ export function PlanPerformanceWidget({ filters }: PlanPerformanceWidgetProps) {
             variant="outline"
             size="sm"
             disabled={data.page === 1}
-            onClick={() => setPagination((prev) => ({ ...prev, page: prev.page! - 1 }))}
+            onClick={() =>
+              setPagination((prev) => ({ ...prev, page: prev.page! - 1 }))
+            }
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
@@ -189,7 +200,9 @@ export function PlanPerformanceWidget({ filters }: PlanPerformanceWidgetProps) {
             variant="outline"
             size="sm"
             disabled={data.page === data.totalPages}
-            onClick={() => setPagination((prev) => ({ ...prev, page: prev.page! + 1 }))}
+            onClick={() =>
+              setPagination((prev) => ({ ...prev, page: prev.page! + 1 }))
+            }
           >
             <ChevronRight className="h-4 w-4" />
           </Button>

@@ -1,6 +1,6 @@
 /**
  * Token Storage Utility
- * 
+ *
  * Güvenli token saklama için utility fonksiyonları.
  * localStorage ve sessionStorage desteği ile birlikte
  * gelecekte encryption desteği eklenebilir.
@@ -24,7 +24,7 @@ function getStorage(storageType: StorageType = DEFAULT_STORAGE_TYPE): Storage {
 
 /**
  * Access token'ı saklar
- * 
+ *
  * @param token - Access token
  * @param options - Storage seçenekleri
  */
@@ -43,7 +43,7 @@ export function setAccessToken(
 
 /**
  * Access token'ı alır
- * 
+ *
  * @param options - Storage seçenekleri
  * @returns Access token veya null
  */
@@ -61,7 +61,7 @@ export function getAccessToken(
 
 /**
  * Refresh token'ı saklar
- * 
+ *
  * @param token - Refresh token
  * @param options - Storage seçenekleri
  */
@@ -80,7 +80,7 @@ export function setRefreshToken(
 
 /**
  * Refresh token'ı alır
- * 
+ *
  * @param options - Storage seçenekleri
  * @returns Refresh token veya null
  */
@@ -98,14 +98,11 @@ export function getRefreshToken(
 
 /**
  * Kullanıcı bilgilerini saklar
- * 
+ *
  * @param user - Kullanıcı objesi
  * @param options - Storage seçenekleri
  */
-export function setUser(
-  user: any,
-  options: TokenStorageOptions = {}
-): void {
+export function setUser(user: any, options: TokenStorageOptions = {}): void {
   try {
     const storage = getStorage(options.storageType);
     storage.setItem('user', JSON.stringify(user));
@@ -117,7 +114,7 @@ export function setUser(
 
 /**
  * Kullanıcı bilgilerini alır
- * 
+ *
  * @param options - Storage seçenekleri
  * @returns Kullanıcı objesi veya null
  */
@@ -137,7 +134,7 @@ export function getUser(options: TokenStorageOptions = {}): any | null {
 
 /**
  * Tüm token'ları ve kullanıcı bilgilerini temizler
- * 
+ *
  * @param options - Storage seçenekleri
  */
 export function clearTokens(options: TokenStorageOptions = {}): void {
@@ -153,7 +150,7 @@ export function clearTokens(options: TokenStorageOptions = {}): void {
 
 /**
  * Token'ların varlığını kontrol eder
- * 
+ *
  * @param options - Storage seçenekleri
  * @returns Token'lar mevcutsa true
  */
@@ -165,7 +162,7 @@ export function hasTokens(options: TokenStorageOptions = {}): boolean {
 
 /**
  * Token'ları ve kullanıcı bilgilerini toplu olarak saklar
- * 
+ *
  * @param data - Token ve kullanıcı bilgileri
  * @param options - Storage seçenekleri
  */
@@ -184,7 +181,7 @@ export function setAuthData(
 
 /**
  * Tüm auth verilerini alır
- * 
+ *
  * @param options - Storage seçenekleri
  * @returns Auth verileri
  */

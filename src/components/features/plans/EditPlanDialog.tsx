@@ -123,17 +123,21 @@ export function EditPlanDialog({
 
     // Build only changed fields
     const changes: UpdatePlanDto = {};
-    if (formData.planName !== plan.planName) changes.planName = formData.planName;
+    if (formData.planName !== plan.planName)
+      changes.planName = formData.planName;
     if (formData.description !== (plan.description || ''))
       changes.description = formData.description;
     if (formData.cplId !== plan.cplId) changes.cplId = formData.cplId;
-    if (formData.channelId !== plan.channelId) changes.channelId = formData.channelId;
-    if (formData.categoryId !== plan.categoryId) changes.categoryId = formData.categoryId;
+    if (formData.channelId !== plan.channelId)
+      changes.channelId = formData.channelId;
+    if (formData.categoryId !== plan.categoryId)
+      changes.categoryId = formData.categoryId;
     if (formData.startDate !== toDateInputValue(plan.startDate))
       changes.startDate = formData.startDate;
     if (formData.endDate !== toDateInputValue(plan.endDate))
       changes.endDate = formData.endDate;
-    if (formData.comments !== (plan.comments || '')) changes.comments = formData.comments;
+    if (formData.comments !== (plan.comments || ''))
+      changes.comments = formData.comments;
 
     // If nothing changed, just close
     if (Object.keys(changes).length === 0) {
@@ -158,7 +162,9 @@ export function EditPlanDialog({
             <Input
               id="edit-planName"
               value={formData.planName || ''}
-              onChange={(e) => setFormData({ ...formData, planName: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, planName: e.target.value })
+              }
               placeholder="Örn: Q1 2026 NKA Promosyon Planı"
               className={errors.planName ? 'border-red-500' : ''}
             />
@@ -173,7 +179,9 @@ export function EditPlanDialog({
             <Input
               id="edit-description"
               value={formData.description || ''}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, description: e.target.value })
+              }
               placeholder="Plan açıklaması..."
             />
           </div>
@@ -184,9 +192,13 @@ export function EditPlanDialog({
               <Label>Kanal *</Label>
               <Select
                 value={formData.channelId}
-                onValueChange={(value) => setFormData({ ...formData, channelId: value })}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, channelId: value })
+                }
               >
-                <SelectTrigger className={errors.channelId ? 'border-red-500' : ''}>
+                <SelectTrigger
+                  className={errors.channelId ? 'border-red-500' : ''}
+                >
                   <SelectValue placeholder="Kanal seçin" />
                 </SelectTrigger>
                 <SelectContent>
@@ -206,7 +218,9 @@ export function EditPlanDialog({
               <Label>CPL *</Label>
               <Select
                 value={formData.cplId}
-                onValueChange={(value) => setFormData({ ...formData, cplId: value })}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, cplId: value })
+                }
               >
                 <SelectTrigger className={errors.cplId ? 'border-red-500' : ''}>
                   <SelectValue placeholder="CPL seçin" />
@@ -228,9 +242,13 @@ export function EditPlanDialog({
               <Label>Kategori *</Label>
               <Select
                 value={formData.categoryId}
-                onValueChange={(value) => setFormData({ ...formData, categoryId: value })}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, categoryId: value })
+                }
               >
-                <SelectTrigger className={errors.categoryId ? 'border-red-500' : ''}>
+                <SelectTrigger
+                  className={errors.categoryId ? 'border-red-500' : ''}
+                >
                   <SelectValue placeholder="Kategori seçin" />
                 </SelectTrigger>
                 <SelectContent>
@@ -261,7 +279,9 @@ export function EditPlanDialog({
                   className={errors.startDate ? 'border-red-500' : ''}
                 />
                 {errors.startDate && (
-                  <p className="text-sm text-red-500 mt-1">{errors.startDate}</p>
+                  <p className="text-sm text-red-500 mt-1">
+                    {errors.startDate}
+                  </p>
                 )}
               </div>
               <div>
@@ -286,7 +306,9 @@ export function EditPlanDialog({
             <Input
               id="edit-comments"
               value={formData.comments || ''}
-              onChange={(e) => setFormData({ ...formData, comments: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, comments: e.target.value })
+              }
               placeholder="Onaylayan için notlar..."
             />
           </div>

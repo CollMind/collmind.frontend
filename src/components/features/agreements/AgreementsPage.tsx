@@ -3,7 +3,11 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useAgreements } from '@/services/agreements.service';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { AgreementList } from '@/components/agreements';
-import { AgreementForm, LTAAgreementForm, STAAgreementForm } from '@/components/agreements';
+import {
+  AgreementForm,
+  LTAAgreementForm,
+  STAAgreementForm,
+} from '@/components/agreements';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useMe } from '@/services/users.service';
@@ -21,8 +25,16 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { CreateAgreementDto, AgreementType, AgreementFilterDto, AgreementStatus } from '@/types/agreement.types';
-import { useCreateAgreement, useSubmitAgreement } from '@/services/agreements.service';
+import {
+  CreateAgreementDto,
+  AgreementType,
+  AgreementFilterDto,
+  AgreementStatus,
+} from '@/types/agreement.types';
+import {
+  useCreateAgreement,
+  useSubmitAgreement,
+} from '@/services/agreements.service';
 import { FileText, Plus, Download, ChevronDown } from 'lucide-react';
 import { toNumber } from '@/utils/numberUtils';
 
@@ -40,13 +52,18 @@ export function AgreementsPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [agreementType, setAgreementType] = useState<AgreementType | null>(null);
+  const [agreementType, setAgreementType] = useState<AgreementType | null>(
+    null
+  );
 
   // Query parametrelerinden filtreleri al
   const filters = useMemo<AgreementFilterDto>(() => {
     const typeParam = searchParams.get('type');
     return {
-      agreementType: typeParam === 'STA' || typeParam === 'LTA' ? (typeParam as AgreementType) : undefined,
+      agreementType:
+        typeParam === 'STA' || typeParam === 'LTA'
+          ? (typeParam as AgreementType)
+          : undefined,
     };
   }, [searchParams]);
 
@@ -59,11 +76,19 @@ export function AgreementsPage() {
   // Summary hesaplamaları - Hook'lar her zaman aynı sırada çağrılmalı
   const summary = useMemo(() => {
     const totalAgreements = agreementsArray.length;
-    const staCount = agreementsArray.filter((a) => a.agreementType === AgreementType.STA).length;
-    const ltaCount = agreementsArray.filter((a) => a.agreementType === AgreementType.LTA).length;
-    const activeCount = agreementsArray.filter((a) => a.status === AgreementStatus.ACTIVE).length;
-    const pendingCount = agreementsArray.filter((a) => a.status === AgreementStatus.PENDING).length;
-    
+    const staCount = agreementsArray.filter(
+      (a) => a.agreementType === AgreementType.STA
+    ).length;
+    const ltaCount = agreementsArray.filter(
+      (a) => a.agreementType === AgreementType.LTA
+    ).length;
+    const activeCount = agreementsArray.filter(
+      (a) => a.status === AgreementStatus.ACTIVE
+    ).length;
+    const pendingCount = agreementsArray.filter(
+      (a) => a.status === AgreementStatus.PENDING
+    ).length;
+
     // Backend'den gelen decimal değerleri number'a dönüştür
     // TypeORM decimal değerleri string olarak döndürebilir
     const totalCap = agreementsArray.reduce((sum, a) => {
@@ -96,11 +121,14 @@ export function AgreementsPage() {
     );
   }
 
-  const handleCreate = async (data: CreateAgreementDto, saveAsDraft: boolean = true) => {
+  const handleCreate = async (
+    data: CreateAgreementDto,
+    saveAsDraft: boolean = true
+  ) => {
     try {
       // Create agreement
       const result = await createMutation.mutateAsync(data);
-      
+
       // If saveAsDraft is false, submit for approval after creation
       if (!saveAsDraft && result?.id) {
         try {
@@ -111,7 +139,7 @@ export function AgreementsPage() {
           return;
         }
       }
-      
+
       setIsCreateDialogOpen(false);
       setAgreementType(null);
       // Navigate to detail page
@@ -135,12 +163,14 @@ export function AgreementsPage() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">Anlaşmalar</h1>
-          <p className="text-gray-500 mt-1">
-            STA ve LTA anlaşmalarını yönetin
-          </p>
+          <p className="text-gray-500 mt-1">STA ve LTA anlaşmalarını yönetin</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={handleDownloadExcel} className="gap-2">
+          <Button
+            variant="outline"
+            onClick={handleDownloadExcel}
+            className="gap-2"
+          >
             <Download className="h-4 w-4" />
             Download Excel
           </Button>
@@ -180,10 +210,14 @@ export function AgreementsPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card className="bg-blue-50 border-blue-200">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-blue-700">TOPLAM ANLAŞMA</CardTitle>
+            <CardTitle className="text-sm font-medium text-blue-700">
+              TOPLAM ANLAŞMA
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-blue-800">{summary.totalAgreements}</p>
+            <p className="text-2xl font-bold text-blue-800">
+              {summary.totalAgreements}
+            </p>
             <p className="text-xs text-blue-600 mt-1">
               (STA: {summary.staCount}, LTA: {summary.ltaCount})
             </p>
@@ -192,25 +226,35 @@ export function AgreementsPage() {
 
         <Card className="bg-green-50 border-green-200">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-green-700">AKTİF</CardTitle>
+            <CardTitle className="text-sm font-medium text-green-700">
+              AKTİF
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-green-800">{summary.activeCount}</p>
+            <p className="text-2xl font-bold text-green-800">
+              {summary.activeCount}
+            </p>
           </CardContent>
         </Card>
 
         <Card className="bg-orange-50 border-orange-200">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-orange-700">ONAY BEKLEYEN</CardTitle>
+            <CardTitle className="text-sm font-medium text-orange-700">
+              ONAY BEKLEYEN
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-orange-800">{summary.pendingCount}</p>
+            <p className="text-2xl font-bold text-orange-800">
+              {summary.pendingCount}
+            </p>
           </CardContent>
         </Card>
 
         <Card className="bg-purple-50 border-purple-200">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-purple-700">TOPLAM CAP</CardTitle>
+            <CardTitle className="text-sm font-medium text-purple-700">
+              TOPLAM CAP
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold text-purple-800">
@@ -277,10 +321,7 @@ export function AgreementsPage() {
       </Dialog>
 
       {/* Agreements List */}
-      <AgreementList
-        agreements={agreementsArray}
-        isLoading={isLoading}
-      />
+      <AgreementList agreements={agreementsArray} isLoading={isLoading} />
     </div>
   );
 }

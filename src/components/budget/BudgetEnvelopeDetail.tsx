@@ -21,10 +21,8 @@ export function BudgetEnvelopeDetail() {
     error: envelopeError,
   } = useBudgetEnvelope(id || '');
 
-  const {
-    data: reservedAmountData,
-    isLoading: isLoadingReserved,
-  } = useBudgetReservedAmount(id || '');
+  const { data: reservedAmountData, isLoading: isLoadingReserved } =
+    useBudgetReservedAmount(id || '');
 
   const {
     data: transactions,
@@ -40,7 +38,9 @@ export function BudgetEnvelopeDetail() {
     return (
       <div className="text-red-600 p-4">
         Bütçe zarfı yüklenirken hata oluştu:{' '}
-        {envelopeError instanceof Error ? envelopeError.message : 'Bilinmeyen hata'}
+        {envelopeError instanceof Error
+          ? envelopeError.message
+          : 'Bilinmeyen hata'}
       </div>
     );
   }

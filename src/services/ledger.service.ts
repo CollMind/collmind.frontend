@@ -10,13 +10,18 @@ import { useToast } from '@/hooks/useToast';
 export const ledgerKeys = {
   all: ['ledger'] as const,
   lists: () => [...ledgerKeys.all, 'list'] as const,
-  list: (filters?: LedgerFilterDto) => [...ledgerKeys.lists(), filters] as const,
+  list: (filters?: LedgerFilterDto) =>
+    [...ledgerKeys.lists(), filters] as const,
   details: () => [...ledgerKeys.all, 'detail'] as const,
   detail: (id: string) => [...ledgerKeys.details(), id] as const,
-  byAgreement: (agreementId: string) => [...ledgerKeys.all, 'agreement', agreementId] as const,
-  consumedByAgreement: (agreementId: string) => [...ledgerKeys.all, 'consumed', 'agreement', agreementId] as const,
-  byEnvelope: (envelopeId: string) => [...ledgerKeys.all, 'envelope', envelopeId] as const,
-  consumedByEnvelope: (envelopeId: string) => [...ledgerKeys.all, 'consumed', 'envelope', envelopeId] as const,
+  byAgreement: (agreementId: string) =>
+    [...ledgerKeys.all, 'agreement', agreementId] as const,
+  consumedByAgreement: (agreementId: string) =>
+    [...ledgerKeys.all, 'consumed', 'agreement', agreementId] as const,
+  byEnvelope: (envelopeId: string) =>
+    [...ledgerKeys.all, 'envelope', envelopeId] as const,
+  consumedByEnvelope: (envelopeId: string) =>
+    [...ledgerKeys.all, 'consumed', 'envelope', envelopeId] as const,
 };
 
 /**
@@ -78,7 +83,8 @@ export function useLedgerByAgreement(agreementId: string) {
         return res.data;
       } catch (error: any) {
         toast.error(
-          error.response?.data?.message || 'Anlaşma defter kayıtları yüklenemedi'
+          error.response?.data?.message ||
+            'Anlaşma defter kayıtları yüklenemedi'
         );
         throw error;
       }
@@ -124,7 +130,8 @@ export function useLedgerByEnvelope(envelopeId: string) {
         return res.data;
       } catch (error: any) {
         toast.error(
-          error.response?.data?.message || 'Bütçe zarfı defter kayıtları yüklenemedi'
+          error.response?.data?.message ||
+            'Bütçe zarfı defter kayıtları yüklenemedi'
         );
         throw error;
       }

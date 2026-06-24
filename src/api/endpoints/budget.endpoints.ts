@@ -13,8 +13,7 @@ export const budgetEndpoints = {
   createEnvelope: (data: CreateBudgetEnvelopeDto) =>
     apiClient.post<BudgetEnvelope>('/budget/envelopes', data),
 
-  getAllEnvelopes: () =>
-    apiClient.get<BudgetEnvelope[]>('/budget/envelopes'),
+  getAllEnvelopes: () => apiClient.get<BudgetEnvelope[]>('/budget/envelopes'),
 
   getEnvelopeById: (id: string) =>
     apiClient.get<BudgetEnvelope>(`/budget/envelopes/${id}`),
@@ -35,12 +34,20 @@ export const budgetEndpoints = {
     apiClient.post<BudgetReservation>(`/budget/reservations/${id}/approve`),
 
   rejectReservation: (id: string, reason: string) =>
-    apiClient.post<BudgetReservation>(`/budget/reservations/${id}/reject`, { reason }),
+    apiClient.post<BudgetReservation>(`/budget/reservations/${id}/reject`, {
+      reason,
+    }),
 
   getReservationsByEnvelope: (envelopeId: string) =>
-    apiClient.get<BudgetReservation[]>(`/budget/envelopes/${envelopeId}/reservations`),
+    apiClient.get<BudgetReservation[]>(
+      `/budget/envelopes/${envelopeId}/reservations`
+    ),
 
-  getBudgetStatus: (channel: string, categoryId?: string, periodMonth?: string) =>
+  getBudgetStatus: (
+    channel: string,
+    categoryId?: string,
+    periodMonth?: string
+  ) =>
     apiClient.get<{
       totalAllocation: number;
       available: number;
@@ -52,5 +59,3 @@ export const budgetEndpoints = {
       params: { channel, categoryId, periodMonth },
     }),
 };
-
-

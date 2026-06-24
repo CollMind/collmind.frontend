@@ -1,8 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { offInvoiceEndpoints } from '@/api/endpoints/off-invoice.endpoints';
-import { onInvoiceEndpoints, OnInvoiceEntry } from '@/api/endpoints/on-invoice.endpoints';
-import { AgreementTransaction, TransactionSummary } from '@/types/off-invoice.types';
+import {
+  onInvoiceEndpoints,
+  OnInvoiceEntry,
+} from '@/api/endpoints/on-invoice.endpoints';
+import {
+  AgreementTransaction,
+  TransactionSummary,
+} from '@/types/off-invoice.types';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { useToast } from '@/hooks/useToast';
 import { OffInvoiceManualEntryModal } from './OffInvoiceManualEntryModal';
@@ -13,7 +19,9 @@ export function OffInvoiceTransactionsPage() {
   const navigate = useNavigate();
   const toast = useToast();
   const [transactions, setTransactions] = useState<AgreementTransaction[]>([]);
-  const [onInvoiceEntries, setOnInvoiceEntries] = useState<OnInvoiceEntry[]>([]);
+  const [onInvoiceEntries, setOnInvoiceEntries] = useState<OnInvoiceEntry[]>(
+    []
+  );
   const [summary, setSummary] = useState<TransactionSummary | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<Tab>('off');
@@ -95,46 +103,50 @@ export function OffInvoiceTransactionsPage() {
     return date.toLocaleDateString('tr-TR');
   };
 
-  const filteredTransactions = transactions.filter(tx => {
-    if (activeTab === 'off') {
+  const filteredTransactions = transactions
+    .filter((tx) => {
+      if (activeTab === 'off') {
+        return true;
+      } else if (activeTab === 'on') {
+        return false;
+      }
       return true;
-    } else if (activeTab === 'on') {
-      return false;
-    }
-    return true;
-  }).filter(tx => {
-    if (!searchQuery) return true;
-    const query = searchQuery.toLowerCase();
-    return (
-      tx.invoiceNo.toLowerCase().includes(query) ||
-      tx.agreement?.agreementCode?.toLowerCase().includes(query) ||
-      tx.agreement?.agreementName?.toLowerCase().includes(query) ||
-      tx.customer?.name?.toLowerCase().includes(query) ||
-      tx.customer?.code?.toLowerCase().includes(query) ||
-      tx.batchId?.toLowerCase().includes(query)
-    );
-  });
+    })
+    .filter((tx) => {
+      if (!searchQuery) return true;
+      const query = searchQuery.toLowerCase();
+      return (
+        tx.invoiceNo.toLowerCase().includes(query) ||
+        tx.agreement?.agreementCode?.toLowerCase().includes(query) ||
+        tx.agreement?.agreementName?.toLowerCase().includes(query) ||
+        tx.customer?.name?.toLowerCase().includes(query) ||
+        tx.customer?.code?.toLowerCase().includes(query) ||
+        tx.batchId?.toLowerCase().includes(query)
+      );
+    });
 
-  const filteredOnInvoiceEntries = onInvoiceEntries.filter(entry => {
-    if (activeTab === 'on') {
+  const filteredOnInvoiceEntries = onInvoiceEntries
+    .filter((entry) => {
+      if (activeTab === 'on') {
+        return true;
+      } else if (activeTab === 'off') {
+        return false;
+      }
       return true;
-    } else if (activeTab === 'off') {
-      return false;
-    }
-    return true;
-  }).filter(entry => {
-    if (!searchQuery) return true;
-    const query = searchQuery.toLowerCase();
-    return (
-      entry.invoiceNo.toLowerCase().includes(query) ||
-      entry.customerCode.toLowerCase().includes(query) ||
-      entry.customer?.name?.toLowerCase().includes(query) ||
-      entry.skuCode.toLowerCase().includes(query) ||
-      entry.sku?.name?.toLowerCase().includes(query) ||
-      entry.batchId.toLowerCase().includes(query) ||
-      entry.batch?.batchCode?.toLowerCase().includes(query)
-    );
-  });
+    })
+    .filter((entry) => {
+      if (!searchQuery) return true;
+      const query = searchQuery.toLowerCase();
+      return (
+        entry.invoiceNo.toLowerCase().includes(query) ||
+        entry.customerCode.toLowerCase().includes(query) ||
+        entry.customer?.name?.toLowerCase().includes(query) ||
+        entry.skuCode.toLowerCase().includes(query) ||
+        entry.sku?.name?.toLowerCase().includes(query) ||
+        entry.batchId.toLowerCase().includes(query) ||
+        entry.batch?.batchCode?.toLowerCase().includes(query)
+      );
+    });
 
   if (isLoading) {
     return (
@@ -182,17 +194,25 @@ export function OffInvoiceTransactionsPage() {
           <div className="bg-white rounded-lg shadow p-6">
             <p className="text-sm text-gray-600 mb-2">BUGÜN YÜKLENEN</p>
             <p className="text-2xl font-bold">{summary.today.count}</p>
-            <p className="text-lg text-gray-600">{formatCurrency(summary.today.amount)}</p>
+            <p className="text-lg text-gray-600">
+              {formatCurrency(summary.today.amount)}
+            </p>
           </div>
           <div className="bg-white rounded-lg shadow p-6">
             <p className="text-sm text-gray-600 mb-2">BEKLEYEN (PENDING)</p>
             <p className="text-2xl font-bold">{summary.pending.count}</p>
-            <p className="text-lg text-gray-600">{formatCurrency(summary.pending.amount)}</p>
+            <p className="text-lg text-gray-600">
+              {formatCurrency(summary.pending.amount)}
+            </p>
           </div>
           <div className="bg-white rounded-lg shadow p-6">
             <p className="text-sm text-gray-600 mb-2">TOPLAM İŞLEM</p>
-            <p className="text-2xl font-bold">{formatCurrency(summary.total.amount)}</p>
-            <p className="text-lg text-gray-600">{summary.total.records} kayıt</p>
+            <p className="text-2xl font-bold">
+              {formatCurrency(summary.total.amount)}
+            </p>
+            <p className="text-lg text-gray-600">
+              {summary.total.records} kayıt
+            </p>
           </div>
         </div>
       )}
@@ -230,7 +250,9 @@ export function OffInvoiceTransactionsPage() {
             <button
               onClick={() => setActiveTab('off')}
               className={`py-4 px-2 border-b-2 ${
-                activeTab === 'off' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-600'
+                activeTab === 'off'
+                  ? 'border-blue-600 text-blue-600'
+                  : 'border-transparent text-gray-600'
               }`}
             >
               Off-Invoice {offInvoiceCount}
@@ -238,7 +260,9 @@ export function OffInvoiceTransactionsPage() {
             <button
               onClick={() => setActiveTab('on')}
               className={`py-4 px-2 border-b-2 ${
-                activeTab === 'on' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-600'
+                activeTab === 'on'
+                  ? 'border-blue-600 text-blue-600'
+                  : 'border-transparent text-gray-600'
               }`}
             >
               On-Invoice {onInvoiceCount}
@@ -246,7 +270,9 @@ export function OffInvoiceTransactionsPage() {
             <button
               onClick={() => setActiveTab('all')}
               className={`py-4 px-2 border-b-2 ${
-                activeTab === 'all' ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-600'
+                activeTab === 'all'
+                  ? 'border-blue-600 text-blue-600'
+                  : 'border-transparent text-gray-600'
               }`}
             >
               Tümü {offInvoiceCount + onInvoiceCount}
@@ -316,94 +342,129 @@ export function OffInvoiceTransactionsPage() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                   <input type="checkbox" />
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tip</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Batch / Anlaşma</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Fatura Detayı</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tutar / İndirim</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">CPL / Müşteri</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Yükleme</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  ID
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  Tip
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  Batch / Anlaşma
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  Fatura Detayı
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  Tutar / İndirim
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  CPL / Müşteri
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  Status
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                  Yükleme
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
               {/* Off-Invoice Transactions */}
-              {activeTab === 'off' || activeTab === 'all' ? (
-                filteredTransactions.map((tx) => (
-                  <tr key={tx.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <input type="checkbox" />
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      {tx.invoiceNo}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">OFF</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      {tx.agreement?.agreementCode || tx.batchId || '-'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      {tx.invoiceNo} ({formatDate(tx.invoiceDate)})
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">{formatCurrency(tx.amount)}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      {tx.agreement?.cpl?.name || '-'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded">
-                        Posted
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      {formatDate(tx.createdAt)} Admin
-                    </td>
-                  </tr>
-                ))
-              ) : null}
+              {activeTab === 'off' || activeTab === 'all'
+                ? filteredTransactions.map((tx) => (
+                    <tr key={tx.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <input type="checkbox" />
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        {tx.invoiceNo}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        OFF
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        {tx.agreement?.agreementCode || tx.batchId || '-'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        {tx.invoiceNo} ({formatDate(tx.invoiceDate)})
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        {formatCurrency(tx.amount)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        {tx.agreement?.cpl?.name || '-'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="px-2 py-1 text-xs font-medium bg-green-100 text-green-800 rounded">
+                          Posted
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        {formatDate(tx.createdAt)} Admin
+                      </td>
+                    </tr>
+                  ))
+                : null}
 
               {/* On-Invoice Entries */}
-              {activeTab === 'on' || activeTab === 'all' ? (
-                filteredOnInvoiceEntries.map((entry) => (
-                  <tr key={entry.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <input type="checkbox" />
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      {entry.invoiceNo}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">ON</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      {entry.batch?.batchCode || entry.batchId || '-'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      {entry.invoiceNo} ({formatDate(entry.invoiceDate)}) - {entry.skuCode}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">{formatCurrency(entry.discount)}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      {entry.customer?.name || entry.customerCode || '-'}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`px-2 py-1 text-xs font-medium rounded ${
-                        entry.status === 'POSTED' ? 'bg-green-100 text-green-800' :
-                        entry.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
-                        entry.status === 'ERROR' ? 'bg-red-100 text-red-800' :
-                        'bg-gray-100 text-gray-800'
-                      }`}>
-                        {entry.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">
-                      {formatDate(entry.createdAt)}
-                    </td>
-                  </tr>
-                ))
-              ) : null}
+              {activeTab === 'on' || activeTab === 'all'
+                ? filteredOnInvoiceEntries.map((entry) => (
+                    <tr key={entry.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <input type="checkbox" />
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        {entry.invoiceNo}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        ON
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        {entry.batch?.batchCode || entry.batchId || '-'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        {entry.invoiceNo} ({formatDate(entry.invoiceDate)}) -{' '}
+                        {entry.skuCode}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        {formatCurrency(entry.discount)}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        {entry.customer?.name || entry.customerCode || '-'}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span
+                          className={`px-2 py-1 text-xs font-medium rounded ${
+                            entry.status === 'POSTED'
+                              ? 'bg-green-100 text-green-800'
+                              : entry.status === 'PENDING'
+                                ? 'bg-yellow-100 text-yellow-800'
+                                : entry.status === 'ERROR'
+                                  ? 'bg-red-100 text-red-800'
+                                  : 'bg-gray-100 text-gray-800'
+                          }`}
+                        >
+                          {entry.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm">
+                        {formatDate(entry.createdAt)}
+                      </td>
+                    </tr>
+                  ))
+                : null}
 
               {/* Empty State */}
               {((activeTab === 'off' && filteredTransactions.length === 0) ||
                 (activeTab === 'on' && filteredOnInvoiceEntries.length === 0) ||
-                (activeTab === 'all' && filteredTransactions.length === 0 && filteredOnInvoiceEntries.length === 0)) && (
+                (activeTab === 'all' &&
+                  filteredTransactions.length === 0 &&
+                  filteredOnInvoiceEntries.length === 0)) && (
                 <tr>
-                  <td colSpan={9} className="px-6 py-8 text-center text-gray-500">
+                  <td
+                    colSpan={9}
+                    className="px-6 py-8 text-center text-gray-500"
+                  >
                     Kayıt bulunamadı
                   </td>
                 </tr>

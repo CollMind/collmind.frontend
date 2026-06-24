@@ -29,8 +29,7 @@ export const agreementEndpoints = {
   delete: (id: string) => apiClient.delete(`/agreements/${id}`),
 
   // Durum Geçişleri
-  submit: (id: string) =>
-    apiClient.post<Agreement>(`/agreements/${id}/submit`),
+  submit: (id: string) => apiClient.post<Agreement>(`/agreements/${id}/submit`),
 
   approve: (id: string, data?: ApproveAgreementDto) =>
     apiClient.post<Agreement>(`/agreements/${id}/approve`, data),
@@ -42,20 +41,22 @@ export const agreementEndpoints = {
     apiClient.post<Agreement>(`/agreements/${id}/cancel`, data),
 
   getAvailableTactics: (channelId: string, categoryId?: string) =>
-    apiClient.get<Array<{
-      id: string;
-      name: string;
-      code: string;
-      spendType: 'ON_INVOICE' | 'OFF_INVOICE' | 'BOTH';
-      mechanics: Array<{
+    apiClient.get<
+      Array<{
         id: string;
         name: string;
         code: string;
-        mechanicType: 'PERCENT' | 'AMOUNT' | 'AMOUNT_PER_UNIT';
-        minValue?: number;
-        maxValue?: number;
-      }>;
-    }>>('/agreements/tactics/available', {
+        spendType: 'ON_INVOICE' | 'OFF_INVOICE' | 'BOTH';
+        mechanics: Array<{
+          id: string;
+          name: string;
+          code: string;
+          mechanicType: 'PERCENT' | 'AMOUNT' | 'AMOUNT_PER_UNIT';
+          minValue?: number;
+          maxValue?: number;
+        }>;
+      }>
+    >('/agreements/tactics/available', {
       params: { channelId, categoryId },
     }),
 

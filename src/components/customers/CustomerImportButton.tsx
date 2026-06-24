@@ -16,11 +16,14 @@ interface CustomerImportButtonProps {
   onImportSuccess?: () => void;
 }
 
-export function CustomerImportButton({ onImportSuccess }: CustomerImportButtonProps = {}) {
+export function CustomerImportButton({
+  onImportSuccess,
+}: CustomerImportButtonProps = {}) {
   const [isOpen, setIsOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const { importResult, showResults, setShowResults, ...importMutation } = useCustomerImport();
+  const { importResult, showResults, setShowResults, ...importMutation } =
+    useCustomerImport();
 
   const validateFile = (file: File): { valid: boolean; error?: string } => {
     // Dosya formatı kontrolü
@@ -30,7 +33,8 @@ export function CustomerImportButton({ onImportSuccess }: CustomerImportButtonPr
     if (!fileExtension || !allowedExtensions.includes(fileExtension)) {
       return {
         valid: false,
-        error: 'Sadece Excel (.xlsx, .xls) veya CSV (.csv) dosyaları kabul edilir.',
+        error:
+          'Sadece Excel (.xlsx, .xls) veya CSV (.csv) dosyaları kabul edilir.',
       };
     }
 
@@ -39,7 +43,7 @@ export function CustomerImportButton({ onImportSuccess }: CustomerImportButtonPr
     if (file.size > maxSize) {
       return {
         valid: false,
-        error: 'Dosya boyutu 10MB\'dan büyük olamaz.',
+        error: "Dosya boyutu 10MB'dan büyük olamaz.",
       };
     }
 
@@ -197,7 +201,3 @@ export function CustomerImportButton({ onImportSuccess }: CustomerImportButtonPr
     </Dialog>
   );
 }
-
-
-
-

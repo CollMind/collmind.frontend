@@ -10,7 +10,9 @@ import { getErrorMessage } from '@/utils/errorHandler';
 
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ||
-  (import.meta.env.DEV || import.meta.env.MODE === 'test' ? 'http://localhost:3000' : '');
+  (import.meta.env.DEV || import.meta.env.MODE === 'test'
+    ? 'http://localhost:3000'
+    : '');
 
 if (!API_BASE_URL) {
   throw new Error('VITE_API_BASE_URL must be set for production builds.');
@@ -74,7 +76,7 @@ apiClient.interceptors.response.use(
     if (error.response?.status === 403) {
       // 403 hatası için kullanıcıya uygun mesaj göster
       const errorMessage = getErrorMessage(error);
-      
+
       // Log technical error for debugging
       console.error('403 Forbidden Error:', {
         url: originalRequest?.url,
@@ -82,18 +84,24 @@ apiClient.interceptors.response.use(
         message: errorMessage,
         timestamp: new Date().toISOString(),
       });
-      
+
       // Toast göster
-      store.dispatch(addNotification({
-        type: 'error',
-        message: errorMessage,
-      }));
-      
+      store.dispatch(
+        addNotification({
+          type: 'error',
+          message: errorMessage,
+        })
+      );
+
       return Promise.reject(error);
     }
 
     // Handle 401 Unauthorized
-    if (error.response?.status === 401 && originalRequest && !originalRequest._retry) {
+    if (
+      error.response?.status === 401 &&
+      originalRequest &&
+      !originalRequest._retry
+    ) {
       if (isRefreshing) {
         // Eğer zaten refresh işlemi devam ediyorsa, isteği queue'ya ekle
         return new Promise((resolve, reject) => {
@@ -130,8 +138,12 @@ apiClient.interceptors.response.use(
           }
         );
 
-        const { accessToken, refreshToken: newRefreshToken, user } = response.data;
-        
+        const {
+          accessToken,
+          refreshToken: newRefreshToken,
+          user,
+        } = response.data;
+
         store.dispatch(
           setCredentials({
             user: user || store.getState().auth.user!,
@@ -151,25 +163,32 @@ apiClient.interceptors.response.use(
       } catch (refreshError) {
         // Refresh başarısız, queue'daki tüm istekleri reddet
         processQueue(refreshError, null);
-        
+
         // Toast göster
         const refreshErrorMessage = getErrorMessage(refreshError);
-        store.dispatch(addNotification({
-          type: 'error',
-          message: refreshErrorMessage || 'Oturum süreniz dolmuş. Lütfen tekrar giriş yapın.',
-        }));
-        
+        store.dispatch(
+          addNotification({
+            type: 'error',
+            message:
+              refreshErrorMessage ||
+              'Oturum süreniz dolmuş. Lütfen tekrar giriş yapın.',
+          })
+        );
+
         // Logout yap
         store.dispatch(logout());
-        
+
         // Login sayfasına yönlendir (sadece login sayfasında değilsek ve browser ortamındaysak)
-        if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
+        if (
+          typeof window !== 'undefined' &&
+          window.location.pathname !== '/login'
+        ) {
           // Test ortamında navigation'ı atla
           if (import.meta.env.MODE !== 'test') {
             window.location.href = '/login';
           }
         }
-        
+
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;
@@ -185,20 +204,22 @@ apiClient.interceptors.response.use(
         isNetworkError: true,
         originalError: error,
       };
-      
+
       console.error('Network Error:', {
         message: error.message,
         code: error.code,
         url: originalRequest?.url,
         timestamp: new Date().toISOString(),
       });
-      
+
       // Toast göster
-      store.dispatch(addNotification({
-        type: 'error',
-        message: errorMessage,
-      }));
-      
+      store.dispatch(
+        addNotification({
+          type: 'error',
+          message: errorMessage,
+        })
+      );
+
       return Promise.reject(networkError);
     }
 
@@ -210,22 +231,26 @@ apiClient.interceptors.response.use(
         statusCode: 500,
         originalError: error,
       };
-      
+
       // Log technical error for debugging
-      const errorData500 = error.response?.data as { message?: string } | undefined;
+      const errorData500 = error.response?.data as
+        | { message?: string }
+        | undefined;
       console.error('500 Internal Server Error:', {
         url: originalRequest?.url,
         method: originalRequest?.method,
         message: errorData500?.message || error.message,
         timestamp: new Date().toISOString(),
       });
-      
+
       // Toast göster
-      store.dispatch(addNotification({
-        type: 'error',
-        message: errorMessage,
-      }));
-      
+      store.dispatch(
+        addNotification({
+          type: 'error',
+          message: errorMessage,
+        })
+      );
+
       return Promise.reject(serverError);
     }
 
@@ -233,9 +258,11 @@ apiClient.interceptors.response.use(
     // 401 hatası için toast göstermiyoruz (logout yapılıyor)
     if (error.response?.status >= 400 && error.response?.status !== 401) {
       const errorMessage = getErrorMessage(error);
-      
+
       // Log technical error for debugging
-      const errorData = error.response?.data as { message?: string } | undefined;
+      const errorData = error.response?.data as
+        | { message?: string }
+        | undefined;
       console.error('API Error:', {
         status: error.response.status,
         url: originalRequest?.url,
@@ -243,12 +270,14 @@ apiClient.interceptors.response.use(
         message: errorData?.message || error.message,
         timestamp: new Date().toISOString(),
       });
-      
+
       // Toast göster
-      store.dispatch(addNotification({
-        type: 'error',
-        message: errorMessage,
-      }));
+      store.dispatch(
+        addNotification({
+          type: 'error',
+          message: errorMessage,
+        })
+      );
     }
 
     return Promise.reject(error);

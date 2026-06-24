@@ -15,7 +15,9 @@ let XLSX: any;
 try {
   XLSX = require('xlsx');
 } catch (e) {
-  console.warn('xlsx package not installed. Error report download will not work.');
+  console.warn(
+    'xlsx package not installed. Error report download will not work.'
+  );
 }
 
 interface CustomerImportResultsProps {
@@ -60,7 +62,9 @@ export function CustomerImportResults({
 
   const downloadErrorReport = () => {
     if (!XLSX) {
-      alert('xlsx paketi yüklü değil. Lütfen "npm install xlsx" komutunu çalıştırın.');
+      alert(
+        'xlsx paketi yüklü değil. Lütfen "npm install xlsx" komutunu çalıştırın.'
+      );
       return;
     }
 
@@ -75,7 +79,10 @@ export function CustomerImportResults({
     const ws = XLSX.utils.json_to_sheet(errorData);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Hatalar');
-    XLSX.writeFile(wb, `import_hatalari_${new Date().toISOString().split('T')[0]}.xlsx`);
+    XLSX.writeFile(
+      wb,
+      `import_hatalari_${new Date().toISOString().split('T')[0]}.xlsx`
+    );
   };
 
   return (
@@ -156,7 +163,7 @@ export function CustomerImportResults({
                         <td className="px-3 py-2">
                           <span
                             className={`px-2 py-1 rounded text-xs font-medium ${getErrorTypeColor(
-                              error.error_type,
+                              error.error_type
                             )}`}
                           >
                             {getErrorTypeLabel(error.error_type)}
@@ -189,6 +196,3 @@ export function CustomerImportResults({
     </Dialog>
   );
 }
-
-
-

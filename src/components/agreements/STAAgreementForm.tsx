@@ -1,8 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import {
-  CreateAgreementDto,
-  AgreementType,
-} from '@/types/agreement.types';
+import { CreateAgreementDto, AgreementType } from '@/types/agreement.types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -80,7 +77,7 @@ export function STAAgreementForm({
 }: STAAgreementFormProps) {
   // const toast = useToast();
   const [currentStep, setCurrentStep] = useState(1);
-  
+
   // Helper function to extract ID from initialData (handles both string and object)
   const extractId = (value: any): string => {
     if (!value) return '';
@@ -88,14 +85,18 @@ export function STAAgreementForm({
     if (typeof value === 'object' && value.id) return value.id;
     return '';
   };
-  
+
   const [formData, setFormData] = useState<CreateAgreementDto>({
     agreementName: initialData?.agreementName || '',
     description: initialData?.description || '',
     agreementType: AgreementType.STA,
     cplId: extractId(initialData?.cplId),
-    channelId: extractId(initialData?.channelId || (initialData as any)?.channel),
-    categoryId: extractId(initialData?.categoryId || (initialData as any)?.category),
+    channelId: extractId(
+      initialData?.channelId || (initialData as any)?.channel
+    ),
+    categoryId: extractId(
+      initialData?.categoryId || (initialData as any)?.category
+    ),
     fuId: extractId(initialData?.fuId || (initialData as any)?.forecastingUnit),
     startDate: initialData?.startDate || '',
     endDate: initialData?.endDate || '',
@@ -105,48 +106,68 @@ export function STAAgreementForm({
     currency: initialData?.currency || 'TRY',
     // Required fields
     tacticId: extractId(initialData?.tacticId || (initialData as any)?.tactic),
-    mechanicId: extractId(initialData?.mechanicId || (initialData as any)?.mechanic),
+    mechanicId: extractId(
+      initialData?.mechanicId || (initialData as any)?.mechanic
+    ),
   });
 
   const [selectedTactics, setSelectedTactics] = useState<SelectedTactic[]>([]);
   const [saveAsDraft, setSaveAsDraft] = useState(true);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showTacticDropdown, setShowTacticDropdown] = useState(false);
-  const [tacticsMechanics, setTacticsMechanics] = useState<Record<string, any[]>>({});
+  const [tacticsMechanics, setTacticsMechanics] = useState<
+    Record<string, any[]>
+  >({});
   const [pendingTactic, setPendingTactic] = useState<any>(null); // Tactic waiting for mechanic selection
 
   // Fetch CPL list when channel is selected (using new master data endpoint)
   const { data: channels = [] } = useChannels(true);
-  const { data: cplList = [], isLoading: cplLoading } = useCpls(true, formData.channelId);
+  const { data: cplList = [], isLoading: cplLoading } = useCpls(
+    true,
+    formData.channelId
+  );
 
   // Legacy: Also try old endpoint for backward compatibility
   const { data: legacyCplList } = useQuery({
     queryKey: ['cpl-list-legacy', formData.channelId, formData.categoryId],
     queryFn: () =>
-      customerEndpoints.getCplList(formData.channelId, formData.categoryId).then((res) => res.data),
+      customerEndpoints
+        .getCplList(formData.channelId, formData.categoryId)
+        .then((res) => res.data),
     enabled: !!formData.channelId && cplList.length === 0,
   });
 
   // Use new CPL list if available, otherwise fall back to legacy
-  const finalCplList = cplList.length > 0 ? cplList : (legacyCplList || []);
+  const finalCplList = cplList.length > 0 ? cplList : legacyCplList || [];
 
   // Fetch available tactics
   const { data: availableTactics, isLoading: tacticsLoading } = useQuery({
     queryKey: ['available-tactics', formData.channelId, formData.categoryId],
     queryFn: () =>
-      agreementEndpoints.getAvailableTactics(formData.channelId || '', formData.categoryId).then((res) => res.data),
+      agreementEndpoints
+        .getAvailableTactics(formData.channelId || '', formData.categoryId)
+        .then((res) => res.data),
     enabled: !!formData.channelId,
   });
 
   // Load initial tactic and mechanic if editing
   useEffect(() => {
-    if (initialData?.tacticId && initialData?.mechanicId && availableTactics && availableTactics.length > 0) {
-      const tactic = availableTactics.find(t => t.id === initialData.tacticId);
+    if (
+      initialData?.tacticId &&
+      initialData?.mechanicId &&
+      availableTactics &&
+      availableTactics.length > 0
+    ) {
+      const tactic = availableTactics.find(
+        (t) => t.id === initialData.tacticId
+      );
       if (tactic) {
         const mechanics = tactic.mechanics || [];
         setTacticsMechanics({ [tactic.id]: mechanics });
-        
-        const selectedMechanic = mechanics.find((m: any) => m.id === initialData.mechanicId);
+
+        const selectedMechanic = mechanics.find(
+          (m: any) => m.id === initialData.mechanicId
+        );
         const selectedTactic: SelectedTactic = {
           id: tactic.id,
           name: tactic.name,
@@ -156,17 +177,24 @@ export function STAAgreementForm({
           mechanicId: initialData.mechanicId,
           value: initialData.mechanicValue,
         };
-        
+
         setSelectedTactics([selectedTactic]);
       }
     }
-  }, [initialData?.tacticId, initialData?.mechanicId, initialData?.mechanicValue, availableTactics]);
+  }, [
+    initialData?.tacticId,
+    initialData?.mechanicId,
+    initialData?.mechanicValue,
+    availableTactics,
+  ]);
 
   // Fetch budget status
   const { data: budgetStatus, isLoading: budgetLoading } = useQuery({
     queryKey: ['budget-status', formData.channelId, formData.categoryId],
     queryFn: () =>
-      budgetEndpoints.getBudgetStatus(formData.channelId || '', formData.categoryId).then((res) => res.data),
+      budgetEndpoints
+        .getBudgetStatus(formData.channelId || '', formData.categoryId)
+        .then((res) => res.data),
     enabled: !!formData.channelId && !!formData.categoryId,
   });
 
@@ -216,7 +244,8 @@ export function STAAgreementForm({
         const start = new Date(formData.startDate);
         const end = new Date(formData.endDate);
         if (end <= start) {
-          newErrors.endDate = 'Bitiş tarihi başlangıç tarihinden sonra olmalıdır';
+          newErrors.endDate =
+            'Bitiş tarihi başlangıç tarihinden sonra olmalıdır';
         }
         const days = periodDays;
         if (days > 90) {
@@ -241,9 +270,12 @@ export function STAAgreementForm({
       if (selectedTactics.length === 0) {
         newErrors.tactics = 'En az bir taktik seçilmelidir';
       }
-      const capAmount = typeof formData.capTotalAmount === 'number' ? formData.capTotalAmount : toNumber(formData.capTotalAmount);
+      const capAmount =
+        typeof formData.capTotalAmount === 'number'
+          ? formData.capTotalAmount
+          : toNumber(formData.capTotalAmount);
       if (!capAmount || capAmount <= 0) {
-        newErrors.capTotalAmount = 'Cap değeri 0\'dan büyük olmalıdır';
+        newErrors.capTotalAmount = "Cap değeri 0'dan büyük olmalıdır";
       }
     }
 
@@ -265,40 +297,46 @@ export function STAAgreementForm({
     if (!selectedTactics.find((t) => t.id === tactic.id)) {
       // Mechanics are already included in the tactic object from getAvailableTactics
       const mechanics = tactic.mechanics || [];
-      
-      console.log('Adding tactic with mechanics:', { tactic: tactic.name, mechanicsCount: mechanics.length });
-      
+
+      console.log('Adding tactic with mechanics:', {
+        tactic: tactic.name,
+        mechanicsCount: mechanics.length,
+      });
+
       // Store mechanics for this tactic
-      setTacticsMechanics(prev => ({ ...prev, [tactic.id]: mechanics }));
-      
+      setTacticsMechanics((prev) => ({ ...prev, [tactic.id]: mechanics }));
+
       // If no mechanics, show error
       if (mechanics.length === 0) {
-        setErrors({ ...errors, tactics: `"${tactic.name}" taktiği için mekanik bulunamadı. Lütfen admin panelinden bu taktik için mekanik ekleyin.` });
+        setErrors({
+          ...errors,
+          tactics: `"${tactic.name}" taktiği için mekanik bulunamadı. Lütfen admin panelinden bu taktik için mekanik ekleyin.`,
+        });
         setShowTacticDropdown(false);
         return;
       }
-      
+
       // If only one mechanic, auto-select it
       if (mechanics.length === 1) {
         const mechanic = mechanics[0];
-        const newTactic: SelectedTactic = { 
+        const newTactic: SelectedTactic = {
           id: tactic.id,
           name: tactic.name,
           code: tactic.code,
           spendType: tactic.spendType || 'ON_INVOICE',
           mechanicType: mechanic.mechanicType,
           value: undefined,
-          mechanicId: mechanic.id 
+          mechanicId: mechanic.id,
         };
-        
+
         setSelectedTactics([...selectedTactics, newTactic]);
-        
+
         // Set first tactic as default
         if (selectedTactics.length === 0) {
-          setFormData({ 
-            ...formData, 
+          setFormData({
+            ...formData,
             tacticId: tactic.id,
-            mechanicId: mechanic.id 
+            mechanicId: mechanic.id,
           });
         }
         setShowTacticDropdown(false);
@@ -315,33 +353,33 @@ export function STAAgreementForm({
   const handleSelectMechanic = (tactic: any, mechanicId: string) => {
     const mechanics = tacticsMechanics[tactic.id] || tactic.mechanics || [];
     const selectedMechanic = mechanics.find((m: any) => m.id === mechanicId);
-    
+
     if (!selectedMechanic) {
       setErrors({ ...errors, tactics: 'Seçilen mekanik bulunamadı' });
       return;
     }
-    
-    const newTactic: SelectedTactic = { 
+
+    const newTactic: SelectedTactic = {
       id: tactic.id,
       name: tactic.name,
       code: tactic.code,
       spendType: tactic.spendType || 'ON_INVOICE',
       mechanicType: selectedMechanic.mechanicType,
       value: undefined,
-      mechanicId: selectedMechanic.id 
+      mechanicId: selectedMechanic.id,
     };
-    
+
     setSelectedTactics([...selectedTactics, newTactic]);
-    
+
     // Set first tactic as default
     if (selectedTactics.length === 0) {
-      setFormData({ 
-        ...formData, 
+      setFormData({
+        ...formData,
         tacticId: tactic.id,
-        mechanicId: selectedMechanic.id 
+        mechanicId: selectedMechanic.id,
       });
     }
-    
+
     setPendingTactic(null);
   };
 
@@ -352,13 +390,17 @@ export function STAAgreementForm({
   const handleRemoveTactic = (tacticId: string) => {
     setSelectedTactics(selectedTactics.filter((t) => t.id !== tacticId));
     // Remove mechanics for this tactic
-    setTacticsMechanics(prev => {
+    setTacticsMechanics((prev) => {
       const newMechanics = { ...prev };
       delete newMechanics[tacticId];
       return newMechanics;
     });
     if (formData.tacticId === tacticId) {
-      setFormData({ ...formData, tacticId: selectedTactics[0]?.id || '', mechanicId: selectedTactics[0]?.mechanicId || '' });
+      setFormData({
+        ...formData,
+        tacticId: selectedTactics[0]?.id || '',
+        mechanicId: selectedTactics[0]?.mechanicId || '',
+      });
     }
   };
 
@@ -380,11 +422,16 @@ export function STAAgreementForm({
   };
 
   const handleSubmit = async () => {
-    console.log('handleSubmit called', { currentStep, selectedTactics, saveAsDraft, formData });
-    
+    console.log('handleSubmit called', {
+      currentStep,
+      selectedTactics,
+      saveAsDraft,
+      formData,
+    });
+
     // Clear previous errors
     setErrors({});
-    
+
     if (!validateStep(currentStep)) {
       console.log('Validation failed', errors);
       return;
@@ -399,14 +446,14 @@ export function STAAgreementForm({
 
     // Use first selected tactic
     const firstTactic = selectedTactics[0];
-    
+
     // Validate mechanic ID exists
     if (!firstTactic.mechanicId) {
       console.log('No mechanic ID for tactic', firstTactic);
       setErrors({ tactics: 'Lütfen taktik için bir mekanik seçin' });
       return;
     }
-    
+
     try {
       const submitData: CreateAgreementDto = {
         ...formData,
@@ -447,12 +494,13 @@ export function STAAgreementForm({
           <React.Fragment key={step.id}>
             <div className="flex items-center">
               <div
-                className={`flex items-center justify-center w-10 h-10 rounded-full border-2 ${currentStep > step.id
-                  ? 'bg-green-500 border-green-500 text-white'
-                  : currentStep === step.id
-                    ? 'bg-blue-500 border-blue-500 text-white'
-                    : 'bg-gray-200 border-gray-300 text-gray-500'
-                  }`}
+                className={`flex items-center justify-center w-10 h-10 rounded-full border-2 ${
+                  currentStep > step.id
+                    ? 'bg-green-500 border-green-500 text-white'
+                    : currentStep === step.id
+                      ? 'bg-blue-500 border-blue-500 text-white'
+                      : 'bg-gray-200 border-gray-300 text-gray-500'
+                }`}
               >
                 {currentStep > step.id ? (
                   <Check className="h-5 w-5" />
@@ -461,16 +509,20 @@ export function STAAgreementForm({
                 )}
               </div>
               <span
-                className={`ml-2 text-sm ${currentStep >= step.id ? 'text-gray-900 font-medium' : 'text-gray-500'
-                  }`}
+                className={`ml-2 text-sm ${
+                  currentStep >= step.id
+                    ? 'text-gray-900 font-medium'
+                    : 'text-gray-500'
+                }`}
               >
                 {step.title}
               </span>
             </div>
             {index < STEPS.length - 1 && (
               <div
-                className={`flex-1 h-0.5 mx-4 ${currentStep > step.id ? 'bg-green-500' : 'bg-gray-300'
-                  }`}
+                className={`flex-1 h-0.5 mx-4 ${
+                  currentStep > step.id ? 'bg-green-500' : 'bg-gray-300'
+                }`}
               />
             )}
           </React.Fragment>
@@ -499,7 +551,9 @@ export function STAAgreementForm({
                 className={errors.agreementName ? 'border-red-500' : ''}
               />
               {errors.agreementName && (
-                <p className="text-xs text-red-600 mt-1">{errors.agreementName}</p>
+                <p className="text-xs text-red-600 mt-1">
+                  {errors.agreementName}
+                </p>
               )}
             </div>
             <div>
@@ -532,7 +586,9 @@ export function STAAgreementForm({
                   <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
                 </div>
                 {errors.startDate && (
-                  <p className="text-xs text-red-600 mt-1">{errors.startDate}</p>
+                  <p className="text-xs text-red-600 mt-1">
+                    {errors.startDate}
+                  </p>
                 )}
               </div>
               <div>
@@ -560,9 +616,12 @@ export function STAAgreementForm({
               <div className="flex items-start gap-2 p-3 bg-blue-50 rounded-md">
                 <Info className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
                 <div>
-                  <p className="text-sm font-medium text-blue-800">Süre Kısıtlaması</p>
+                  <p className="text-sm font-medium text-blue-800">
+                    Süre Kısıtlaması
+                  </p>
                   <p className="text-xs text-blue-700 mt-1">
-                    STA (Kısa Vadeli Anlaşma) süresi maksimum 90 gün olabilir. Şu anki süre: {periodDays} gün
+                    STA (Kısa Vadeli Anlaşma) süresi maksimum 90 gün olabilir.
+                    Şu anki süre: {periodDays} gün
                   </p>
                 </div>
               </div>
@@ -580,7 +639,12 @@ export function STAAgreementForm({
                 <ChannelSelect
                   value={formData.channelId}
                   onChange={(value) => {
-                    setFormData({ ...formData, channelId: value, cplId: '', categoryId: '' });
+                    setFormData({
+                      ...formData,
+                      channelId: value,
+                      cplId: '',
+                      categoryId: '',
+                    });
                   }}
                   label="Kanal"
                   required
@@ -606,51 +670,62 @@ export function STAAgreementForm({
                   <Label>
                     CPL Seçimi * <span className="text-red-500">*</span>
                   </Label>
-                {cplLoading ? (
-                  <div className="text-center py-4 text-gray-500">Yükleniyor...</div>
-                ) : (
-                  <div className="grid grid-cols-3 gap-4 mt-2">
-                    {finalCplList?.map((cpl: any) => (
-                      <Card
-                        key={cpl.id}
-                        className={`cursor-pointer transition-all ${formData.cplId === cpl.id
-                          ? 'border-blue-500 bg-blue-50'
-                          : 'border-gray-200 hover:border-gray-300'
+                  {cplLoading ? (
+                    <div className="text-center py-4 text-gray-500">
+                      Yükleniyor...
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-3 gap-4 mt-2">
+                      {finalCplList?.map((cpl: any) => (
+                        <Card
+                          key={cpl.id}
+                          className={`cursor-pointer transition-all ${
+                            formData.cplId === cpl.id
+                              ? 'border-blue-500 bg-blue-50'
+                              : 'border-gray-200 hover:border-gray-300'
                           }`}
-                        onClick={() => setFormData({ ...formData, cplId: cpl.id })}
-                      >
-                        <CardContent className="p-4">
-                          <h3 className="font-semibold text-lg mb-2">{cpl.name}</h3>
-                          <p className="text-sm text-gray-600">
-                            Müşteri Sayısı: {cpl.customerCount}
-                          </p>
-                          <p className="text-sm text-gray-600">
-                            Aktif Anlaşma: {cpl.activeAgreementCount}
-                          </p>
-                          <p className="text-sm text-gray-500 mt-2">{cpl.code}</p>
-                        </CardContent>
-                      </Card>
-                    ))}
+                          onClick={() =>
+                            setFormData({ ...formData, cplId: cpl.id })
+                          }
+                        >
+                          <CardContent className="p-4">
+                            <h3 className="font-semibold text-lg mb-2">
+                              {cpl.name}
+                            </h3>
+                            <p className="text-sm text-gray-600">
+                              Müşteri Sayısı: {cpl.customerCount}
+                            </p>
+                            <p className="text-sm text-gray-600">
+                              Aktif Anlaşma: {cpl.activeAgreementCount}
+                            </p>
+                            <p className="text-sm text-gray-500 mt-2">
+                              {cpl.code}
+                            </p>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+                  {errors.cplId && (
+                    <p className="text-xs text-red-600 mt-1">{errors.cplId}</p>
+                  )}
+                </div>
+
+                {formData.cplId && (
+                  <div>
+                    <FuSelect
+                      value={formData.fuId}
+                      onChange={(value) =>
+                        setFormData({ ...formData, fuId: value })
+                      }
+                      label="Forecasting Unit (FU)"
+                      required
+                      error={errors.fuId}
+                      categoryId={formData.categoryId}
+                    />
                   </div>
                 )}
-                {errors.cplId && (
-                  <p className="text-xs text-red-600 mt-1">{errors.cplId}</p>
-                )}
-              </div>
-
-              {formData.cplId && (
-                <div>
-                  <FuSelect
-                    value={formData.fuId}
-                    onChange={(value) => setFormData({ ...formData, fuId: value })}
-                    label="Forecasting Unit (FU)"
-                    required
-                    error={errors.fuId}
-                    categoryId={formData.categoryId}
-                  />
-                </div>
-              )}
-            </>
+              </>
             )}
           </CardContent>
         </Card>
@@ -667,7 +742,9 @@ export function STAAgreementForm({
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
                       <Wallet className="h-4 w-4 text-gray-600" />
-                      <Label className="text-sm font-medium">Bütçe Durumu</Label>
+                      <Label className="text-sm font-medium">
+                        Bütçe Durumu
+                      </Label>
                     </div>
                     <Badge
                       className={
@@ -689,9 +766,10 @@ export function STAAgreementForm({
                       <Progress
                         value={
                           updatedBudgetStatus.totalAllocation > 0
-                            ? ((updatedBudgetStatus.reserved + updatedBudgetStatus.consumed) /
-                              updatedBudgetStatus.totalAllocation) *
-                            100
+                            ? ((updatedBudgetStatus.reserved +
+                                updatedBudgetStatus.consumed) /
+                                updatedBudgetStatus.totalAllocation) *
+                              100
                             : 0
                         }
                         className="h-2"
@@ -699,11 +777,15 @@ export function STAAgreementForm({
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-600">Kullanılabilir</span>
-                      <span className="font-medium">{formatCurrency(updatedBudgetStatus.available)}</span>
+                      <span className="font-medium">
+                        {formatCurrency(updatedBudgetStatus.available)}
+                      </span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-600">Planlanan (Bu STA)</span>
-                      <span className="font-medium">{formatCurrency(toNumber(updatedBudgetStatus.planned))}</span>
+                      <span className="font-medium">
+                        {formatCurrency(toNumber(updatedBudgetStatus.planned))}
+                      </span>
                     </div>
                   </div>
                 </CardContent>
@@ -723,8 +805,9 @@ export function STAAgreementForm({
                   Taktik Ekle
                 </span>
                 <ChevronRight
-                  className={`h-4 w-4 transition-transform ${showTacticDropdown ? 'rotate-90' : ''
-                    }`}
+                  className={`h-4 w-4 transition-transform ${
+                    showTacticDropdown ? 'rotate-90' : ''
+                  }`}
                 />
               </Button>
               {showTacticDropdown && availableTactics && (
@@ -741,11 +824,18 @@ export function STAAgreementForm({
                             <Check className="h-4 w-4 text-green-600" />
                           )}
                           <div>
-                            <p className="text-sm font-medium text-gray-900">{tactic.name}</p>
-                            <p className="text-xs text-gray-500">{tactic.code}</p>
+                            <p className="text-sm font-medium text-gray-900">
+                              {tactic.name}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              {tactic.code}
+                            </p>
                           </div>
                         </div>
-                        <Badge variant="outline" className="text-xs border-gray-200 text-gray-600 bg-gray-50">
+                        <Badge
+                          variant="outline"
+                          className="text-xs border-gray-200 text-gray-600 bg-gray-50"
+                        >
                           {tactic.mechanics?.length || 0} Mekanik
                         </Badge>
                       </div>
@@ -765,7 +855,8 @@ export function STAAgreementForm({
                         {pendingTactic.name} için Mekanik Seçin
                       </Label>
                       <p className="text-xs text-blue-700 mt-1">
-                        Bu taktik için birden fazla mekanik mevcut. Lütfen birini seçin.
+                        Bu taktik için birden fazla mekanik mevcut. Lütfen
+                        birini seçin.
                       </p>
                     </div>
                     <Button
@@ -777,7 +868,7 @@ export function STAAgreementForm({
                       ✕
                     </Button>
                   </div>
-                  
+
                   <div className="space-y-2">
                     {(pendingTactic.mechanics || []).map((mechanic: any) => (
                       <Button
@@ -785,14 +876,22 @@ export function STAAgreementForm({
                         type="button"
                         variant="outline"
                         className="w-full justify-start text-left"
-                        onClick={() => handleSelectMechanic(pendingTactic, mechanic.id)}
+                        onClick={() =>
+                          handleSelectMechanic(pendingTactic, mechanic.id)
+                        }
                       >
                         <div className="flex items-center justify-between w-full">
                           <div>
-                            <p className="text-sm font-medium">{mechanic.name}</p>
-                            <p className="text-xs text-gray-500">{mechanic.code} - {mechanic.mechanicType}</p>
+                            <p className="text-sm font-medium">
+                              {mechanic.name}
+                            </p>
+                            <p className="text-xs text-gray-500">
+                              {mechanic.code} - {mechanic.mechanicType}
+                            </p>
                           </div>
-                          <Badge variant="outline">{mechanic.mechanicType}</Badge>
+                          <Badge variant="outline">
+                            {mechanic.mechanicType}
+                          </Badge>
                         </div>
                       </Button>
                     ))}
@@ -804,14 +903,18 @@ export function STAAgreementForm({
             {/* Selected Tactics */}
             {selectedTactics.map((tactic) => {
               const mechanics = tacticsMechanics[tactic.id] || [];
-              
+
               return (
                 <Card key={tactic.id} className="bg-white">
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between mb-3">
                       <div>
-                        <Label className="text-sm font-medium">{tactic.name}</Label>
-                        <p className="text-xs text-gray-500">{tactic.spendType}</p>
+                        <Label className="text-sm font-medium">
+                          {tactic.name}
+                        </Label>
+                        <p className="text-xs text-gray-500">
+                          {tactic.spendType}
+                        </p>
                       </div>
                       <Button
                         type="button"
@@ -822,21 +925,25 @@ export function STAAgreementForm({
                         <Trash2 className="h-4 w-4 text-red-600" />
                       </Button>
                     </div>
-                    
+
                     {/* Mechanic Selection - Always show for editing */}
                     <div className="mb-3">
                       <MechanicSelect
                         value={tactic.mechanicId}
                         onChange={(mechanicId) => {
-                          const selectedMechanic = mechanics.find((m: any) => m.id === mechanicId);
+                          const selectedMechanic = mechanics.find(
+                            (m: any) => m.id === mechanicId
+                          );
                           setSelectedTactics(
-                            selectedTactics.map((t) => 
-                              t.id === tactic.id 
-                                ? { 
-                                    ...t, 
+                            selectedTactics.map((t) =>
+                              t.id === tactic.id
+                                ? {
+                                    ...t,
                                     mechanicId,
-                                    mechanicType: selectedMechanic?.mechanicType || t.mechanicType
-                                  } 
+                                    mechanicType:
+                                      selectedMechanic?.mechanicType ||
+                                      t.mechanicType,
+                                  }
                                 : t
                             )
                           );
@@ -852,18 +959,22 @@ export function STAAgreementForm({
                       />
                       {!tactic.mechanicId && mechanics.length === 0 && (
                         <p className="text-xs text-amber-600 mt-1">
-                          Bu taktik için mekanik bulunamadı. Lütfen admin panelinden mekanik ekleyin.
+                          Bu taktik için mekanik bulunamadı. Lütfen admin
+                          panelinden mekanik ekleyin.
                         </p>
                       )}
                     </div>
-                    
+
                     <div className="flex items-center gap-2">
                       <Input
                         type="number"
                         placeholder="Değer"
                         value={tactic.value || ''}
                         onChange={(e) =>
-                          handleTacticValueChange(tactic.id, parseFloat(e.target.value) || 0)
+                          handleTacticValueChange(
+                            tactic.id,
+                            parseFloat(e.target.value) || 0
+                          )
                         }
                         className="flex-1"
                       />
@@ -883,7 +994,8 @@ export function STAAgreementForm({
             {/* Cap */}
             <div>
               <Label htmlFor="capTotalAmount">
-                Cap (Maksimum Harcama Limiti) * <span className="text-red-500">*</span>
+                Cap (Maksimum Harcama Limiti) *{' '}
+                <span className="text-red-500">*</span>
               </Label>
               <div className="relative mt-2">
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
@@ -906,7 +1018,9 @@ export function STAAgreementForm({
                 />
               </div>
               {errors.capTotalAmount && (
-                <p className="text-xs text-red-600 mt-1">{errors.capTotalAmount}</p>
+                <p className="text-xs text-red-600 mt-1">
+                  {errors.capTotalAmount}
+                </p>
               )}
             </div>
           </CardContent>
@@ -922,7 +1036,9 @@ export function STAAgreementForm({
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between">
                   <span className="text-gray-600">Anlaşma Adı:</span>
-                  <span className="font-medium">{formData.agreementName || '-'}</span>
+                  <span className="font-medium">
+                    {formData.agreementName || '-'}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Dönem:</span>
@@ -934,17 +1050,25 @@ export function STAAgreementForm({
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Müşteri / CPL:</span>
-                  <span className="font-medium">{getSelectedCpl()?.name || '-'}</span>
+                  <span className="font-medium">
+                    {getSelectedCpl()?.name || '-'}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Kanal / Kategori:</span>
                   <span className="font-medium">
-                    {channels.find((c: { id: string; name?: string }) => c.id === formData.channelId)?.name || '-'} / {getSelectedCategory()?.name || '-'}
+                    {channels.find(
+                      (c: { id: string; name?: string }) =>
+                        c.id === formData.channelId
+                    )?.name || '-'}{' '}
+                    / {getSelectedCategory()?.name || '-'}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Toplam Cap:</span>
-                  <span className="font-medium">{formatCurrency(toNumber(formData.capTotalAmount))}</span>
+                  <span className="font-medium">
+                    {formatCurrency(toNumber(formData.capTotalAmount))}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Taktik Sayısı:</span>
@@ -952,12 +1076,18 @@ export function STAAgreementForm({
                 </div>
                 {selectedTactics.length > 0 && (
                   <div className="mt-2 pt-2 border-t">
-                    <p className="text-xs text-gray-500 mb-2">SEÇİLEN TAKTİKLER</p>
+                    <p className="text-xs text-gray-500 mb-2">
+                      SEÇİLEN TAKTİKLER
+                    </p>
                     {selectedTactics.map((tactic) => (
-                      <div key={tactic.id} className="flex justify-between text-sm">
+                      <div
+                        key={tactic.id}
+                        className="flex justify-between text-sm"
+                      >
                         <span>{tactic.name}</span>
                         <span className="font-medium">
-                          {tactic.value || 0} {tactic.mechanicType === 'PERCENT' ? '%' : '₺'}
+                          {tactic.value || 0}{' '}
+                          {tactic.mechanicType === 'PERCENT' ? '%' : '₺'}
                         </span>
                       </div>
                     ))}
@@ -982,10 +1112,11 @@ export function STAAgreementForm({
 
             <div className="space-y-3">
               <div
-                className={`flex items-start gap-3 p-4 border-2 rounded-lg cursor-pointer ${saveAsDraft
-                  ? 'border-blue-500 bg-blue-50'
-                  : 'border-gray-200 hover:border-gray-300'
-                  }`}
+                className={`flex items-start gap-3 p-4 border-2 rounded-lg cursor-pointer ${
+                  saveAsDraft
+                    ? 'border-blue-500 bg-blue-50'
+                    : 'border-gray-200 hover:border-gray-300'
+                }`}
                 onClick={() => setSaveAsDraft(true)}
               >
                 <input
@@ -997,18 +1128,22 @@ export function STAAgreementForm({
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
                     <Save className="h-4 w-4" />
-                    <Label className="font-medium cursor-pointer">Taslak Olarak Kaydet</Label>
+                    <Label className="font-medium cursor-pointer">
+                      Taslak Olarak Kaydet
+                    </Label>
                   </div>
                   <p className="text-xs text-gray-600">
-                    Daha sonra düzenlemeye devam edebilirsiniz. Onay sürecine girmez.
+                    Daha sonra düzenlemeye devam edebilirsiniz. Onay sürecine
+                    girmez.
                   </p>
                 </div>
               </div>
               <div
-                className={`flex items-start gap-3 p-4 border-2 rounded-lg cursor-pointer ${!saveAsDraft
-                  ? 'border-blue-500 bg-blue-50'
-                  : 'border-gray-200 hover:border-gray-300'
-                  }`}
+                className={`flex items-start gap-3 p-4 border-2 rounded-lg cursor-pointer ${
+                  !saveAsDraft
+                    ? 'border-blue-500 bg-blue-50'
+                    : 'border-gray-200 hover:border-gray-300'
+                }`}
                 onClick={() => setSaveAsDraft(false)}
               >
                 <input
@@ -1020,15 +1155,18 @@ export function STAAgreementForm({
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
                     <Send className="h-4 w-4" />
-                    <Label className="font-medium cursor-pointer">Onaya Gönder</Label>
+                    <Label className="font-medium cursor-pointer">
+                      Onaya Gönder
+                    </Label>
                   </div>
                   <p className="text-xs text-gray-600">
-                    İlgili Category Manager onayına sunulur. Bütçe rezervasyonu başlar.
+                    İlgili Category Manager onayına sunulur. Bütçe rezervasyonu
+                    başlar.
                   </p>
                 </div>
               </div>
             </div>
-            
+
             {/* Submit Error Message */}
             {errors.submit && (
               <div className="p-3 bg-red-50 border border-red-200 rounded-md">
@@ -1043,14 +1181,24 @@ export function STAAgreementForm({
       <div className="flex justify-between">
         <div>
           {onCancel && (
-            <Button type="button" variant="outline" onClick={onCancel} disabled={isLoading}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onCancel}
+              disabled={isLoading}
+            >
               İptal
             </Button>
           )}
         </div>
         <div className="flex gap-2">
           {currentStep > 1 && (
-            <Button type="button" variant="outline" onClick={handlePrevious} disabled={isLoading}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handlePrevious}
+              disabled={isLoading}
+            >
               <ChevronLeft className="h-4 w-4 mr-2" />
               Geri
             </Button>
@@ -1065,7 +1213,11 @@ export function STAAgreementForm({
               type="button"
               onClick={(e) => {
                 e.preventDefault();
-                console.log('Submit button clicked', { isLoading, currentStep, selectedTactics });
+                console.log('Submit button clicked', {
+                  isLoading,
+                  currentStep,
+                  selectedTactics,
+                });
                 handleSubmit();
               }}
               disabled={isLoading}

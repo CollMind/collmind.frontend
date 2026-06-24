@@ -1,6 +1,10 @@
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useAgreement, useAgreementPermissions, useAgreements } from '@/services/agreements.service';
+import {
+  useAgreement,
+  useAgreementPermissions,
+  useAgreements,
+} from '@/services/agreements.service';
 import { useQueryClient } from '@tanstack/react-query';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -33,11 +37,7 @@ export function AgreementDetail() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
-  const {
-    data: agreement,
-    isLoading,
-    error,
-  } = useAgreement(id || '');
+  const { data: agreement, isLoading, error } = useAgreement(id || '');
 
   const permissions = useAgreementPermissions(agreement);
 
@@ -155,7 +155,10 @@ export function AgreementDetail() {
             <div>
               <p className="text-sm text-gray-600">Müşteri</p>
               <p className="font-medium">
-                {agreement.customerName || agreement.cplName || agreement.cplId || '-'}
+                {agreement.customerName ||
+                  agreement.cplName ||
+                  agreement.cplId ||
+                  '-'}
               </p>
             </div>
             {agreement.regionId && (
@@ -203,7 +206,9 @@ export function AgreementDetail() {
                 <p className="text-sm text-gray-600">Mekanik Değeri</p>
                 <p className="font-medium">
                   {agreement.mechanicValue}
-                  {agreement.mechanicType === 'PERCENT' ? '%' : ' ' + (agreement.currency || 'TRY')}
+                  {agreement.mechanicType === 'PERCENT'
+                    ? '%'
+                    : ' ' + (agreement.currency || 'TRY')}
                 </p>
               </div>
             )}
@@ -224,7 +229,10 @@ export function AgreementDetail() {
             <div>
               <p className="text-sm text-gray-600">Bütçe Tavanı</p>
               <p className="font-medium text-lg">
-                {formatCurrency(toNumber(agreement.capTotalAmount), agreement.currency)}
+                {formatCurrency(
+                  toNumber(agreement.capTotalAmount),
+                  agreement.currency
+                )}
               </p>
             </div>
             {agreement.spendType && (
@@ -255,14 +263,21 @@ export function AgreementDetail() {
           <CardTitle>İş Gerekçesi</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-gray-700 whitespace-pre-wrap">{agreement.justification}</p>
+          <p className="text-gray-700 whitespace-pre-wrap">
+            {agreement.justification}
+          </p>
         </CardContent>
       </Card>
 
       {/* Metadata */}
       <div className="text-xs text-gray-500">
-        <p>Oluşturulma: {new Date(agreement.createdAt).toLocaleString('tr-TR')}</p>
-        <p>Son Güncelleme: {new Date(agreement.updatedAt).toLocaleString('tr-TR')}</p>
+        <p>
+          Oluşturulma: {new Date(agreement.createdAt).toLocaleString('tr-TR')}
+        </p>
+        <p>
+          Son Güncelleme:{' '}
+          {new Date(agreement.updatedAt).toLocaleString('tr-TR')}
+        </p>
       </div>
     </div>
   );

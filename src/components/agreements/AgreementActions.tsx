@@ -18,14 +18,7 @@ import {
   useDeleteAgreement,
   useAgreementPermissions,
 } from '@/services/agreements.service';
-import {
-  Send,
-  Check,
-  X,
-  Ban,
-  Trash2,
-  Edit,
-} from 'lucide-react';
+import { Send, Check, X, Ban, Trash2, Edit } from 'lucide-react';
 
 interface AgreementActionsProps {
   agreement: Agreement;
@@ -208,13 +201,13 @@ export function AgreementActions({
             </DialogDescription>
           </DialogHeader>
           <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => setSubmitDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setSubmitDialogOpen(false)}
+            >
               İptal
             </Button>
-            <Button
-              onClick={handleSubmit}
-              disabled={submitMutation.isPending}
-            >
+            <Button onClick={handleSubmit} disabled={submitMutation.isPending}>
               {submitMutation.isPending ? 'Gönderiliyor...' : 'Gönder'}
             </Button>
           </div>
@@ -243,7 +236,10 @@ export function AgreementActions({
               />
             </div>
             <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setApproveDialogOpen(false)}>
+              <Button
+                variant="outline"
+                onClick={() => setApproveDialogOpen(false)}
+              >
                 İptal
               </Button>
               <Button
@@ -280,7 +276,10 @@ export function AgreementActions({
               />
             </div>
             <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setRejectDialogOpen(false)}>
+              <Button
+                variant="outline"
+                onClick={() => setRejectDialogOpen(false)}
+              >
                 İptal
               </Button>
               <Button
@@ -318,7 +317,10 @@ export function AgreementActions({
               />
             </div>
             <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={() => setCancelDialogOpen(false)}>
+              <Button
+                variant="outline"
+                onClick={() => setCancelDialogOpen(false)}
+              >
                 İptal
               </Button>
               <Button
@@ -345,7 +347,10 @@ export function AgreementActions({
             </DialogDescription>
           </DialogHeader>
           <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setDeleteDialogOpen(false)}
+            >
               İptal
             </Button>
             <Button

@@ -1,7 +1,19 @@
 import { useQuery } from '@tanstack/react-query';
-import { financeReportingEndpoints, ReportFilters } from '@/api/endpoints/finance-reporting.endpoints';
+import {
+  financeReportingEndpoints,
+  ReportFilters,
+} from '@/api/endpoints/finance-reporting.endpoints';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from 'recharts';
 
 interface SpendTrendWidgetProps {
   filters: ReportFilters;
@@ -11,7 +23,10 @@ export function SpendTrendWidget({ filters }: SpendTrendWidgetProps) {
   const { data, isLoading, error } = useQuery({
     queryKey: ['spend-trend', filters],
     queryFn: async () => {
-      const res = await financeReportingEndpoints.getSpendTrend(filters, 'monthly');
+      const res = await financeReportingEndpoints.getSpendTrend(
+        filters,
+        'monthly'
+      );
       return res.data;
     },
     staleTime: 30000,
@@ -22,7 +37,9 @@ export function SpendTrendWidget({ filters }: SpendTrendWidgetProps) {
   }
 
   if (error || !data) {
-    return <div className="text-red-500 text-sm">Veri yüklenirken hata oluştu</div>;
+    return (
+      <div className="text-red-500 text-sm">Veri yüklenirken hata oluştu</div>
+    );
   }
 
   const formatCurrency = (value: number) => {
@@ -35,7 +52,10 @@ export function SpendTrendWidget({ filters }: SpendTrendWidgetProps) {
   };
 
   const chartData = data.dataPoints.map((dp) => ({
-    date: new Date(dp.date).toLocaleDateString('tr-TR', { month: 'short', year: 'numeric' }),
+    date: new Date(dp.date).toLocaleDateString('tr-TR', {
+      month: 'short',
+      year: 'numeric',
+    }),
     'On-Invoice': dp.onInvoice,
     'Off-Invoice': dp.offInvoice,
     'LTA On': dp.ltaOnInvoice || 0,
@@ -47,7 +67,10 @@ export function SpendTrendWidget({ filters }: SpendTrendWidgetProps) {
   return (
     <div className="space-y-4">
       <ResponsiveContainer width="100%" height={300}>
-        <LineChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
+        <LineChart
+          data={chartData}
+          margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+        >
           <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
           <XAxis
             dataKey="date"
@@ -77,10 +100,7 @@ export function SpendTrendWidget({ filters }: SpendTrendWidgetProps) {
             }}
             labelStyle={{ fontWeight: 'bold', marginBottom: '4px' }}
           />
-          <Legend
-            wrapperStyle={{ paddingTop: '20px' }}
-            iconType="line"
-          />
+          <Legend wrapperStyle={{ paddingTop: '20px' }} iconType="line" />
           <Line
             type="monotone"
             dataKey="On-Invoice"
@@ -118,11 +138,15 @@ export function SpendTrendWidget({ filters }: SpendTrendWidgetProps) {
         </div>
         <div>
           <span className="text-gray-500">Avg Daily On-Invoice:</span>
-          <span className="ml-2 font-semibold">{formatCurrency(data.avgDailyOnInvoice)}</span>
+          <span className="ml-2 font-semibold">
+            {formatCurrency(data.avgDailyOnInvoice)}
+          </span>
         </div>
         <div>
           <span className="text-gray-500">Avg Daily Off-Invoice:</span>
-          <span className="ml-2 font-semibold">{formatCurrency(data.avgDailyOffInvoice)}</span>
+          <span className="ml-2 font-semibold">
+            {formatCurrency(data.avgDailyOffInvoice)}
+          </span>
         </div>
       </div>
     </div>

@@ -30,11 +30,13 @@ export function ChannelSelect({
       label={label}
       value={value}
       onChange={onChange}
-      options={channels.map((channel: { id: string; code: string; name: string }) => ({
-        id: channel.id,
-        code: channel.code,
-        name: channel.name,
-      }))}
+      options={channels.map(
+        (channel: { id: string; code: string; name: string }) => ({
+          id: channel.id,
+          code: channel.code,
+          name: channel.name,
+        })
+      )}
       placeholder={isLoading ? 'Yükleniyor...' : placeholder}
       disabled={disabled || isLoading}
       required={required}

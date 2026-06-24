@@ -48,7 +48,8 @@ export const customerEndpoints = {
   deactivate: (id: string) =>
     apiClient.post<Customer>(`/customers/${id}/deactivate`),
 
-  getStats: (id: string) => apiClient.get<CustomerStats>(`/customers/${id}/stats`),
+  getStats: (id: string) =>
+    apiClient.get<CustomerStats>(`/customers/${id}/stats`),
 
   import: (file: File) => {
     const formData = new FormData();
@@ -57,8 +58,10 @@ export const customerEndpoints = {
   },
 
   getCplList: (channel?: string, categoryId?: string) =>
-    apiClient.get<import('@/types/customer.types').CplListItem[]>('/customers/cpl/list', {
-      params: { channel, categoryId },
-    }),
+    apiClient.get<import('@/types/customer.types').CplListItem[]>(
+      '/customers/cpl/list',
+      {
+        params: { channel, categoryId },
+      }
+    ),
 };
-

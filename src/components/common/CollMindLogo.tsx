@@ -6,10 +6,10 @@ interface CollMindLogoProps {
   size?: 'sm' | 'md' | 'lg';
 }
 
-export function CollMindLogo({ 
-  className, 
+export function CollMindLogo({
+  className,
   showText = true,
-  size = 'md' 
+  size = 'md',
 }: CollMindLogoProps) {
   const sizeClasses = {
     sm: {
@@ -80,4 +80,3 @@ export function CollMindLogo({
     </div>
   );
 }
-

@@ -1,6 +1,6 @@
 /**
  * Ledger Types
- * 
+ *
  * Defter kayıtları ile ilgili type tanımlamaları
  */
 

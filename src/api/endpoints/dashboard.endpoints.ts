@@ -105,6 +105,5 @@ export const dashboardEndpoints = {
       params: { period, includePast },
     }),
 
-  getCplStatus: () =>
-    apiClient.get<CplStatusDto>('/dashboard/cpl-status'),
+  getCplStatus: () => apiClient.get<CplStatusDto>('/dashboard/cpl-status'),
 };

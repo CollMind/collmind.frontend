@@ -86,7 +86,9 @@ export function BudgetDashboard({ onCreateEnvelope }: BudgetDashboardProps) {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">{formatCurrency(totalAllocated)}</p>
+            <p className="text-2xl font-bold">
+              {formatCurrency(totalAllocated)}
+            </p>
           </CardContent>
         </Card>
 
@@ -132,8 +134,12 @@ export function BudgetDashboard({ onCreateEnvelope }: BudgetDashboardProps) {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">{formatCurrency(totalOnInvConsumed)}</p>
-            <p className="text-xs text-gray-600 mt-1">%{onInvPercentage.toFixed(0)} Pay</p>
+            <p className="text-2xl font-bold">
+              {formatCurrency(totalOnInvConsumed)}
+            </p>
+            <p className="text-xs text-gray-600 mt-1">
+              %{onInvPercentage.toFixed(0)} Pay
+            </p>
           </CardContent>
         </Card>
 
@@ -144,8 +150,12 @@ export function BudgetDashboard({ onCreateEnvelope }: BudgetDashboardProps) {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">{formatCurrency(totalOffInvConsumed)}</p>
-            <p className="text-xs text-gray-600 mt-1">%{offInvPercentage.toFixed(0)} Pay</p>
+            <p className="text-2xl font-bold">
+              {formatCurrency(totalOffInvConsumed)}
+            </p>
+            <p className="text-xs text-gray-600 mt-1">
+              %{offInvPercentage.toFixed(0)} Pay
+            </p>
           </CardContent>
         </Card>
 
@@ -190,8 +200,12 @@ export function BudgetDashboard({ onCreateEnvelope }: BudgetDashboardProps) {
                     <th className="text-left p-3 text-sm font-semibold text-gray-700">
                       KANAL / KATEGORİ
                     </th>
-                    <th className="text-left p-3 text-sm font-semibold text-gray-700">DÖNEM</th>
-                    <th className="text-right p-3 text-sm font-semibold text-gray-700">TAHSİS</th>
+                    <th className="text-left p-3 text-sm font-semibold text-gray-700">
+                      DÖNEM
+                    </th>
+                    <th className="text-right p-3 text-sm font-semibold text-gray-700">
+                      TAHSİS
+                    </th>
                     <th className="text-right p-3 text-sm font-semibold text-gray-700">
                       ON-INV CONS.
                     </th>
@@ -212,10 +226,15 @@ export function BudgetDashboard({ onCreateEnvelope }: BudgetDashboardProps) {
                 <tbody>
                   {envelopesArray.map((envelope) => (
                     <tr key={envelope.id} className="border-b hover:bg-gray-50">
-                      <td className="p-3 font-medium">{formatCode(envelope)}</td>
+                      <td className="p-3 font-medium">
+                        {formatCode(envelope)}
+                      </td>
                       <td className="p-3">{envelope.period}</td>
                       <td className="p-3 text-right">
-                        {formatCurrency(safeNumber(envelope.allocatedAmount), envelope.currency)}
+                        {formatCurrency(
+                          safeNumber(envelope.allocatedAmount),
+                          envelope.currency
+                        )}
                       </td>
                       <td className="p-3 text-right">
                         {formatCurrency(
@@ -236,7 +255,10 @@ export function BudgetDashboard({ onCreateEnvelope }: BudgetDashboardProps) {
                         )}
                       </td>
                       <td className="p-3 text-right text-green-600 font-medium">
-                        {formatCurrency(safeNumber(envelope.availableAmount), envelope.currency)}
+                        {formatCurrency(
+                          safeNumber(envelope.availableAmount),
+                          envelope.currency
+                        )}
                       </td>
                       <td className="p-3 text-center">
                         <div className="flex justify-center gap-2">

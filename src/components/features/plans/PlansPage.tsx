@@ -1,7 +1,12 @@
 import { useState, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { planEndpoints, Plan, PlanFilterDto, CreatePlanDto } from '@/api/endpoints/plans.endpoints';
+import {
+  planEndpoints,
+  Plan,
+  PlanFilterDto,
+  CreatePlanDto,
+} from '@/api/endpoints/plans.endpoints';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -51,10 +56,15 @@ export function PlansPage() {
   }, [searchParams]);
 
   const queryClient = useQueryClient();
-  
-  const { data: plans, isLoading, error, refetch } = useQuery({
+
+  const {
+    data: plans,
+    isLoading,
+    error,
+    refetch,
+  } = useQuery({
     queryKey: ['plans', filters],
-    queryFn: () => planEndpoints.getAll(filters).then(res => res.data),
+    queryFn: () => planEndpoints.getAll(filters).then((res) => res.data),
   });
 
   const plansArray = Array.isArray(plans) ? plans : [];
@@ -63,30 +73,36 @@ export function PlansPage() {
   const summary = useMemo(() => {
     const totalPlans = plansArray.length;
     const draftCount = plansArray.filter((p) => p.status === 'DRAFT').length;
-    const pendingCount = plansArray.filter((p) => p.status === 'PENDING_APPROVAL').length;
-    const approvedCount = plansArray.filter((p) => p.status === 'APPROVED').length;
-    
+    const pendingCount = plansArray.filter(
+      (p) => p.status === 'PENDING_APPROVAL'
+    ).length;
+    const approvedCount = plansArray.filter(
+      (p) => p.status === 'APPROVED'
+    ).length;
+
     // Backend'den gelen decimal değerleri number'a dönüştür
     // TypeORM decimal değerleri string olarak döndürebilir
     const totalSpend = plansArray.reduce((sum, p) => {
       let spend = 0;
       if (p.totalSpend != null) {
         // String veya number olabilir, her iki durumu da handle et
-        const spendValue = typeof p.totalSpend === 'string' 
-          ? parseFloat(p.totalSpend.replace(/,/g, '')) 
-          : Number(p.totalSpend);
+        const spendValue =
+          typeof p.totalSpend === 'string'
+            ? parseFloat(p.totalSpend.replace(/,/g, ''))
+            : Number(p.totalSpend);
         spend = isNaN(spendValue) ? 0 : spendValue;
       }
       return sum + spend;
     }, 0);
-    
+
     const totalVolume = plansArray.reduce((sum, p) => {
       let volume = 0;
       if (p.totalPlannedVolume != null) {
         // String veya number olabilir, her iki durumu da handle et
-        const volumeValue = typeof p.totalPlannedVolume === 'string' 
-          ? parseFloat(p.totalPlannedVolume.replace(/,/g, '')) 
-          : Number(p.totalPlannedVolume);
+        const volumeValue =
+          typeof p.totalPlannedVolume === 'string'
+            ? parseFloat(p.totalPlannedVolume.replace(/,/g, ''))
+            : Number(p.totalPlannedVolume);
         volume = isNaN(volumeValue) ? 0 : volumeValue;
       }
       return sum + volume;
@@ -118,9 +134,9 @@ export function PlansPage() {
       const { selectedFuIds, ...planData } = data;
       const result = await planEndpoints.create(planData);
       setIsCreateDialogOpen(false);
-      
+
       const planId = result.data?.id;
-      
+
       // Add selected FUs if any
       if (planId && selectedFuIds && selectedFuIds.length > 0) {
         for (const fuId of selectedFuIds) {
@@ -131,19 +147,19 @@ export function PlansPage() {
           }
         }
       }
-      
+
       toast.success('Plan başarıyla oluşturuldu');
-      
+
       // Invalidate plans list
       queryClient.invalidateQueries({ queryKey: ['plans'] });
-      
+
       if (planId) {
         queryClient.invalidateQueries({ queryKey: ['plan', planId] });
         navigate(`/plans/${planId}`);
       }
     } catch (error: any) {
       let errorMessage = 'Plan oluşturulurken hata oluştu';
-      
+
       if (error?.response?.data?.message) {
         errorMessage = error.response.data.message;
       } else if (error?.response?.data?.error) {
@@ -151,7 +167,7 @@ export function PlansPage() {
       } else if (error?.message) {
         errorMessage = error.message;
       }
-      
+
       toast.error(errorMessage);
       console.error('Plan creation error:', error);
     }
@@ -190,7 +206,9 @@ export function PlansPage() {
         navigate(`/plans/${result.data.id}`);
       }
     } catch (error: any) {
-      toast.error(error?.response?.data?.message || 'Plan kopyalanırken hata oluştu');
+      toast.error(
+        error?.response?.data?.message || 'Plan kopyalanırken hata oluştu'
+      );
     } finally {
       setIsCopying(false);
     }
@@ -210,7 +228,9 @@ export function PlansPage() {
       setDeleteTarget(null);
       refetch();
     } catch (error: any) {
-      toast.error(error?.response?.data?.message || 'Plan silinirken hata oluştu');
+      toast.error(
+        error?.response?.data?.message || 'Plan silinirken hata oluştu'
+      );
     } finally {
       setIsDeleting(false);
     }
@@ -245,7 +265,9 @@ export function PlansPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Toplam Plan</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-600">
+              Toplam Plan
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{summary.totalPlans}</div>
@@ -253,23 +275,33 @@ export function PlansPage() {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Onay Bekleyen</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-600">
+              Onay Bekleyen
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-yellow-600">{summary.pendingCount}</div>
+            <div className="text-2xl font-bold text-yellow-600">
+              {summary.pendingCount}
+            </div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Toplam Harcama</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-600">
+              Toplam Harcama
+            </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(summary.totalSpend)}</div>
+            <div className="text-2xl font-bold">
+              {formatCurrency(summary.totalSpend)}
+            </div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-gray-600">Toplam Hacim</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-600">
+              Toplam Hacim
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">

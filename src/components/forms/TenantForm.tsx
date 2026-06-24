@@ -32,11 +32,7 @@ interface TenantFormProps {
   onCancel?: () => void;
 }
 
-export function TenantForm({
-  tenant,
-  onSuccess,
-  onCancel,
-}: TenantFormProps) {
+export function TenantForm({ tenant, onSuccess, onCancel }: TenantFormProps) {
   const createMutation = useCreateTenant();
   const updateMutation = useUpdateTenant();
 
@@ -199,7 +195,9 @@ export function TenantForm({
                     {...field}
                     type="number"
                     placeholder="100"
-                    onChange={(e) => field.onChange(parseInt(e.target.value) || undefined)}
+                    onChange={(e) =>
+                      field.onChange(parseInt(e.target.value) || undefined)
+                    }
                     value={field.value || ''}
                   />
                 </FormControl>
@@ -219,7 +217,9 @@ export function TenantForm({
                     {...field}
                     type="number"
                     placeholder="1000"
-                    onChange={(e) => field.onChange(parseInt(e.target.value) || undefined)}
+                    onChange={(e) =>
+                      field.onChange(parseInt(e.target.value) || undefined)
+                    }
                     value={field.value || ''}
                   />
                 </FormControl>
@@ -251,7 +251,11 @@ export function TenantForm({
               <FormItem>
                 <FormLabel>Contact Email</FormLabel>
                 <FormControl>
-                  <Input {...field} type="email" placeholder="contact@example.com" />
+                  <Input
+                    {...field}
+                    type="email"
+                    placeholder="contact@example.com"
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -315,8 +319,10 @@ export function TenantForm({
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 {tenant ? 'Updating...' : 'Creating...'}
               </>
+            ) : tenant ? (
+              'Update'
             ) : (
-              tenant ? 'Update' : 'Create'
+              'Create'
             )}
           </Button>
         </div>
@@ -324,7 +330,3 @@ export function TenantForm({
     </Form>
   );
 }
-
-
-
-

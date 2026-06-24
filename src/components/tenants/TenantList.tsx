@@ -1,5 +1,10 @@
 import { useState, useMemo } from 'react';
-import { useTenants, useDeleteTenant, useActivateTenant, useSuspendTenant } from '@/services/tenants.service';
+import {
+  useTenants,
+  useDeleteTenant,
+  useActivateTenant,
+  useSuspendTenant,
+} from '@/services/tenants.service';
 import { Tenant, TenantStatus, TenantPlan } from '@/types/tenant.types';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { EmptyState } from '@/components/common/EmptyState';
@@ -28,7 +33,15 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, Edit, Trash2, CheckCircle, Ban, Search, Filter } from 'lucide-react';
+import {
+  MoreHorizontal,
+  Edit,
+  Trash2,
+  CheckCircle,
+  Ban,
+  Search,
+  Filter,
+} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/useToast';
 
@@ -46,7 +59,9 @@ export function TenantList({ onEdit, onCreate }: TenantListProps) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [tenantToDelete, setTenantToDelete] = useState<Tenant | null>(null);
   const [deleteConfirmName, setDeleteConfirmName] = useState('');
-  const [sortField, setSortField] = useState<'name' | 'status' | 'plan' | 'createdAt'>('name');
+  const [sortField, setSortField] = useState<
+    'name' | 'status' | 'plan' | 'createdAt'
+  >('name');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
   const { data: tenants, isLoading, error } = useTenants();
@@ -130,7 +145,9 @@ export function TenantList({ onEdit, onCreate }: TenantListProps) {
         setTenantToDelete(null);
         setDeleteConfirmName('');
       } catch (error: any) {
-        toast.error(error?.response?.data?.message || 'Kiracı silinirken bir hata oluştu');
+        toast.error(
+          error?.response?.data?.message || 'Kiracı silinirken bir hata oluştu'
+        );
       }
     }
   };
@@ -140,7 +157,10 @@ export function TenantList({ onEdit, onCreate }: TenantListProps) {
       await activateMutation.mutateAsync(tenant.id);
       toast.success('Kiracı başarıyla aktif edildi');
     } catch (error: any) {
-      toast.error(error?.response?.data?.message || 'Kiracı aktif edilirken bir hata oluştu');
+      toast.error(
+        error?.response?.data?.message ||
+          'Kiracı aktif edilirken bir hata oluştu'
+      );
     }
   };
 
@@ -149,7 +169,10 @@ export function TenantList({ onEdit, onCreate }: TenantListProps) {
       await suspendMutation.mutateAsync(tenant.id);
       toast.success('Kiracı başarıyla askıya alındı');
     } catch (error: any) {
-      toast.error(error?.response?.data?.message || 'Kiracı askıya alınırken bir hata oluştu');
+      toast.error(
+        error?.response?.data?.message ||
+          'Kiracı askıya alınırken bir hata oluştu'
+      );
     }
   };
 
@@ -222,9 +245,7 @@ export function TenantList({ onEdit, onCreate }: TenantListProps) {
           </Select>
 
           {/* Create Button */}
-          {onCreate && (
-            <Button onClick={onCreate}>Yeni Kiracı</Button>
-          )}
+          {onCreate && <Button onClick={onCreate}>Yeni Kiracı</Button>}
         </div>
 
         {/* Results count */}
@@ -239,7 +260,8 @@ export function TenantList({ onEdit, onCreate }: TenantListProps) {
           <DialogHeader>
             <DialogTitle>Kiracıyı Sil</DialogTitle>
             <DialogDescription>
-              Bu işlem geri alınamaz. Onaylamak için kiracı adını girin: <strong>{tenantToDelete?.name}</strong>
+              Bu işlem geri alınamaz. Onaylamak için kiracı adını girin:{' '}
+              <strong>{tenantToDelete?.name}</strong>
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
@@ -263,7 +285,10 @@ export function TenantList({ onEdit, onCreate }: TenantListProps) {
             <Button
               variant="destructive"
               onClick={handleDeleteConfirm}
-              disabled={deleteMutation.isPending || deleteConfirmName !== tenantToDelete?.name}
+              disabled={
+                deleteMutation.isPending ||
+                deleteConfirmName !== tenantToDelete?.name
+              }
             >
               {deleteMutation.isPending ? 'Siliniyor...' : 'Sil'}
             </Button>
@@ -385,12 +410,16 @@ export function TenantList({ onEdit, onCreate }: TenantListProps) {
                           )}
                           <DropdownMenuSeparator />
                           {tenant.status === TenantStatus.ACTIVE ? (
-                            <DropdownMenuItem onClick={() => handleSuspend(tenant)}>
+                            <DropdownMenuItem
+                              onClick={() => handleSuspend(tenant)}
+                            >
                               <Ban className="mr-2 h-4 w-4" />
                               Askıya Al
                             </DropdownMenuItem>
                           ) : (
-                            <DropdownMenuItem onClick={() => handleActivate(tenant)}>
+                            <DropdownMenuItem
+                              onClick={() => handleActivate(tenant)}
+                            >
                               <CheckCircle className="mr-2 h-4 w-4" />
                               Aktif Et
                             </DropdownMenuItem>

@@ -88,9 +88,27 @@ export interface UploadFileResponse {
   validCount: number;
   invalidCount: number;
   warningCount: number;
-  validRows: Array<CreateOffInvoiceTransactionDto & { rowNumber: number; fiscalPeriod?: string }>;
-  invalidRows: Array<CreateOffInvoiceTransactionDto & { rowNumber: number; errors: ValidationError[]; warnings: ValidationError[]; fiscalPeriod?: string }>;
-  warningRows: Array<CreateOffInvoiceTransactionDto & { rowNumber: number; warnings: ValidationError[]; fiscalPeriod?: string }>;
+  validRows: Array<
+    CreateOffInvoiceTransactionDto & {
+      rowNumber: number;
+      fiscalPeriod?: string;
+    }
+  >;
+  invalidRows: Array<
+    CreateOffInvoiceTransactionDto & {
+      rowNumber: number;
+      errors: ValidationError[];
+      warnings: ValidationError[];
+      fiscalPeriod?: string;
+    }
+  >;
+  warningRows: Array<
+    CreateOffInvoiceTransactionDto & {
+      rowNumber: number;
+      warnings: ValidationError[];
+      fiscalPeriod?: string;
+    }
+  >;
   summary: {
     totalAmount: number;
     affectedAgreements: number;

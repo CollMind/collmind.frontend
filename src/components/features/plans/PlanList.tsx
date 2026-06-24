@@ -23,15 +23,23 @@ interface PlanListProps {
 const getStatusBadge = (status: Plan['status']) => {
   const statusMap: Record<string, { text: string; className: string }> = {
     DRAFT: { text: 'TASLAK', className: 'bg-gray-100 text-gray-800' },
-    PENDING_APPROVAL: { text: 'ONAY BEKLEYEN', className: 'bg-orange-100 text-orange-800' },
+    PENDING_APPROVAL: {
+      text: 'ONAY BEKLEYEN',
+      className: 'bg-orange-100 text-orange-800',
+    },
     APPROVED: { text: 'ONAYLANDI', className: 'bg-blue-100 text-blue-800' },
     REJECTED: { text: 'REDDEDİLDİ', className: 'bg-red-100 text-red-800' },
   };
 
-  const statusInfo = statusMap[status] || { text: status, className: 'bg-gray-100 text-gray-800' };
-  
+  const statusInfo = statusMap[status] || {
+    text: status,
+    className: 'bg-gray-100 text-gray-800',
+  };
+
   return (
-    <span className={`px-3 py-1 rounded-full text-xs font-medium ${statusInfo.className}`}>
+    <span
+      className={`px-3 py-1 rounded-full text-xs font-medium ${statusInfo.className}`}
+    >
       {statusInfo.text}
     </span>
   );
@@ -39,7 +47,7 @@ const getStatusBadge = (status: Plan['status']) => {
 
 const getRagStatus = (ragStatus?: string) => {
   if (!ragStatus) return null;
-  
+
   if (ragStatus === 'RED') {
     return <span className="text-red-600 font-medium">• KRİTİK</span>;
   }
@@ -63,9 +71,9 @@ const formatCurrency = (amount: number) => {
 
 const formatPeriod = (startDate?: string, endDate?: string) => {
   if (!startDate || !endDate) return 'N/A';
-  
+
   const start = new Date(startDate);
-  
+
   // Q1-2026 formatı
   const year = start.getFullYear();
   const month = start.getMonth() + 1;
@@ -73,11 +81,17 @@ const formatPeriod = (startDate?: string, endDate?: string) => {
   if (month >= 4 && month <= 6) quarter = 'Q2';
   else if (month >= 7 && month <= 9) quarter = 'Q3';
   else if (month >= 10) quarter = 'Q4';
-  
+
   return `${quarter}-${year}`;
 };
 
-export function PlanList({ plans, onPlanClick, onEdit, onCopy, onDelete }: PlanListProps) {
+export function PlanList({
+  plans,
+  onPlanClick,
+  onEdit,
+  onCopy,
+  onDelete,
+}: PlanListProps) {
   if (plans.length === 0) {
     return (
       <Card>
@@ -110,7 +124,9 @@ export function PlanList({ plans, onPlanClick, onEdit, onCopy, onDelete }: PlanL
             <TableBody>
               {plans.map((plan) => (
                 <TableRow key={plan.id} className="hover:bg-gray-50">
-                  <TableCell className="font-medium text-sm">{plan.planCode}</TableCell>
+                  <TableCell className="font-medium text-sm">
+                    {plan.planCode}
+                  </TableCell>
                   <TableCell>
                     <button
                       onClick={() => onPlanClick(plan)}
@@ -121,11 +137,17 @@ export function PlanList({ plans, onPlanClick, onEdit, onCopy, onDelete }: PlanL
                   </TableCell>
                   <TableCell>
                     <div className="text-sm">
-                      <div className="font-medium">{plan.cpl?.name || 'N/A'}</div>
-                      <div className="text-gray-500 text-xs">{plan.channel?.name || 'N/A'}</div>
+                      <div className="font-medium">
+                        {plan.cpl?.name || 'N/A'}
+                      </div>
+                      <div className="text-gray-500 text-xs">
+                        {plan.channel?.name || 'N/A'}
+                      </div>
                     </div>
                   </TableCell>
-                  <TableCell className="text-sm">{plan.category?.name || 'N/A'}</TableCell>
+                  <TableCell className="text-sm">
+                    {plan.category?.name || 'N/A'}
+                  </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-1 text-sm">
                       <Calendar className="h-3 w-3 text-gray-400" />

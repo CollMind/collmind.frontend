@@ -14,8 +14,10 @@ export const budgetKeys = {
   all: ['budget'] as const,
   envelopes: () => [...budgetKeys.all, 'envelopes'] as const,
   envelope: (id: string) => [...budgetKeys.envelopes(), id] as const,
-  reservedAmount: (id: string) => [...budgetKeys.envelope(id), 'reserved'] as const,
-  transactions: (id: string) => [...budgetKeys.envelope(id), 'transactions'] as const,
+  reservedAmount: (id: string) =>
+    [...budgetKeys.envelope(id), 'reserved'] as const,
+  transactions: (id: string) =>
+    [...budgetKeys.envelope(id), 'transactions'] as const,
   reservations: (envelopeId: string) =>
     [...budgetKeys.all, 'reservations', envelopeId] as const,
 };
@@ -47,7 +49,9 @@ export const useCreateBudgetEnvelope = () => {
       toast.success('Budget envelope başarıyla oluşturuldu');
     },
     onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Budget envelope oluşturulamadı');
+      toast.error(
+        error.response?.data?.message || 'Budget envelope oluşturulamadı'
+      );
     },
   });
 };
@@ -109,7 +113,9 @@ export const useBudgetReservations = (envelopeId: string) => {
   return useQuery({
     queryKey: budgetKeys.reservations(envelopeId),
     queryFn: () =>
-      budgetEndpoints.getReservationsByEnvelope(envelopeId).then((res) => res.data),
+      budgetEndpoints
+        .getReservationsByEnvelope(envelopeId)
+        .then((res) => res.data),
     enabled: !!envelopeId,
   });
 };
@@ -137,5 +143,3 @@ export const useBudgetTransactions = (envelopeId: string) => {
     enabled: !!envelopeId,
   });
 };
-
-

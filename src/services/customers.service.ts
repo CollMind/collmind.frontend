@@ -30,15 +30,15 @@ export function useCustomers(filters?: CustomerFilterDto) {
     queryFn: async () => {
       try {
         const response = await customerEndpoints.getAll(filters);
-        
+
         // Handle different response formats
         let data = response.data;
-        
+
         // If data is already an array, return it
         if (Array.isArray(data)) {
           return data;
         }
-        
+
         // If data is an object, check for common array properties
         if (data && typeof data === 'object') {
           const dataObj = data as any;
@@ -55,7 +55,7 @@ export function useCustomers(filters?: CustomerFilterDto) {
             return dataObj.results;
           }
         }
-        
+
         return [];
       } catch (error) {
         console.error('Error fetching customers:', error);
@@ -163,12 +163,12 @@ export function useCustomerImport() {
     onSuccess: (data: ImportResult) => {
       // Invalidate customer list to refresh after import
       queryClient.invalidateQueries({ queryKey: customerKeys.lists() });
-      
+
       setImportResult(data);
       setShowResults(true);
 
       const { total, created, skipped, errors } = data;
-      
+
       if (created === total) {
         toast.success(`Tüm ${total} müşteri başarıyla içe aktarıldı.`);
       } else if (created > 0) {
@@ -176,7 +176,9 @@ export function useCustomerImport() {
           `${created} müşteri içe aktarıldı, ${skipped} müşteri atlandı. Detaylar için sonuçları kontrol edin.`
         );
       } else {
-        toast.error('Hiçbir müşteri içe aktarılamadı. Lütfen sonuçları kontrol edin.');
+        toast.error(
+          'Hiçbir müşteri içe aktarılamadı. Lütfen sonuçları kontrol edin.'
+        );
       }
 
       // Log errors for debugging

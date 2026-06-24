@@ -34,7 +34,9 @@ const getTransactionStatusLabel = (status: BudgetTransactionStatus): string => {
   return labels[status] || status;
 };
 
-const getSourceTypeLabel = (sourceType: BudgetTransactionSourceType): string => {
+const getSourceTypeLabel = (
+  sourceType: BudgetTransactionSourceType
+): string => {
   const labels: Record<BudgetTransactionSourceType, string> = {
     AGREEMENT: 'Anlaşma',
     MANUAL: 'Manuel',
@@ -112,18 +114,32 @@ export function BudgetTransactionsTable({
           <table className="w-full">
             <thead>
               <tr className="border-b">
-                <th className="text-left p-3 text-sm font-semibold text-gray-700">Tarih</th>
-                <th className="text-left p-3 text-sm font-semibold text-gray-700">Tip</th>
-                <th className="text-left p-3 text-sm font-semibold text-gray-700">Durum</th>
-                <th className="text-left p-3 text-sm font-semibold text-gray-700">Kaynak</th>
-                <th className="text-right p-3 text-sm font-semibold text-gray-700">Tutar</th>
-                <th className="text-left p-3 text-sm font-semibold text-gray-700">Açıklama</th>
+                <th className="text-left p-3 text-sm font-semibold text-gray-700">
+                  Tarih
+                </th>
+                <th className="text-left p-3 text-sm font-semibold text-gray-700">
+                  Tip
+                </th>
+                <th className="text-left p-3 text-sm font-semibold text-gray-700">
+                  Durum
+                </th>
+                <th className="text-left p-3 text-sm font-semibold text-gray-700">
+                  Kaynak
+                </th>
+                <th className="text-right p-3 text-sm font-semibold text-gray-700">
+                  Tutar
+                </th>
+                <th className="text-left p-3 text-sm font-semibold text-gray-700">
+                  Açıklama
+                </th>
               </tr>
             </thead>
             <tbody>
               {transactions.map((transaction) => (
                 <tr key={transaction.id} className="border-b hover:bg-gray-50">
-                  <td className="p-3 text-sm">{formatDate(transaction.createdAt)}</td>
+                  <td className="p-3 text-sm">
+                    {formatDate(transaction.createdAt)}
+                  </td>
                   <td className="p-3">
                     <EnumBadge value={transaction.txType} />
                   </td>
@@ -135,16 +151,21 @@ export function BudgetTransactionsTable({
                       <div className="font-medium">
                         {getSourceTypeLabel(transaction.sourceType)}
                       </div>
-                      <div className="text-xs text-gray-500">{transaction.sourceId}</div>
+                      <div className="text-xs text-gray-500">
+                        {transaction.sourceId}
+                      </div>
                     </div>
                   </td>
                   <td className="p-3 text-right text-sm font-medium">
                     {(() => {
                       // RELEASE her zaman pozitif (bütçeyi serbest bırakır)
-                      if (transaction.txType === BudgetTransactionType.RELEASE) {
+                      if (
+                        transaction.txType === BudgetTransactionType.RELEASE
+                      ) {
                         return (
                           <span className="text-green-600">
-                            +{transaction.amount.toLocaleString('tr-TR')} {transaction.currency}
+                            +{transaction.amount.toLocaleString('tr-TR')}{' '}
+                            {transaction.currency}
                           </span>
                         );
                       }
@@ -152,16 +173,22 @@ export function BudgetTransactionsTable({
                       if (transaction.txType === BudgetTransactionType.ADJUST) {
                         const isPositive = transaction.amount >= 0;
                         return (
-                          <span className={isPositive ? 'text-green-600' : 'text-red-600'}>
+                          <span
+                            className={
+                              isPositive ? 'text-green-600' : 'text-red-600'
+                            }
+                          >
                             {isPositive ? '+' : ''}
-                            {transaction.amount.toLocaleString('tr-TR')} {transaction.currency}
+                            {transaction.amount.toLocaleString('tr-TR')}{' '}
+                            {transaction.currency}
                           </span>
                         );
                       }
                       // RESERVE ve CONSUME her zaman negatif (bütçeyi azaltır)
                       return (
                         <span className="text-red-600">
-                          -{transaction.amount.toLocaleString('tr-TR')} {transaction.currency}
+                          -{transaction.amount.toLocaleString('tr-TR')}{' '}
+                          {transaction.currency}
                         </span>
                       );
                     })()}

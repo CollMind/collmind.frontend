@@ -17,7 +17,8 @@ import { UserRole } from '@/types/user.types';
 export const agreementKeys = {
   all: ['agreements'] as const,
   lists: () => [...agreementKeys.all, 'list'] as const,
-  list: (filters?: AgreementFilterDto) => [...agreementKeys.lists(), filters] as const,
+  list: (filters?: AgreementFilterDto) =>
+    [...agreementKeys.lists(), filters] as const,
   details: () => [...agreementKeys.all, 'detail'] as const,
   detail: (id: string) => [...agreementKeys.details(), id] as const,
 };
@@ -59,9 +60,7 @@ export function useCreateAgreement() {
       return data;
     },
     onError: (error: any) => {
-      toast.error(
-        error.response?.data?.message || 'Anlaşma oluşturulamadı'
-      );
+      toast.error(error.response?.data?.message || 'Anlaşma oluşturulamadı');
     },
   });
 }
@@ -77,14 +76,14 @@ export function useUpdateAgreement() {
     mutationFn: ({ id, data }: { id: string; data: UpdateAgreementDto }) =>
       agreementEndpoints.update(id, data).then((res) => res.data),
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: agreementKeys.detail(data.id) });
+      queryClient.invalidateQueries({
+        queryKey: agreementKeys.detail(data.id),
+      });
       queryClient.invalidateQueries({ queryKey: agreementKeys.lists() });
       toast.success('Anlaşma başarıyla güncellendi');
     },
     onError: (error: any) => {
-      toast.error(
-        error.response?.data?.message || 'Anlaşma güncellenemedi'
-      );
+      toast.error(error.response?.data?.message || 'Anlaşma güncellenemedi');
     },
   });
 }
@@ -103,9 +102,7 @@ export function useDeleteAgreement() {
       toast.success('Anlaşma başarıyla silindi');
     },
     onError: (error: any) => {
-      toast.error(
-        error.response?.data?.message || 'Anlaşma silinemedi'
-      );
+      toast.error(error.response?.data?.message || 'Anlaşma silinemedi');
     },
   });
 }
@@ -118,16 +115,17 @@ export function useSubmitAgreement() {
   const toast = useToast();
 
   return useMutation({
-    mutationFn: (id: string) => agreementEndpoints.submit(id).then((res) => res.data),
+    mutationFn: (id: string) =>
+      agreementEndpoints.submit(id).then((res) => res.data),
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: agreementKeys.detail(data.id) });
+      queryClient.invalidateQueries({
+        queryKey: agreementKeys.detail(data.id),
+      });
       queryClient.invalidateQueries({ queryKey: agreementKeys.lists() });
       toast.success('Anlaşma onay için gönderildi');
     },
     onError: (error: any) => {
-      toast.error(
-        error.response?.data?.message || 'Anlaşma gönderilemedi'
-      );
+      toast.error(error.response?.data?.message || 'Anlaşma gönderilemedi');
     },
   });
 }
@@ -143,15 +141,15 @@ export function useApproveAgreement() {
     mutationFn: ({ id, data }: { id: string; data?: ApproveAgreementDto }) =>
       agreementEndpoints.approve(id, data).then((res) => res.data),
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: agreementKeys.detail(data.id) });
+      queryClient.invalidateQueries({
+        queryKey: agreementKeys.detail(data.id),
+      });
       queryClient.invalidateQueries({ queryKey: agreementKeys.lists() });
       queryClient.invalidateQueries({ queryKey: ['budget'] }); // Bütçe rezervasyonu yapıldı
       toast.success('Anlaşma başarıyla onaylandı');
     },
     onError: (error: any) => {
-      toast.error(
-        error.response?.data?.message || 'Anlaşma onaylanamadı'
-      );
+      toast.error(error.response?.data?.message || 'Anlaşma onaylanamadı');
     },
   });
 }
@@ -167,14 +165,14 @@ export function useRejectAgreement() {
     mutationFn: ({ id, data }: { id: string; data: RejectAgreementDto }) =>
       agreementEndpoints.reject(id, data).then((res) => res.data),
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: agreementKeys.detail(data.id) });
+      queryClient.invalidateQueries({
+        queryKey: agreementKeys.detail(data.id),
+      });
       queryClient.invalidateQueries({ queryKey: agreementKeys.lists() });
       toast.success('Anlaşma reddedildi');
     },
     onError: (error: any) => {
-      toast.error(
-        error.response?.data?.message || 'Anlaşma reddedilemedi'
-      );
+      toast.error(error.response?.data?.message || 'Anlaşma reddedilemedi');
     },
   });
 }
@@ -190,15 +188,15 @@ export function useCancelAgreement() {
     mutationFn: ({ id, data }: { id: string; data: CancelAgreementDto }) =>
       agreementEndpoints.cancel(id, data).then((res) => res.data),
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: agreementKeys.detail(data.id) });
+      queryClient.invalidateQueries({
+        queryKey: agreementKeys.detail(data.id),
+      });
       queryClient.invalidateQueries({ queryKey: agreementKeys.lists() });
       queryClient.invalidateQueries({ queryKey: ['budget'] }); // Bütçe serbest bırakıldı
       toast.success('Anlaşma iptal edildi');
     },
     onError: (error: any) => {
-      toast.error(
-        error.response?.data?.message || 'Anlaşma iptal edilemedi'
-      );
+      toast.error(error.response?.data?.message || 'Anlaşma iptal edilemedi');
     },
   });
 }
@@ -245,11 +243,15 @@ export function useAgreementPermissions(agreement: Agreement | undefined) {
 
   const canApprove =
     agreement.status === AgreementStatus.PENDING &&
-    (userRole === UserRole.ADMIN || userRole === UserRole.MANAGER || userRole === UserRole.FINANCE);
+    (userRole === UserRole.ADMIN ||
+      userRole === UserRole.MANAGER ||
+      userRole === UserRole.FINANCE);
 
   const canReject =
     agreement.status === AgreementStatus.PENDING &&
-    (userRole === UserRole.ADMIN || userRole === UserRole.MANAGER || userRole === UserRole.FINANCE);
+    (userRole === UserRole.ADMIN ||
+      userRole === UserRole.MANAGER ||
+      userRole === UserRole.FINANCE);
 
   const canCancel =
     (agreement.status === AgreementStatus.APPROVED ||

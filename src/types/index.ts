@@ -9,4 +9,3 @@ export * from './ledger.types';
 export * from './notification.types';
 export * from './agreement.types';
 export * from './off-invoice.types';
-

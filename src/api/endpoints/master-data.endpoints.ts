@@ -48,16 +48,20 @@ export const cplEndpoints = {
 // Forecasting Unit endpoints
 export const fuEndpoints = {
   getAll: (activeOnly?: boolean, guId?: string, categoryId?: string) =>
-    apiClient.get('/master-data/forecasting-units', { params: { activeOnly, guId, categoryId } }),
+    apiClient.get('/master-data/forecasting-units', {
+      params: { activeOnly, guId, categoryId },
+    }),
 
-  getById: (id: string) => apiClient.get(`/master-data/forecasting-units/${id}`),
+  getById: (id: string) =>
+    apiClient.get(`/master-data/forecasting-units/${id}`),
 
   create: (data: any) => apiClient.post('/master-data/forecasting-units', data),
 
   update: (id: string, data: any) =>
     apiClient.patch(`/master-data/forecasting-units/${id}`, data),
 
-  delete: (id: string) => apiClient.delete(`/master-data/forecasting-units/${id}`),
+  delete: (id: string) =>
+    apiClient.delete(`/master-data/forecasting-units/${id}`),
 };
 
 // Generic Unit endpoints
@@ -77,8 +81,15 @@ export const guEndpoints = {
 
 // SKU endpoints
 export const skuEndpoints = {
-  getAll: (activeOnly?: boolean, fuId?: string, brandId?: string, categoryId?: string) =>
-    apiClient.get('/master-data/skus', { params: { activeOnly, fuId, brandId, categoryId } }),
+  getAll: (
+    activeOnly?: boolean,
+    fuId?: string,
+    brandId?: string,
+    categoryId?: string
+  ) =>
+    apiClient.get('/master-data/skus', {
+      params: { activeOnly, fuId, brandId, categoryId },
+    }),
 
   getById: (id: string) => apiClient.get(`/master-data/skus/${id}`),
 
@@ -88,7 +99,7 @@ export const skuEndpoints = {
     apiClient.patch(`/master-data/skus/${id}`, data),
 
   delete: (id: string) => apiClient.delete(`/master-data/skus/${id}`),
-  
+
   assignToFu: (skuId: string, fuId: string) =>
     apiClient.patch(`/master-data/skus/${skuId}`, { fuId: fuId || null }),
 };
@@ -111,11 +122,11 @@ export const tacticEndpoints = {
 // Mechanic endpoints
 export const mechanicEndpoints = {
   getAll: (activeOnly?: boolean, tacticId?: string) =>
-    apiClient.get('/master-data/mechanics', { 
-      params: { 
-        activeOnly: activeOnly ? 'true' : undefined, 
-        tacticId 
-      } 
+    apiClient.get('/master-data/mechanics', {
+      params: {
+        activeOnly: activeOnly ? 'true' : undefined,
+        tacticId,
+      },
     }),
 
   getById: (id: string) => apiClient.get(`/master-data/mechanics/${id}`),
@@ -127,8 +138,14 @@ export const mechanicEndpoints = {
 
   delete: (id: string) => apiClient.delete(`/master-data/mechanics/${id}`),
 
-  getApplicable: (context: { channelCode?: string; channelId?: string; categoryCode?: string; categoryId?: string; cplId?: string; cplCodes?: string[] }) =>
-    apiClient.post('/master-data/mechanics/applicable', context),
+  getApplicable: (context: {
+    channelCode?: string;
+    channelId?: string;
+    categoryCode?: string;
+    categoryId?: string;
+    cplId?: string;
+    cplCodes?: string[];
+  }) => apiClient.post('/master-data/mechanics/applicable', context),
 };
 
 // Brand endpoints

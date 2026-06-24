@@ -82,7 +82,13 @@ export interface PlanSku {
   // Promo spend alanları
   promoOnInvoiceSpend: number;
   promoOffInvoiceSpend: number;
-  sku?: { id: string; name: string; code: string; unitPrice?: number; cogs?: number };
+  sku?: {
+    id: string;
+    name: string;
+    code: string;
+    unitPrice?: number;
+    cogs?: number;
+  };
   spendBreakdowns?: MechanicSpendBreakdown[];
 }
 
@@ -124,7 +130,12 @@ export interface PlanMechanicValue {
   offInvoiceAmount: number;
   distributionMethod?: 'percentage' | 'per_unit' | 'lumpsum' | 'proportional';
   metadata?: Record<string, any>;
-  mechanic?: { id: string; name: string; code: string; spendingType?: 'on_invoice' | 'off_invoice' | 'both' };
+  mechanic?: {
+    id: string;
+    name: string;
+    code: string;
+    spendingType?: 'on_invoice' | 'off_invoice' | 'both';
+  };
   spendBreakdowns?: MechanicSpendBreakdown[];
 }
 
@@ -203,8 +214,7 @@ export const planEndpoints = {
   getById: (id: string) => apiClient.get<Plan>(`/plans/${id}`),
 
   // Plan Oluşturma
-  create: (data: CreatePlanDto) =>
-    apiClient.post<Plan>('/plans', data),
+  create: (data: CreatePlanDto) => apiClient.post<Plan>('/plans', data),
 
   // Plan Güncelleme (Sadece DRAFT)
   update: (id: string, data: UpdatePlanDto) =>
@@ -223,15 +233,28 @@ export const planEndpoints = {
     apiClient.delete(`/plans/${planId}/fus/${fuId}`),
 
   // SKU Volume Güncelleme
-  updateSkuVolume: (planId: string, fuId: string, skuId: string, data: UpdateSkuVolumeDto) =>
-    apiClient.patch<PlanSku>(`/plans/${planId}/fus/${fuId}/skus/${skuId}/volume`, data),
+  updateSkuVolume: (
+    planId: string,
+    fuId: string,
+    skuId: string,
+    data: UpdateSkuVolumeDto
+  ) =>
+    apiClient.patch<PlanSku>(
+      `/plans/${planId}/fus/${fuId}/skus/${skuId}/volume`,
+      data
+    ),
 
   // Durum Geçişleri
-  submit: (id: string) =>
-    apiClient.post<Plan>(`/plans/${id}/submit`),
+  submit: (id: string) => apiClient.post<Plan>(`/plans/${id}/submit`),
 
-  approve: (id: string, data?: { comments?: string; autoCreateBudget?: boolean; budgetAmount?: number }) =>
-    apiClient.post<Plan>(`/plans/${id}/approve`, data),
+  approve: (
+    id: string,
+    data?: {
+      comments?: string;
+      autoCreateBudget?: boolean;
+      budgetAmount?: number;
+    }
+  ) => apiClient.post<Plan>(`/plans/${id}/approve`, data),
 
   // Bütçe Kontrolü
   checkBudget: (id: string) =>
@@ -241,22 +264,17 @@ export const planEndpoints = {
     apiClient.post<Plan>(`/plans/${id}/reject`, data),
 
   // Plan Silme
-  delete: (id: string) =>
-    apiClient.delete(`/plans/${id}`),
+  delete: (id: string) => apiClient.delete(`/plans/${id}`),
 
   // Plan Analizi
-  getAnalysis: (id: string) =>
-    apiClient.get(`/plans/${id}/analysis`),
+  getAnalysis: (id: string) => apiClient.get(`/plans/${id}/analysis`),
 
   // KPI Hesaplama
-  calculateKpis: (id: string) =>
-    apiClient.post(`/plans/${id}/calculate-kpis`),
+  calculateKpis: (id: string) => apiClient.post(`/plans/${id}/calculate-kpis`),
 
   // Plan Yeniden Hesaplama
-  recalculate: (id: string) =>
-    apiClient.post<Plan>(`/plans/${id}/recalculate`),
+  recalculate: (id: string) => apiClient.post<Plan>(`/plans/${id}/recalculate`),
 
   // Pending Approval Plans
-  getPendingApprovals: () =>
-    apiClient.get<Plan[]>('/plans/pending-approvals'),
+  getPendingApprovals: () => apiClient.get<Plan[]>('/plans/pending-approvals'),
 };

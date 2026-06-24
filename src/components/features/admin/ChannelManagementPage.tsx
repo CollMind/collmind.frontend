@@ -62,7 +62,9 @@ export function ChannelManagementPage() {
       handleDialogClose();
     },
     onError: (error: any) => {
-      toast.error(error?.response?.data?.message || 'Kanal oluşturulurken hata oluştu');
+      toast.error(
+        error?.response?.data?.message || 'Kanal oluşturulurken hata oluştu'
+      );
     },
   });
 
@@ -75,7 +77,9 @@ export function ChannelManagementPage() {
       handleDialogClose();
     },
     onError: (error: any) => {
-      toast.error(error?.response?.data?.message || 'Kanal güncellenirken hata oluştu');
+      toast.error(
+        error?.response?.data?.message || 'Kanal güncellenirken hata oluştu'
+      );
     },
   });
 
@@ -86,7 +90,9 @@ export function ChannelManagementPage() {
       queryClient.invalidateQueries({ queryKey: ['channels'] });
     },
     onError: (error: any) => {
-      toast.error(error?.response?.data?.message || 'Kanal silinirken hata oluştu');
+      toast.error(
+        error?.response?.data?.message || 'Kanal silinirken hata oluştu'
+      );
     },
   });
 
@@ -177,7 +183,9 @@ export function ChannelManagementPage() {
               <Input
                 id="code"
                 value={formData.code}
-                onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, code: e.target.value })
+                }
                 required
               />
             </div>
@@ -186,7 +194,9 @@ export function ChannelManagementPage() {
               <Input
                 id="name"
                 value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
                 required
               />
             </div>
@@ -195,7 +205,9 @@ export function ChannelManagementPage() {
               <Textarea
                 id="description"
                 value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, description: e.target.value })
+                }
                 rows={3}
               />
             </div>
@@ -204,7 +216,9 @@ export function ChannelManagementPage() {
               <Input
                 id="subchannel"
                 value={formData.subchannel}
-                onChange={(e) => setFormData({ ...formData, subchannel: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, subchannel: e.target.value })
+                }
               />
             </div>
             <div>
@@ -214,7 +228,10 @@ export function ChannelManagementPage() {
                 type="number"
                 value={formData.sortOrder}
                 onChange={(e) =>
-                  setFormData({ ...formData, sortOrder: parseInt(e.target.value) || 0 })
+                  setFormData({
+                    ...formData,
+                    sortOrder: parseInt(e.target.value) || 0,
+                  })
                 }
               />
             </div>
@@ -229,10 +246,17 @@ export function ChannelManagementPage() {
               <Label htmlFor="isActive">Aktif</Label>
             </div>
             <div className="flex justify-end gap-2">
-              <Button type="button" variant="outline" onClick={handleDialogClose}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleDialogClose}
+              >
                 İptal
               </Button>
-              <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
+              <Button
+                type="submit"
+                disabled={createMutation.isPending || updateMutation.isPending}
+              >
                 {editingChannel ? 'Güncelle' : 'Oluştur'}
               </Button>
             </div>

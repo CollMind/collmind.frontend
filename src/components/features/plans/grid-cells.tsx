@@ -1,6 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 interface EditableCellProps {
   value: number | null | undefined;
@@ -112,8 +117,12 @@ export function EditableCell({
   const displayValue = formatValue(value);
   const hasError = !!error;
   const hasWarning = !!warning;
-  const borderColor = hasError ? 'border-red-500' : hasWarning ? 'border-amber-500' : '';
-  
+  const borderColor = hasError
+    ? 'border-red-500'
+    : hasWarning
+      ? 'border-amber-500'
+      : '';
+
   const cellContent = (
     <div
       className={`text-right text-sm cursor-pointer hover:bg-blue-100 transition-colors px-2 py-1 rounded border-2 ${borderColor} ${className}`}
@@ -129,7 +138,7 @@ export function EditableCell({
       )}
     </div>
   );
-  
+
   const tooltipContent = error || warning || tooltip;
 
   if (tooltipContent) {
@@ -139,8 +148,16 @@ export function EditableCell({
           <TooltipTrigger asChild>{cellContent}</TooltipTrigger>
           <TooltipContent>
             <div className="text-xs">
-              {error && <div className="text-red-600 font-semibold mb-1">Error: {error}</div>}
-              {warning && <div className="text-amber-600 font-semibold mb-1">Warning: {warning}</div>}
+              {error && (
+                <div className="text-red-600 font-semibold mb-1">
+                  Error: {error}
+                </div>
+              )}
+              {warning && (
+                <div className="text-amber-600 font-semibold mb-1">
+                  Warning: {warning}
+                </div>
+              )}
               {tooltip && <div>{tooltip}</div>}
             </div>
           </TooltipContent>
@@ -220,7 +237,9 @@ export function CalculatedCell({
             {formatValue(value)}
           </div>
         </TooltipTrigger>
-        {(formula || breakdown) && <TooltipContent>{tooltipContent}</TooltipContent>}
+        {(formula || breakdown) && (
+          <TooltipContent>{tooltipContent}</TooltipContent>
+        )}
       </Tooltip>
     </TooltipProvider>
   );
@@ -273,7 +292,9 @@ export function InheritedCell({
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
-          <div className={`text-right text-sm text-gray-500 px-2 py-1 ${className}`}>
+          <div
+            className={`text-right text-sm text-gray-500 px-2 py-1 ${className}`}
+          >
             {formatValue(value)}
             <span className="text-xs text-gray-400 ml-1">(from FU)</span>
           </div>
@@ -294,10 +315,17 @@ interface RAGCellProps {
   className?: string;
 }
 
-export function RAGCell({ status, value, thresholds, className = '' }: RAGCellProps) {
+export function RAGCell({
+  status,
+  value,
+  thresholds,
+  className = '',
+}: RAGCellProps) {
   const getStatusColor = (): string => {
-    if (status === 'GREEN') return 'bg-green-100 text-green-800 border-green-300';
-    if (status === 'AMBER') return 'bg-amber-100 text-amber-800 border-amber-300';
+    if (status === 'GREEN')
+      return 'bg-green-100 text-green-800 border-green-300';
+    if (status === 'AMBER')
+      return 'bg-amber-100 text-amber-800 border-amber-300';
     if (status === 'RED') return 'bg-red-100 text-red-800 border-red-300';
     return 'bg-gray-100 text-gray-600 border-gray-300';
   };
@@ -312,7 +340,9 @@ export function RAGCell({ status, value, thresholds, className = '' }: RAGCellPr
   const tooltipContent = (
     <div className="text-xs">
       <div className="font-semibold mb-1">Status: {getStatusLabel()}</div>
-      {value !== null && value !== undefined && <div>Value: {value.toFixed(2)}</div>}
+      {value !== null && value !== undefined && (
+        <div>Value: {value.toFixed(2)}</div>
+      )}
       {thresholds && (
         <div className="mt-1">
           {thresholds.green && <div>Green: &gt;= {thresholds.green}</div>}
@@ -330,7 +360,9 @@ export function RAGCell({ status, value, thresholds, className = '' }: RAGCellPr
             className={`text-center px-3 py-1.5 rounded border-2 font-medium text-xs ${getStatusColor()} ${className}`}
           >
             <div className="flex items-center justify-center gap-1">
-              <span className="text-lg">{status === 'GREEN' ? '●' : status === 'AMBER' ? '●' : '●'}</span>
+              <span className="text-lg">
+                {status === 'GREEN' ? '●' : status === 'AMBER' ? '●' : '●'}
+              </span>
               <span>{getStatusLabel()}</span>
             </div>
           </div>

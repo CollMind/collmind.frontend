@@ -1,6 +1,11 @@
 import { useState, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { kpiEndpoints, Kpi, CreateKpiDto, UpdateKpiDto } from '@/api/endpoints/kpi.endpoints';
+import {
+  kpiEndpoints,
+  Kpi,
+  CreateKpiDto,
+  UpdateKpiDto,
+} from '@/api/endpoints/kpi.endpoints';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -142,7 +147,7 @@ export function KpiManagementPage() {
     mutationFn: () => kpiEndpoints.seedDefaults(),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['kpis'] });
-      toast.success('Varsayılan KPI\'lar oluşturuldu');
+      toast.success("Varsayılan KPI'lar oluşturuldu");
     },
     onError: (error: any) => {
       toast.error(error?.response?.data?.message || 'Seed işlemi başarısız');
@@ -198,22 +203,33 @@ export function KpiManagementPage() {
     }
   }, [form, editingKpi, createMutation, updateMutation]);
 
-  const handleDelete = useCallback((kpi: Kpi) => {
-    if (window.confirm(`"${kpi.kpiName}" KPI'sını silmek istediğinize emin misiniz?`)) {
-      deleteMutation.mutate(kpi.id);
-    }
-  }, [deleteMutation]);
+  const handleDelete = useCallback(
+    (kpi: Kpi) => {
+      if (
+        window.confirm(
+          `"${kpi.kpiName}" KPI'sını silmek istediğinize emin misiniz?`
+        )
+      ) {
+        deleteMutation.mutate(kpi.id);
+      }
+    },
+    [deleteMutation]
+  );
 
-  const toggleActive = useCallback((kpi: Kpi) => {
-    updateMutation.mutate({
-      id: kpi.id,
-      data: { isActive: !kpi.isActive },
-    });
-  }, [updateMutation]);
+  const toggleActive = useCallback(
+    (kpi: Kpi) => {
+      updateMutation.mutate({
+        id: kpi.id,
+        data: { isActive: !kpi.isActive },
+      });
+    },
+    [updateMutation]
+  );
 
   // Filtered KPIs
   const filteredKpis = kpis.filter((kpi) => {
-    const matchesSearch = !search ||
+    const matchesSearch =
+      !search ||
       kpi.kpiCode.toLowerCase().includes(search.toLowerCase()) ||
       kpi.kpiName.toLowerCase().includes(search.toLowerCase()) ||
       kpi.kpiGroup.toLowerCase().includes(search.toLowerCase());
@@ -222,30 +238,40 @@ export function KpiManagementPage() {
   });
 
   // Group KPIs by group
-  const groups = [...new Set(kpis.map(k => k.kpiGroup))];
+  const groups = [...new Set(kpis.map((k) => k.kpiGroup))];
 
   const getCalcLevelLabel = (level: string) =>
-    CALCULATION_LEVELS.find(l => l.value === level)?.label || level;
+    CALCULATION_LEVELS.find((l) => l.value === level)?.label || level;
   const getDisplayFormatLabel = (format: string) =>
-    DISPLAY_FORMATS.find(f => f.value === format)?.label || format;
+    DISPLAY_FORMATS.find((f) => f.value === format)?.label || format;
 
   const getLevelColor = (level: string) => {
     switch (level) {
-      case 'sku': return 'bg-blue-100 text-blue-700';
-      case 'fu': return 'bg-purple-100 text-purple-700';
-      case 'plan': return 'bg-orange-100 text-orange-700';
-      default: return 'bg-gray-100 text-gray-700';
+      case 'sku':
+        return 'bg-blue-100 text-blue-700';
+      case 'fu':
+        return 'bg-purple-100 text-purple-700';
+      case 'plan':
+        return 'bg-orange-100 text-orange-700';
+      default:
+        return 'bg-gray-100 text-gray-700';
     }
   };
 
   const getGroupColor = (group: string) => {
     switch (group) {
-      case 'Volume': return 'bg-green-100 text-green-700';
-      case 'Profit': return 'bg-emerald-100 text-emerald-700';
-      case 'ROI': return 'bg-amber-100 text-amber-700';
-      case 'Revenue': return 'bg-blue-100 text-blue-700';
-      case 'Spend': return 'bg-red-100 text-red-700';
-      default: return 'bg-gray-100 text-gray-700';
+      case 'Volume':
+        return 'bg-green-100 text-green-700';
+      case 'Profit':
+        return 'bg-emerald-100 text-emerald-700';
+      case 'ROI':
+        return 'bg-amber-100 text-amber-700';
+      case 'Revenue':
+        return 'bg-blue-100 text-blue-700';
+      case 'Spend':
+        return 'bg-red-100 text-red-700';
+      default:
+        return 'bg-gray-100 text-gray-700';
     }
   };
 
@@ -290,14 +316,18 @@ export function KpiManagementPage() {
             <CheckCircle className="h-5 w-5 text-green-500" />
             <span className="text-sm text-gray-500">Aktif</span>
           </div>
-          <p className="text-2xl font-bold mt-1">{kpis.filter(k => k.isActive).length}</p>
+          <p className="text-2xl font-bold mt-1">
+            {kpis.filter((k) => k.isActive).length}
+          </p>
         </div>
         <div className="bg-white rounded-lg border p-4">
           <div className="flex items-center gap-2">
             <Eye className="h-5 w-5 text-purple-500" />
             <span className="text-sm text-gray-500">Grid'de Görünen</span>
           </div>
-          <p className="text-2xl font-bold mt-1">{kpis.filter(k => k.showInGrid).length}</p>
+          <p className="text-2xl font-bold mt-1">
+            {kpis.filter((k) => k.showInGrid).length}
+          </p>
         </div>
         <div className="bg-white rounded-lg border p-4">
           <div className="flex items-center gap-2">
@@ -305,7 +335,13 @@ export function KpiManagementPage() {
             <span className="text-sm text-gray-500">RAG Eşikli</span>
           </div>
           <p className="text-2xl font-bold mt-1">
-            {kpis.filter(k => k.ragGreenThreshold !== null && k.ragGreenThreshold !== undefined).length}
+            {
+              kpis.filter(
+                (k) =>
+                  k.ragGreenThreshold !== null &&
+                  k.ragGreenThreshold !== undefined
+              ).length
+            }
           </p>
         </div>
       </div>
@@ -327,8 +363,10 @@ export function KpiManagementPage() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Tüm Gruplar</SelectItem>
-            {groups.map(g => (
-              <SelectItem key={g} value={g}>{g}</SelectItem>
+            {groups.map((g) => (
+              <SelectItem key={g} value={g}>
+                {g}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -347,24 +385,48 @@ export function KpiManagementPage() {
           <div className="p-8 text-center text-gray-500">Yükleniyor...</div>
         ) : filteredKpis.length === 0 ? (
           <div className="p-8 text-center text-gray-500">
-            {search || filterGroup !== 'all' ? 'Filtrelerle eşleşen KPI bulunamadı' : 'Henüz KPI tanımlanmamış. "Varsayılanları Yükle" butonunu kullanabilirsiniz.'}
+            {search || filterGroup !== 'all'
+              ? 'Filtrelerle eşleşen KPI bulunamadı'
+              : 'Henüz KPI tanımlanmamış. "Varsayılanları Yükle" butonunu kullanabilirsiniz.'}
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-gray-50 border-b">
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">Sıra</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">Kod</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">İsim</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">Grup</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">Seviye</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">Formül</th>
-                  <th className="text-left px-4 py-3 font-medium text-gray-600">Format</th>
-                  <th className="text-center px-4 py-3 font-medium text-gray-600">Grid</th>
-                  <th className="text-center px-4 py-3 font-medium text-gray-600">RAG</th>
-                  <th className="text-center px-4 py-3 font-medium text-gray-600">Durum</th>
-                  <th className="text-right px-4 py-3 font-medium text-gray-600">İşlemler</th>
+                  <th className="text-left px-4 py-3 font-medium text-gray-600">
+                    Sıra
+                  </th>
+                  <th className="text-left px-4 py-3 font-medium text-gray-600">
+                    Kod
+                  </th>
+                  <th className="text-left px-4 py-3 font-medium text-gray-600">
+                    İsim
+                  </th>
+                  <th className="text-left px-4 py-3 font-medium text-gray-600">
+                    Grup
+                  </th>
+                  <th className="text-left px-4 py-3 font-medium text-gray-600">
+                    Seviye
+                  </th>
+                  <th className="text-left px-4 py-3 font-medium text-gray-600">
+                    Formül
+                  </th>
+                  <th className="text-left px-4 py-3 font-medium text-gray-600">
+                    Format
+                  </th>
+                  <th className="text-center px-4 py-3 font-medium text-gray-600">
+                    Grid
+                  </th>
+                  <th className="text-center px-4 py-3 font-medium text-gray-600">
+                    RAG
+                  </th>
+                  <th className="text-center px-4 py-3 font-medium text-gray-600">
+                    Durum
+                  </th>
+                  <th className="text-right px-4 py-3 font-medium text-gray-600">
+                    İşlemler
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -373,16 +435,24 @@ export function KpiManagementPage() {
                     key={kpi.id}
                     className="border-b last:border-b-0 hover:bg-gray-50 transition-colors"
                   >
-                    <td className="px-4 py-3 text-gray-500">{kpi.calculationOrder}</td>
-                    <td className="px-4 py-3 font-mono text-xs font-semibold">{kpi.kpiCode}</td>
+                    <td className="px-4 py-3 text-gray-500">
+                      {kpi.calculationOrder}
+                    </td>
+                    <td className="px-4 py-3 font-mono text-xs font-semibold">
+                      {kpi.kpiCode}
+                    </td>
                     <td className="px-4 py-3 font-medium">{kpi.kpiName}</td>
                     <td className="px-4 py-3">
-                      <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${getGroupColor(kpi.kpiGroup)}`}>
+                      <span
+                        className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${getGroupColor(kpi.kpiGroup)}`}
+                      >
                         {kpi.kpiGroup}
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${getLevelColor(kpi.calculationLevel)}`}>
+                      <span
+                        className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium ${getLevelColor(kpi.calculationLevel)}`}
+                      >
                         {getCalcLevelLabel(kpi.calculationLevel)}
                       </span>
                     </td>
@@ -402,7 +472,8 @@ export function KpiManagementPage() {
                       )}
                     </td>
                     <td className="px-4 py-3 text-center">
-                      {kpi.ragGreenThreshold !== null && kpi.ragGreenThreshold !== undefined ? (
+                      {kpi.ragGreenThreshold !== null &&
+                      kpi.ragGreenThreshold !== undefined ? (
                         <div className="flex items-center justify-center gap-0.5">
                           <span className="w-2 h-2 rounded-full bg-red-500" />
                           <span className="w-2 h-2 rounded-full bg-amber-500" />
@@ -414,17 +485,30 @@ export function KpiManagementPage() {
                     </td>
                     <td className="px-4 py-3 text-center">
                       <button onClick={() => toggleActive(kpi)}>
-                        <Badge variant={kpi.isActive ? 'default' : 'secondary'} className="cursor-pointer">
+                        <Badge
+                          variant={kpi.isActive ? 'default' : 'secondary'}
+                          className="cursor-pointer"
+                        >
                           {kpi.isActive ? 'Aktif' : 'Pasif'}
                         </Badge>
                       </button>
                     </td>
                     <td className="px-4 py-3 text-right">
                       <div className="flex items-center justify-end gap-1">
-                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(kpi)}>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => openEdit(kpi)}
+                        >
                           <Edit2 className="h-3.5 w-3.5" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-red-500 hover:text-red-700" onClick={() => handleDelete(kpi)}>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-red-500 hover:text-red-700"
+                          onClick={() => handleDelete(kpi)}
+                        >
                           <Trash2 className="h-3.5 w-3.5" />
                         </Button>
                       </div>
@@ -441,7 +525,9 @@ export function KpiManagementPage() {
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editingKpi ? 'KPI Düzenle' : 'Yeni KPI Oluştur'}</DialogTitle>
+            <DialogTitle>
+              {editingKpi ? 'KPI Düzenle' : 'Yeni KPI Oluştur'}
+            </DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4">
@@ -453,7 +539,12 @@ export function KpiManagementPage() {
                 </label>
                 <Input
                   value={form.kpiCode}
-                  onChange={(e) => setForm(f => ({ ...f, kpiCode: e.target.value.toUpperCase() }))}
+                  onChange={(e) =>
+                    setForm((f) => ({
+                      ...f,
+                      kpiCode: e.target.value.toUpperCase(),
+                    }))
+                  }
                   placeholder="Ör: INCR_VOL"
                   disabled={!!editingKpi}
                 />
@@ -464,7 +555,9 @@ export function KpiManagementPage() {
                 </label>
                 <Input
                   value={form.kpiName}
-                  onChange={(e) => setForm(f => ({ ...f, kpiName: e.target.value }))}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, kpiName: e.target.value }))
+                  }
                   placeholder="Ör: Incremental Volume"
                 />
               </div>
@@ -472,33 +565,53 @@ export function KpiManagementPage() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">KPI Grubu</label>
-                <Select value={form.kpiGroup} onValueChange={(v) => setForm(f => ({ ...f, kpiGroup: v }))}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  KPI Grubu
+                </label>
+                <Select
+                  value={form.kpiGroup}
+                  onValueChange={(v) => setForm((f) => ({ ...f, kpiGroup: v }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
                   <SelectContent>
-                    {KPI_GROUPS.map(g => (
-                      <SelectItem key={g} value={g}>{g}</SelectItem>
+                    {KPI_GROUPS.map((g) => (
+                      <SelectItem key={g} value={g}>
+                        {g}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Hesaplama Sırası</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Hesaplama Sırası
+                </label>
                 <Input
                   type="number"
                   min={1}
                   max={50}
                   value={form.calculationOrder}
-                  onChange={(e) => setForm(f => ({ ...f, calculationOrder: parseInt(e.target.value) || 1 }))}
+                  onChange={(e) =>
+                    setForm((f) => ({
+                      ...f,
+                      calculationOrder: parseInt(e.target.value) || 1,
+                    }))
+                  }
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Açıklama</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Açıklama
+              </label>
               <Input
                 value={form.kpiDescription || ''}
-                onChange={(e) => setForm(f => ({ ...f, kpiDescription: e.target.value }))}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, kpiDescription: e.target.value }))
+                }
                 placeholder="KPI açıklaması..."
               />
             </div>
@@ -511,23 +624,45 @@ export function KpiManagementPage() {
               </h3>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Formül Tipi</label>
-                  <Select value={form.formulaType} onValueChange={(v: any) => setForm(f => ({ ...f, formulaType: v }))}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Formül Tipi
+                  </label>
+                  <Select
+                    value={form.formulaType}
+                    onValueChange={(v: any) =>
+                      setForm((f) => ({ ...f, formulaType: v }))
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
                     <SelectContent>
-                      {FORMULA_TYPES.map(t => (
-                        <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
+                      {FORMULA_TYPES.map((t) => (
+                        <SelectItem key={t.value} value={t.value}>
+                          {t.label}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Hesaplama Seviyesi</label>
-                  <Select value={form.calculationLevel} onValueChange={(v: any) => setForm(f => ({ ...f, calculationLevel: v }))}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Hesaplama Seviyesi
+                  </label>
+                  <Select
+                    value={form.calculationLevel}
+                    onValueChange={(v: any) =>
+                      setForm((f) => ({ ...f, calculationLevel: v }))
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
                     <SelectContent>
-                      {CALCULATION_LEVELS.map(l => (
-                        <SelectItem key={l.value} value={l.value}>{l.label}</SelectItem>
+                      {CALCULATION_LEVELS.map((l) => (
+                        <SelectItem key={l.value} value={l.value}>
+                          {l.label}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -540,24 +675,34 @@ export function KpiManagementPage() {
                 </label>
                 <Textarea
                   value={form.formulaText}
-                  onChange={(e) => setForm(f => ({ ...f, formulaText: e.target.value }))}
+                  onChange={(e) =>
+                    setForm((f) => ({ ...f, formulaText: e.target.value }))
+                  }
                   placeholder="Ör: PLAN_VOL - BASE_VOL"
                   rows={3}
                   className="font-mono text-sm"
                 />
                 <p className="text-xs text-gray-400 mt-1">
-                  Değişkenler: BASE_VOL, PLAN_VOL, BPTT, COGS, INCR_VOL, PLAN_TURNOVER, TACTIC_SPEND, GP veya diğer KPI kodları
+                  Değişkenler: BASE_VOL, PLAN_VOL, BPTT, COGS, INCR_VOL,
+                  PLAN_TURNOVER, TACTIC_SPEND, GP veya diğer KPI kodları
                 </p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Bağımlı KPI'lar</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Bağımlı KPI'lar
+                </label>
                 <Input
                   value={(form.dependsOnKpis || []).join(', ')}
-                  onChange={(e) => setForm(f => ({
-                    ...f,
-                    dependsOnKpis: e.target.value.split(',').map(s => s.trim()).filter(Boolean),
-                  }))}
+                  onChange={(e) =>
+                    setForm((f) => ({
+                      ...f,
+                      dependsOnKpis: e.target.value
+                        .split(',')
+                        .map((s) => s.trim())
+                        .filter(Boolean),
+                    }))
+                  }
                   placeholder="Virgülle ayrılmış KPI kodları: INCR_VOL, PLAN_TURNOVER"
                 />
               </div>
@@ -566,33 +711,62 @@ export function KpiManagementPage() {
             {/* Display */}
             <div className="grid grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Gösterim Formatı</label>
-                <Select value={form.displayFormat} onValueChange={(v: any) => setForm(f => ({ ...f, displayFormat: v }))}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Gösterim Formatı
+                </label>
+                <Select
+                  value={form.displayFormat}
+                  onValueChange={(v: any) =>
+                    setForm((f) => ({ ...f, displayFormat: v }))
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
                   <SelectContent>
-                    {DISPLAY_FORMATS.map(df => (
-                      <SelectItem key={df.value} value={df.value}>{df.label}</SelectItem>
+                    {DISPLAY_FORMATS.map((df) => (
+                      <SelectItem key={df.value} value={df.value}>
+                        {df.label}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Ondalık Basamak</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Ondalık Basamak
+                </label>
                 <Input
                   type="number"
                   min={0}
                   max={6}
                   value={form.decimalPlaces ?? 2}
-                  onChange={(e) => setForm(f => ({ ...f, decimalPlaces: parseInt(e.target.value) || 0 }))}
+                  onChange={(e) =>
+                    setForm((f) => ({
+                      ...f,
+                      decimalPlaces: parseInt(e.target.value) || 0,
+                    }))
+                  }
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Agregasyon</label>
-                <Select value={form.aggregationMethodFu || 'sum'} onValueChange={(v: any) => setForm(f => ({ ...f, aggregationMethodFu: v }))}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Agregasyon
+                </label>
+                <Select
+                  value={form.aggregationMethodFu || 'sum'}
+                  onValueChange={(v: any) =>
+                    setForm((f) => ({ ...f, aggregationMethodFu: v }))
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
                   <SelectContent>
-                    {AGGREGATION_METHODS.map(m => (
-                      <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
+                    {AGGREGATION_METHODS.map((m) => (
+                      <SelectItem key={m.value} value={m.value}>
+                        {m.label}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -602,32 +776,47 @@ export function KpiManagementPage() {
             {/* Grid & RAG */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-3">
-                <h4 className="text-sm font-semibold text-gray-700">Grid Ayarları</h4>
+                <h4 className="text-sm font-semibold text-gray-700">
+                  Grid Ayarları
+                </h4>
                 <div className="flex items-center gap-2">
                   <input
                     type="checkbox"
                     id="showInGrid"
                     checked={form.showInGrid ?? true}
-                    onChange={(e) => setForm(f => ({ ...f, showInGrid: e.target.checked }))}
+                    onChange={(e) =>
+                      setForm((f) => ({ ...f, showInGrid: e.target.checked }))
+                    }
                     className="rounded border-gray-300"
                   />
-                  <label htmlFor="showInGrid" className="text-sm text-gray-700">Grid'de Göster</label>
+                  <label htmlFor="showInGrid" className="text-sm text-gray-700">
+                    Grid'de Göster
+                  </label>
                 </div>
                 {form.showInGrid && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Sütun Sırası</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Sütun Sırası
+                    </label>
                     <Input
                       type="number"
                       min={1}
                       value={form.columnOrder || ''}
-                      onChange={(e) => setForm(f => ({ ...f, columnOrder: parseInt(e.target.value) || undefined }))}
+                      onChange={(e) =>
+                        setForm((f) => ({
+                          ...f,
+                          columnOrder: parseInt(e.target.value) || undefined,
+                        }))
+                      }
                       placeholder="Opsiyonel"
                     />
                   </div>
                 )}
               </div>
               <div className="space-y-3">
-                <h4 className="text-sm font-semibold text-gray-700">RAG Eşikleri</h4>
+                <h4 className="text-sm font-semibold text-gray-700">
+                  RAG Eşikleri
+                </h4>
                 <div>
                   <label className="block text-sm text-gray-600 mb-1">
                     <span className="w-2 h-2 rounded-full bg-green-500 inline-block mr-1" />
@@ -636,10 +825,14 @@ export function KpiManagementPage() {
                   <Input
                     type="number"
                     value={form.ragGreenThreshold ?? ''}
-                    onChange={(e) => setForm(f => ({
-                      ...f,
-                      ragGreenThreshold: e.target.value ? parseFloat(e.target.value) : undefined,
-                    }))}
+                    onChange={(e) =>
+                      setForm((f) => ({
+                        ...f,
+                        ragGreenThreshold: e.target.value
+                          ? parseFloat(e.target.value)
+                          : undefined,
+                      }))
+                    }
                     placeholder="Ör: 20"
                   />
                 </div>
@@ -651,10 +844,14 @@ export function KpiManagementPage() {
                   <Input
                     type="number"
                     value={form.ragAmberThreshold ?? ''}
-                    onChange={(e) => setForm(f => ({
-                      ...f,
-                      ragAmberThreshold: e.target.value ? parseFloat(e.target.value) : undefined,
-                    }))}
+                    onChange={(e) =>
+                      setForm((f) => ({
+                        ...f,
+                        ragAmberThreshold: e.target.value
+                          ? parseFloat(e.target.value)
+                          : undefined,
+                      }))
+                    }
                     placeholder="Ör: 10"
                   />
                 </div>
@@ -667,22 +864,30 @@ export function KpiManagementPage() {
                 type="checkbox"
                 id="isActive"
                 checked={form.isActive ?? true}
-                onChange={(e) => setForm(f => ({ ...f, isActive: e.target.checked }))}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, isActive: e.target.checked }))
+                }
                 className="rounded border-gray-300"
               />
-              <label htmlFor="isActive" className="text-sm text-gray-700">Aktif</label>
+              <label htmlFor="isActive" className="text-sm text-gray-700">
+                Aktif
+              </label>
             </div>
           </div>
 
           <DialogFooter>
-            <Button variant="outline" onClick={closeModal}>İptal</Button>
+            <Button variant="outline" onClick={closeModal}>
+              İptal
+            </Button>
             <Button
               onClick={handleSubmit}
               disabled={createMutation.isPending || updateMutation.isPending}
             >
               {createMutation.isPending || updateMutation.isPending
                 ? 'Kaydediliyor...'
-                : editingKpi ? 'Güncelle' : 'Oluştur'}
+                : editingKpi
+                  ? 'Güncelle'
+                  : 'Oluştur'}
             </Button>
           </DialogFooter>
         </DialogContent>

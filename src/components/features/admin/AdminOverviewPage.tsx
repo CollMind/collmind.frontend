@@ -13,15 +13,19 @@ export function AdminOverviewPage() {
   // Müşteri verilerini getir - filters olmadan tüm müşterileri al
   // Backend'den paginated response gelebilir, bu yüzden useCustomers hook'unu kullanıyoruz
   const { data: customers, isLoading: customersLoading } = useCustomers();
-  
+
   // Response formatını kontrol et: array veya paginated object olabilir
   let customersArray: any[] = [];
   if (Array.isArray(customers)) {
     customersArray = customers;
-  } else if (customers && typeof customers === 'object' && 'data' in customers) {
+  } else if (
+    customers &&
+    typeof customers === 'object' &&
+    'data' in customers
+  ) {
     customersArray = (customers as any).data || [];
   }
-  
+
   const totalCustomers = customersArray.length;
 
   // CPL verilerini getir
@@ -56,7 +60,8 @@ export function AdminOverviewPage() {
   const kpisArray = Array.isArray(kpis) ? kpis : [];
   const totalKpis = kpisArray.length;
 
-  const isLoading = customersLoading || cplsLoading || fusLoading || skusLoading || kpisLoading;
+  const isLoading =
+    customersLoading || cplsLoading || fusLoading || skusLoading || kpisLoading;
 
   if (isLoading) {
     return (
@@ -70,7 +75,9 @@ export function AdminOverviewPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold">Admin Genel Bakış</h1>
-        <p className="text-gray-600 mt-2">Master veri yönetimi ve istatistikler</p>
+        <p className="text-gray-600 mt-2">
+          Master veri yönetimi ve istatistikler
+        </p>
       </div>
 
       {/* Master Data Kartları */}
@@ -107,7 +114,9 @@ export function AdminOverviewPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{totalFus}</div>
-            <p className="text-xs text-muted-foreground">Toplam Forecasting Unit</p>
+            <p className="text-xs text-muted-foreground">
+              Toplam Forecasting Unit
+            </p>
           </CardContent>
         </Card>
 

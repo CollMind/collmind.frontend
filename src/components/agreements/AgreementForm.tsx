@@ -91,12 +91,14 @@ export function AgreementForm({
 
   const handleAddParam = () => {
     if (newParamKey && newParamValue) {
-      setFormData(prev => ({
+      setFormData((prev) => ({
         ...prev,
         additionalParams: {
           ...prev.additionalParams,
-          [newParamKey]: isNaN(Number(newParamValue)) ? newParamValue : Number(newParamValue)
-        }
+          [newParamKey]: isNaN(Number(newParamValue))
+            ? newParamValue
+            : Number(newParamValue),
+        },
       }));
       setNewParamKey('');
       setNewParamValue('');
@@ -104,7 +106,7 @@ export function AgreementForm({
   };
 
   const handleRemoveParam = (key: string) => {
-    setFormData(prev => {
+    setFormData((prev) => {
       const newParams = { ...prev.additionalParams };
       delete newParams[key];
       return { ...prev, additionalParams: newParams };
@@ -145,9 +147,12 @@ export function AgreementForm({
     }
 
     if (step === 5) {
-      const capAmount = typeof formData.capTotalAmount === 'number' ? formData.capTotalAmount : toNumber(formData.capTotalAmount);
+      const capAmount =
+        typeof formData.capTotalAmount === 'number'
+          ? formData.capTotalAmount
+          : toNumber(formData.capTotalAmount);
       if (!capAmount || capAmount <= 0) {
-        newErrors.capTotalAmount = 'Bütçe tavanı 0\'dan büyük olmalıdır';
+        newErrors.capTotalAmount = "Bütçe tavanı 0'dan büyük olmalıdır";
       }
       if (!formData.startDate) {
         newErrors.startDate = 'Başlangıç tarihi zorunludur';
@@ -159,13 +164,17 @@ export function AgreementForm({
         const start = new Date(formData.startDate);
         const end = new Date(formData.endDate);
         if (end <= start) {
-          newErrors.endDate = 'Bitiş tarihi başlangıç tarihinden sonra olmalıdır';
+          newErrors.endDate =
+            'Bitiş tarihi başlangıç tarihinden sonra olmalıdır';
         }
       }
     }
 
     if (step === 6) {
-      if (!formData.justification || formData.justification.trim().length < 10) {
+      if (
+        !formData.justification ||
+        formData.justification.trim().length < 10
+      ) {
         newErrors.justification = 'Gerekçe en az 10 karakter olmalıdır';
       }
     }
@@ -217,12 +226,13 @@ export function AgreementForm({
           <React.Fragment key={step.id}>
             <div className="flex items-center">
               <div
-                className={`flex items-center justify-center w-10 h-10 rounded-full border-2 ${currentStep > step.id
-                  ? 'bg-green-500 border-green-500 text-white'
-                  : currentStep === step.id
-                    ? 'bg-blue-500 border-blue-500 text-white'
-                    : 'bg-white border-gray-300 text-gray-500'
-                  }`}
+                className={`flex items-center justify-center w-10 h-10 rounded-full border-2 ${
+                  currentStep > step.id
+                    ? 'bg-green-500 border-green-500 text-white'
+                    : currentStep === step.id
+                      ? 'bg-blue-500 border-blue-500 text-white'
+                      : 'bg-white border-gray-300 text-gray-500'
+                }`}
               >
                 {currentStep > step.id ? (
                   <Check className="h-5 w-5" />
@@ -231,16 +241,20 @@ export function AgreementForm({
                 )}
               </div>
               <span
-                className={`ml-2 text-sm ${currentStep >= step.id ? 'text-gray-900 font-medium' : 'text-gray-500'
-                  }`}
+                className={`ml-2 text-sm ${
+                  currentStep >= step.id
+                    ? 'text-gray-900 font-medium'
+                    : 'text-gray-500'
+                }`}
               >
                 {step.title}
               </span>
             </div>
             {index < STEPS.length - 1 && (
               <div
-                className={`flex-1 h-0.5 mx-4 ${currentStep > step.id ? 'bg-green-500' : 'bg-gray-300'
-                  }`}
+                className={`flex-1 h-0.5 mx-4 ${
+                  currentStep > step.id ? 'bg-green-500' : 'bg-gray-300'
+                }`}
               />
             )}
           </React.Fragment>
@@ -278,24 +292,36 @@ export function AgreementForm({
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="agreementType">
-                  Anlaşma Tipi * <span className="text-xs text-gray-500">(STA ≤30 gün, LTA &gt;30 gün)</span>
+                  Anlaşma Tipi *{' '}
+                  <span className="text-xs text-gray-500">
+                    (STA ≤30 gün, LTA &gt;30 gün)
+                  </span>
                 </Label>
                 <Select
                   value={formData.agreementType}
                   onValueChange={(value) =>
-                    setFormData({ ...formData, agreementType: value as AgreementType })
+                    setFormData({
+                      ...formData,
+                      agreementType: value as AgreementType,
+                    })
                   }
                 >
                   <SelectTrigger id="agreementType">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value={AgreementType.STA}>STA (Short-Term)</SelectItem>
-                    <SelectItem value={AgreementType.LTA}>LTA (Long-Term)</SelectItem>
+                    <SelectItem value={AgreementType.STA}>
+                      STA (Short-Term)
+                    </SelectItem>
+                    <SelectItem value={AgreementType.LTA}>
+                      LTA (Long-Term)
+                    </SelectItem>
                   </SelectContent>
                 </Select>
                 {errors.agreementType && (
-                  <p className="text-xs text-red-600 mt-1">{errors.agreementType}</p>
+                  <p className="text-xs text-red-600 mt-1">
+                    {errors.agreementType}
+                  </p>
                 )}
               </div>
               <div>
@@ -335,7 +361,9 @@ export function AgreementForm({
               <Input
                 id="cplId"
                 value={formData.cplId}
-                onChange={(e) => setFormData({ ...formData, cplId: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, cplId: e.target.value })
+                }
                 placeholder="Müşteri ID (UUID)"
                 required
               />
@@ -351,7 +379,9 @@ export function AgreementForm({
               <Input
                 id="regionId"
                 value={formData.regionId || ''}
-                onChange={(e) => setFormData({ ...formData, regionId: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, regionId: e.target.value })
+                }
                 placeholder="Bölge ID (UUID)"
               />
             </div>
@@ -360,7 +390,9 @@ export function AgreementForm({
               <Input
                 id="categoryId"
                 value={formData.categoryId || ''}
-                onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, categoryId: e.target.value })
+                }
                 placeholder="Kategori ID (UUID)"
               />
             </div>
@@ -377,7 +409,9 @@ export function AgreementForm({
               <Input
                 id="fuId"
                 value={formData.fuId}
-                onChange={(e) => setFormData({ ...formData, fuId: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, fuId: e.target.value })
+                }
                 placeholder="FU ID (UUID)"
                 required
               />
@@ -390,7 +424,9 @@ export function AgreementForm({
               <Input
                 id="guId"
                 value={formData.guId || ''}
-                onChange={(e) => setFormData({ ...formData, guId: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, guId: e.target.value })
+                }
                 placeholder="GU ID (UUID)"
               />
             </div>
@@ -426,7 +462,9 @@ export function AgreementForm({
               <Input
                 id="tacticId"
                 value={formData.tacticId}
-                onChange={(e) => setFormData({ ...formData, tacticId: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, tacticId: e.target.value })
+                }
                 placeholder="Taktik ID (UUID)"
                 required
               />
@@ -439,7 +477,9 @@ export function AgreementForm({
               <Input
                 id="mechanicId"
                 value={formData.mechanicId}
-                onChange={(e) => setFormData({ ...formData, mechanicId: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, mechanicId: e.target.value })
+                }
                 placeholder="Mekanik ID (UUID)"
                 required
               />
@@ -453,16 +493,25 @@ export function AgreementForm({
                 <Select
                   value={formData.mechanicType}
                   onValueChange={(value) =>
-                    setFormData({ ...formData, mechanicType: value as MechanicType })
+                    setFormData({
+                      ...formData,
+                      mechanicType: value as MechanicType,
+                    })
                   }
                 >
                   <SelectTrigger id="mechanicType">
                     <SelectValue placeholder="Seçiniz" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value={MechanicType.AMOUNT}>Sabit (AMOUNT)</SelectItem>
-                    <SelectItem value={MechanicType.PERCENT}>Yüzde (PERCENT)</SelectItem>
-                    <SelectItem value={MechanicType.AMOUNT_PER_UNIT}>Birim Başına Tutar (AMOUNT_PER_UNIT)</SelectItem>
+                    <SelectItem value={MechanicType.AMOUNT}>
+                      Sabit (AMOUNT)
+                    </SelectItem>
+                    <SelectItem value={MechanicType.PERCENT}>
+                      Yüzde (PERCENT)
+                    </SelectItem>
+                    <SelectItem value={MechanicType.AMOUNT_PER_UNIT}>
+                      Birim Başına Tutar (AMOUNT_PER_UNIT)
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -486,8 +535,12 @@ export function AgreementForm({
 
             {/* Dynamic Parameters Section */}
             <div className="pt-4 border-t mt-4">
-              <Label className="text-base font-semibold">Ek Parametreler (Opsiyonel)</Label>
-              <p className="text-xs text-gray-500 mb-2">Taktik için gerekli ek parametreleri buradan ekleyebilirsiniz.</p>
+              <Label className="text-base font-semibold">
+                Ek Parametreler (Opsiyonel)
+              </Label>
+              <p className="text-xs text-gray-500 mb-2">
+                Taktik için gerekli ek parametreleri buradan ekleyebilirsiniz.
+              </p>
               <div className="flex gap-2 mb-2">
                 <Input
                   placeholder="Parametre Adı"
@@ -501,18 +554,41 @@ export function AgreementForm({
                   onChange={(e) => setNewParamValue(e.target.value)}
                   className="flex-1"
                 />
-                <Button type="button" variant="secondary" onClick={handleAddParam}>Ekle</Button>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={handleAddParam}
+                >
+                  Ekle
+                </Button>
               </div>
               <div className="space-y-2 max-h-40 overflow-y-auto">
-                {formData.additionalParams && Object.entries(formData.additionalParams).map(([key, value]) => (
-                  <div key={key} className="flex justify-between items-center bg-gray-50 p-2 rounded border border-gray-100">
-                    <span className="text-sm font-medium">{key}: <span className="font-normal text-gray-700">{String(value)}</span></span>
-                    <Button type="button" variant="ghost" size="sm" onClick={() => handleRemoveParam(key)} className="h-6 w-6 p-0 hover:text-red-600">
-                      <span className="sr-only">Sil</span>
-                      &times;
-                    </Button>
-                  </div>
-                ))}
+                {formData.additionalParams &&
+                  Object.entries(formData.additionalParams).map(
+                    ([key, value]) => (
+                      <div
+                        key={key}
+                        className="flex justify-between items-center bg-gray-50 p-2 rounded border border-gray-100"
+                      >
+                        <span className="text-sm font-medium">
+                          {key}:{' '}
+                          <span className="font-normal text-gray-700">
+                            {String(value)}
+                          </span>
+                        </span>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleRemoveParam(key)}
+                          className="h-6 w-6 p-0 hover:text-red-600"
+                        >
+                          <span className="sr-only">Sil</span>
+                          &times;
+                        </Button>
+                      </div>
+                    )
+                  )}
               </div>
             </div>
           </CardContent>
@@ -546,7 +622,9 @@ export function AgreementForm({
                   </p>
                 )}
                 {errors.capTotalAmount && (
-                  <p className="text-xs text-red-600 mt-1">{errors.capTotalAmount}</p>
+                  <p className="text-xs text-red-600 mt-1">
+                    {errors.capTotalAmount}
+                  </p>
                 )}
               </div>
               <div>
@@ -561,8 +639,12 @@ export function AgreementForm({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value={SpendType.OFF_INVOICE}>Off-Invoice</SelectItem>
-                    <SelectItem value={SpendType.ON_INVOICE}>On-Invoice</SelectItem>
+                    <SelectItem value={SpendType.OFF_INVOICE}>
+                      Off-Invoice
+                    </SelectItem>
+                    <SelectItem value={SpendType.ON_INVOICE}>
+                      On-Invoice
+                    </SelectItem>
                     <SelectItem value={SpendType.BOTH}>Both</SelectItem>
                   </SelectContent>
                 </Select>
@@ -575,11 +657,15 @@ export function AgreementForm({
                   id="startDate"
                   type="date"
                   value={formData.startDate}
-                  onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, startDate: e.target.value })
+                  }
                   required
                 />
                 {errors.startDate && (
-                  <p className="text-xs text-red-600 mt-1">{errors.startDate}</p>
+                  <p className="text-xs text-red-600 mt-1">
+                    {errors.startDate}
+                  </p>
                 )}
               </div>
               <div>
@@ -588,7 +674,9 @@ export function AgreementForm({
                   id="endDate"
                   type="date"
                   value={formData.endDate}
-                  onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, endDate: e.target.value })
+                  }
                   required
                 />
                 {errors.endDate && (
@@ -612,10 +700,18 @@ export function AgreementForm({
                     <SelectValue placeholder="Mutabakat periyodu seçin" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value={ReconciliationPeriod.WEEKLY}>Haftalık</SelectItem>
-                    <SelectItem value={ReconciliationPeriod.MONTHLY}>Aylık</SelectItem>
-                    <SelectItem value={ReconciliationPeriod.QUARTERLY}>Üç Aylık</SelectItem>
-                    <SelectItem value={ReconciliationPeriod.YEARLY}>Yıllık</SelectItem>
+                    <SelectItem value={ReconciliationPeriod.WEEKLY}>
+                      Haftalık
+                    </SelectItem>
+                    <SelectItem value={ReconciliationPeriod.MONTHLY}>
+                      Aylık
+                    </SelectItem>
+                    <SelectItem value={ReconciliationPeriod.QUARTERLY}>
+                      Üç Aylık
+                    </SelectItem>
+                    <SelectItem value={ReconciliationPeriod.YEARLY}>
+                      Yıllık
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -624,7 +720,9 @@ export function AgreementForm({
               <Label htmlFor="currency">Para Birimi</Label>
               <Select
                 value={formData.currency}
-                onValueChange={(value) => setFormData({ ...formData, currency: value })}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, currency: value })
+                }
               >
                 <SelectTrigger id="currency">
                   <SelectValue />
@@ -660,7 +758,9 @@ export function AgreementForm({
                 En az 10 karakter olmalıdır
               </p>
               {errors.justification && (
-                <p className="text-xs text-red-600 mt-1">{errors.justification}</p>
+                <p className="text-xs text-red-600 mt-1">
+                  {errors.justification}
+                </p>
               )}
             </div>
             <div>
@@ -702,7 +802,9 @@ export function AgreementForm({
             </Button>
           ) : (
             <Button type="submit" disabled={isLoading}>
-              {isLoading ? 'Oluşturuluyor...' : (
+              {isLoading ? (
+                'Oluşturuluyor...'
+              ) : (
                 <>
                   <Check className="h-4 w-4 mr-2" />
                   Oluştur

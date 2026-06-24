@@ -27,7 +27,11 @@ export function FuSelect({
   guId,
   categoryId,
 }: FuSelectProps) {
-  const { data: fus = [], isLoading } = useForecastingUnits(activeOnly, guId, categoryId);
+  const { data: fus = [], isLoading } = useForecastingUnits(
+    activeOnly,
+    guId,
+    categoryId
+  );
 
   return (
     <DynamicSelect

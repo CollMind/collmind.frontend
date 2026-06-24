@@ -2,14 +2,14 @@ import { useQuery } from '@tanstack/react-query';
 import { planEndpoints } from '@/api/endpoints/plans.endpoints';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { 
-  TrendingUp, 
-  Zap, 
-  Shield, 
-  Clock, 
+import {
+  TrendingUp,
+  Zap,
+  Shield,
+  Clock,
   Package,
   ArrowDown,
-  ArrowRight
+  ArrowRight,
 } from 'lucide-react';
 
 interface PlanAnalysisProps {
@@ -19,7 +19,7 @@ interface PlanAnalysisProps {
 export function PlanAnalysis({ planId }: PlanAnalysisProps) {
   const { data: analysis, isLoading } = useQuery({
     queryKey: ['plan-analysis', planId],
-    queryFn: () => planEndpoints.getAnalysis(planId).then(res => res.data),
+    queryFn: () => planEndpoints.getAnalysis(planId).then((res) => res.data),
     enabled: !!planId,
   });
 
@@ -55,7 +55,10 @@ export function PlanAnalysis({ planId }: PlanAnalysisProps) {
   const getRoiStatusBadge = () => {
     if (analysis.gpRoiPerformance.status === 'BELOW_TARGET') {
       return (
-        <Badge variant="destructive" className="bg-red-100 text-red-800 border-red-200">
+        <Badge
+          variant="destructive"
+          className="bg-red-100 text-red-800 border-red-200"
+        >
           <ArrowDown className="h-3 w-3 mr-1" />
           Hedef Altı
         </Badge>
@@ -76,12 +79,14 @@ export function PlanAnalysis({ planId }: PlanAnalysisProps) {
   };
 
   // ON/OFF Split percentage
-  const onInvoicePercentage = analysis.onOffSplit.total > 0
-    ? (analysis.onOffSplit.onInvoice / analysis.onOffSplit.total) * 100
-    : 0;
-  const offInvoicePercentage = analysis.onOffSplit.total > 0
-    ? (analysis.onOffSplit.offInvoice / analysis.onOffSplit.total) * 100
-    : 0;
+  const onInvoicePercentage =
+    analysis.onOffSplit.total > 0
+      ? (analysis.onOffSplit.onInvoice / analysis.onOffSplit.total) * 100
+      : 0;
+  const offInvoicePercentage =
+    analysis.onOffSplit.total > 0
+      ? (analysis.onOffSplit.offInvoice / analysis.onOffSplit.total) * 100
+      : 0;
 
   return (
     <div className="space-y-6">
@@ -104,18 +109,20 @@ export function PlanAnalysis({ planId }: PlanAnalysisProps) {
                   ? formatPercentage(analysis.gpRoiPerformance.currentRoi, 1)
                   : '%0.0'}
               </div>
-              <div className="mt-2">
-                {getRoiStatusBadge()}
-              </div>
+              <div className="mt-2">{getRoiStatusBadge()}</div>
             </div>
             <div className="space-y-1 text-xs">
               <div className="flex justify-between text-gray-600">
                 <span>TARGET ROI</span>
-                <span className="font-medium">{formatPercentage(analysis.gpRoiPerformance.targetRoi, 1)}</span>
+                <span className="font-medium">
+                  {formatPercentage(analysis.gpRoiPerformance.targetRoi, 1)}
+                </span>
               </div>
               <div className="flex justify-between text-gray-600">
                 <span>INCREMENTAL GP</span>
-                <span className="font-medium">{formatCurrency(analysis.gpRoiPerformance.incrementalGp)}</span>
+                <span className="font-medium">
+                  {formatCurrency(analysis.gpRoiPerformance.incrementalGp)}
+                </span>
               </div>
             </div>
           </CardContent>
@@ -141,7 +148,9 @@ export function PlanAnalysis({ planId }: PlanAnalysisProps) {
             <div className="space-y-1 text-xs">
               <div className="flex justify-between text-gray-600">
                 <span>PLANNED GP</span>
-                <span className="font-medium">{formatCurrency(analysis.financialSummary.plannedGp)}</span>
+                <span className="font-medium">
+                  {formatCurrency(analysis.financialSummary.plannedGp)}
+                </span>
               </div>
             </div>
           </CardContent>
@@ -161,21 +170,25 @@ export function PlanAnalysis({ planId }: PlanAnalysisProps) {
             <div className="space-y-2">
               <div className="flex items-center justify-between text-xs">
                 <span className="text-gray-600">On-Invoice</span>
-                <span className="font-medium">{formatPercentage(onInvoicePercentage, 1)}</span>
+                <span className="font-medium">
+                  {formatPercentage(onInvoicePercentage, 1)}
+                </span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
-                <div 
-                  className="bg-blue-600 h-2 rounded-full" 
+                <div
+                  className="bg-blue-600 h-2 rounded-full"
                   style={{ width: `${onInvoicePercentage}%` }}
                 />
               </div>
               <div className="flex items-center justify-between text-xs">
                 <span className="text-gray-600">Off-Invoice</span>
-                <span className="font-medium">{formatPercentage(offInvoicePercentage, 1)}</span>
+                <span className="font-medium">
+                  {formatPercentage(offInvoicePercentage, 1)}
+                </span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-2">
-                <div 
-                  className="bg-purple-600 h-2 rounded-full" 
+                <div
+                  className="bg-purple-600 h-2 rounded-full"
                   style={{ width: `${offInvoicePercentage}%` }}
                 />
               </div>
@@ -200,7 +213,10 @@ export function PlanAnalysis({ planId }: PlanAnalysisProps) {
             <div className="space-y-3">
               {analysis.fuRoiComparison.length > 0 ? (
                 analysis.fuRoiComparison.map((fu: any) => (
-                  <div key={fu.fuId} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
+                  <div
+                    key={fu.fuId}
+                    className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0"
+                  >
                     <span className="text-sm text-gray-700">{fu.fuName}</span>
                     <span className="text-sm font-medium text-gray-900">
                       {fu.roi !== null ? formatPercentage(fu.roi, 1) : 'N/A'}
@@ -228,15 +244,20 @@ export function PlanAnalysis({ planId }: PlanAnalysisProps) {
             <div className="space-y-3">
               {analysis.spendBreakdown.length > 0 ? (
                 analysis.spendBreakdown.map((item: any, index: number) => (
-                  <div key={index} className="flex items-center justify-between py-2">
+                  <div
+                    key={index}
+                    className="flex items-center justify-between py-2"
+                  >
                     <div className="flex items-center gap-2">
-                      <div 
+                      <div
                         className="w-3 h-3 rounded-full"
-                        style={{ 
-                          backgroundColor: index === 0 ? '#3B82F6' : '#8B5CF6' 
+                        style={{
+                          backgroundColor: index === 0 ? '#3B82F6' : '#8B5CF6',
                         }}
                       />
-                      <span className="text-sm text-gray-700">{item.tacticName}</span>
+                      <span className="text-sm text-gray-700">
+                        {item.tacticName}
+                      </span>
                     </div>
                     <div className="text-right">
                       <div className="text-sm font-medium text-gray-900">
@@ -249,7 +270,9 @@ export function PlanAnalysis({ planId }: PlanAnalysisProps) {
                   </div>
                 ))
               ) : (
-                <div className="text-sm text-gray-500">Henüz harcama yapılmamış</div>
+                <div className="text-sm text-gray-500">
+                  Henüz harcama yapılmamış
+                </div>
               )}
             </div>
           </CardContent>
@@ -291,13 +314,19 @@ export function PlanAnalysis({ planId }: PlanAnalysisProps) {
             {/* Middle: Uplift Performance */}
             <div className="space-y-2">
               <div>
-                <div className="text-xs text-gray-500 mb-1">UPLIFT PERFORMANSI</div>
+                <div className="text-xs text-gray-500 mb-1">
+                  UPLIFT PERFORMANSI
+                </div>
                 <div className="text-3xl font-bold text-orange-600">
-                  {formatPercentage(analysis.volumeAnalysis.upliftPercentage, 1)}
+                  {formatPercentage(
+                    analysis.volumeAnalysis.upliftPercentage,
+                    1
+                  )}
                 </div>
               </div>
               <div className="text-sm text-orange-600 font-medium">
-                +{formatNumber(analysis.volumeAnalysis.incrementalVolume, 0)} ADET
+                +{formatNumber(analysis.volumeAnalysis.incrementalVolume, 0)}{' '}
+                ADET
               </div>
             </div>
 
@@ -306,22 +335,37 @@ export function PlanAnalysis({ planId }: PlanAnalysisProps) {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-gray-200">
-                    <th className="text-left py-2 text-xs font-semibold text-gray-600 uppercase">BASE</th>
-                    <th className="text-left py-2 text-xs font-semibold text-gray-600 uppercase">PLANNED</th>
-                    <th className="text-left py-2 text-xs font-semibold text-gray-600 uppercase">UPLIFT</th>
+                    <th className="text-left py-2 text-xs font-semibold text-gray-600 uppercase">
+                      BASE
+                    </th>
+                    <th className="text-left py-2 text-xs font-semibold text-gray-600 uppercase">
+                      PLANNED
+                    </th>
+                    <th className="text-left py-2 text-xs font-semibold text-gray-600 uppercase">
+                      UPLIFT
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
                   {analysis.volumeAnalysis.fuDetails.map((fu: any) => (
                     <tr key={fu.fuId} className="border-b border-gray-100">
-                      <td className="py-2 text-gray-700">{formatNumber(fu.baseVolume, 0)}</td>
-                      <td className="py-2 font-semibold text-gray-900">{formatNumber(fu.plannedVolume, 0)}</td>
-                      <td className="py-2 text-gray-700">{formatPercentage(fu.uplift, 0)}</td>
+                      <td className="py-2 text-gray-700">
+                        {formatNumber(fu.baseVolume, 0)}
+                      </td>
+                      <td className="py-2 font-semibold text-gray-900">
+                        {formatNumber(fu.plannedVolume, 0)}
+                      </td>
+                      <td className="py-2 text-gray-700">
+                        {formatPercentage(fu.uplift, 0)}
+                      </td>
                     </tr>
                   ))}
                   {analysis.volumeAnalysis.fuDetails.length === 0 && (
                     <tr>
-                      <td colSpan={3} className="py-4 text-center text-gray-500 text-xs">
+                      <td
+                        colSpan={3}
+                        className="py-4 text-center text-gray-500 text-xs"
+                      >
                         Henüz FU eklenmemiş
                       </td>
                     </tr>

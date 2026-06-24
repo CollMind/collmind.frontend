@@ -199,15 +199,23 @@ export interface CashFlowReport {
 
 export const financeReportingEndpoints = {
   getBudgetUtilization: (filters: ReportFilters) =>
-    apiClient.get<BudgetUtilizationReport>('/finance-reporting/budget-utilization', { params: filters }),
+    apiClient.get<BudgetUtilizationReport>(
+      '/finance-reporting/budget-utilization',
+      { params: filters }
+    ),
 
-  getSpendTrend: (filters: ReportFilters, granularity: 'daily' | 'weekly' | 'monthly' = 'monthly') =>
+  getSpendTrend: (
+    filters: ReportFilters,
+    granularity: 'daily' | 'weekly' | 'monthly' = 'monthly'
+  ) =>
     apiClient.get<TrendReport>('/finance-reporting/spend-trend', {
       params: { ...filters, granularity },
     }),
 
   getSpendComposition: (filters: ReportFilters) =>
-    apiClient.get<CompositionReport>('/finance-reporting/spend-composition', { params: filters }),
+    apiClient.get<CompositionReport>('/finance-reporting/spend-composition', {
+      params: filters,
+    }),
 
   getPlanPerformance: (filters: ReportFilters, pagination: PaginationParams) =>
     apiClient.get<PaginatedPlanReport>('/finance-reporting/plan-performance', {
@@ -215,12 +223,22 @@ export const financeReportingEndpoints = {
     }),
 
   getBudgetAtRisk: (filters: ReportFilters) =>
-    apiClient.get<RiskReport>('/finance-reporting/budget-at-risk', { params: filters }),
+    apiClient.get<RiskReport>('/finance-reporting/budget-at-risk', {
+      params: filters,
+    }),
 
   getMechanicEffectiveness: (filters: ReportFilters) =>
-    apiClient.get<MechanicReport>('/finance-reporting/mechanic-effectiveness', { params: filters }),
+    apiClient.get<MechanicReport>('/finance-reporting/mechanic-effectiveness', {
+      params: filters,
+    }),
 
-  getVarianceAnalysis: (filters: ReportFilters, comparisonType: 'budget_vs_actual' | 'forecast_vs_actual' | 'previous_period' = 'budget_vs_actual') =>
+  getVarianceAnalysis: (
+    filters: ReportFilters,
+    comparisonType:
+      | 'budget_vs_actual'
+      | 'forecast_vs_actual'
+      | 'previous_period' = 'budget_vs_actual'
+  ) =>
     apiClient.get<VarianceReport>('/finance-reporting/variance-analysis', {
       params: { ...filters, comparisonType },
     }),

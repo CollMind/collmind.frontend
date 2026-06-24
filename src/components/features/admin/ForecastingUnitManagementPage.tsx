@@ -1,7 +1,14 @@
 import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { fuEndpoints, skuEndpoints } from '@/api/endpoints/master-data.endpoints';
-import { useForecastingUnits, useCategories, useGenericUnits } from '@/hooks/useMasterData';
+import {
+  fuEndpoints,
+  skuEndpoints,
+} from '@/api/endpoints/master-data.endpoints';
+import {
+  useForecastingUnits,
+  useCategories,
+  useGenericUnits,
+} from '@/hooks/useMasterData';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -21,7 +28,15 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/useToast';
-import { Plus, Edit, Trash2, Package, Search, ChevronDown, Check } from 'lucide-react';
+import {
+  Plus,
+  Edit,
+  Trash2,
+  Package,
+  Search,
+  ChevronDown,
+  Check,
+} from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -61,7 +76,8 @@ export function ForecastingUnitManagementPage() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isAssignSkuDialogOpen, setIsAssignSkuDialogOpen] = useState(false);
   const [editingFu, setEditingFu] = useState<ForecastingUnit | null>(null);
-  const [selectedFuForSku, setSelectedFuForSku] = useState<ForecastingUnit | null>(null);
+  const [selectedFuForSku, setSelectedFuForSku] =
+    useState<ForecastingUnit | null>(null);
   const [createStep, setCreateStep] = useState(1);
   const [formData, setFormData] = useState({
     categoryId: '',
@@ -76,13 +92,17 @@ export function ForecastingUnitManagementPage() {
   const queryClient = useQueryClient();
 
   const { data: categories = [] } = useCategories(true);
-  const { data: fus = [], isLoading } = useForecastingUnits(false, undefined, selectedCategory !== 'all' ? selectedCategory : undefined);
+  const { data: fus = [], isLoading } = useForecastingUnits(
+    false,
+    undefined,
+    selectedCategory !== 'all' ? selectedCategory : undefined
+  );
   const { data: genericUnits = [] } = useGenericUnits(true);
 
   // Filter by category
   const filteredFus = useMemo(() => {
     let filtered = fus;
-    
+
     if (searchTerm) {
       filtered = filtered.filter(
         (fu) =>
@@ -97,7 +117,11 @@ export function ForecastingUnitManagementPage() {
   // Get SKUs for each FU
   const { data: allSkus = [] } = useQuery({
     queryKey: ['skus', false],
-    queryFn: () => skuEndpoints.getAll(false).then((res) => res.data || []).catch(() => []),
+    queryFn: () =>
+      skuEndpoints
+        .getAll(false)
+        .then((res) => res.data || [])
+        .catch(() => []),
   });
 
   // Calculate metrics for each FU
@@ -127,7 +151,9 @@ export function ForecastingUnitManagementPage() {
       // Success is handled in handleCreateSubmit
     },
     onError: (error: any) => {
-      toast.error(error?.response?.data?.message || 'FU oluşturulurken hata oluştu');
+      toast.error(
+        error?.response?.data?.message || 'FU oluşturulurken hata oluştu'
+      );
     },
   });
 
@@ -140,7 +166,9 @@ export function ForecastingUnitManagementPage() {
       handleEditDialogClose();
     },
     onError: (error: any) => {
-      toast.error(error?.response?.data?.message || 'FU güncellenirken hata oluştu');
+      toast.error(
+        error?.response?.data?.message || 'FU güncellenirken hata oluştu'
+      );
     },
   });
 
@@ -151,7 +179,9 @@ export function ForecastingUnitManagementPage() {
       queryClient.invalidateQueries({ queryKey: ['forecasting-units'] });
     },
     onError: (error: any) => {
-      toast.error(error?.response?.data?.message || 'FU silinirken hata oluştu');
+      toast.error(
+        error?.response?.data?.message || 'FU silinirken hata oluştu'
+      );
     },
   });
 
@@ -165,13 +195,22 @@ export function ForecastingUnitManagementPage() {
       setIsAssignSkuDialogOpen(false);
     },
     onError: (error: any) => {
-      toast.error(error?.response?.data?.message || 'SKU atanırken hata oluştu');
+      toast.error(
+        error?.response?.data?.message || 'SKU atanırken hata oluştu'
+      );
     },
   });
 
   const handleCreate = () => {
     setCreateStep(1);
-    setFormData({ categoryId: '', guId: '', code: '', name: '', description: '', selectedSkuIds: [] });
+    setFormData({
+      categoryId: '',
+      guId: '',
+      code: '',
+      name: '',
+      description: '',
+      selectedSkuIds: [],
+    });
     setSkuSearchTerm('');
     setIsCreateDialogOpen(true);
   };
@@ -179,7 +218,14 @@ export function ForecastingUnitManagementPage() {
   const handleCreateDialogClose = () => {
     setIsCreateDialogOpen(false);
     setCreateStep(1);
-    setFormData({ categoryId: '', guId: '', code: '', name: '', description: '', selectedSkuIds: [] });
+    setFormData({
+      categoryId: '',
+      guId: '',
+      code: '',
+      name: '',
+      description: '',
+      selectedSkuIds: [],
+    });
     setSkuSearchTerm('');
   };
 
@@ -201,7 +247,14 @@ export function ForecastingUnitManagementPage() {
   const handleEditDialogClose = () => {
     setIsEditDialogOpen(false);
     setEditingFu(null);
-    setFormData({ categoryId: '', guId: '', code: '', name: '', description: '', selectedSkuIds: [] });
+    setFormData({
+      categoryId: '',
+      guId: '',
+      code: '',
+      name: '',
+      description: '',
+      selectedSkuIds: [],
+    });
   };
 
   const handleAssignSku = (fu: ForecastingUnit) => {
@@ -217,9 +270,13 @@ export function ForecastingUnitManagementPage() {
         return;
       }
       // Check if there's a GU for this category
-      const categoryGu = genericUnits.find((gu: any) => gu.categoryId === formData.categoryId);
+      const categoryGu = genericUnits.find(
+        (gu: any) => gu.categoryId === formData.categoryId
+      );
       if (!categoryGu) {
-        toast.error('Bu kategori için Generic Unit bulunamadı. Lütfen önce Generic Unit oluşturun.');
+        toast.error(
+          'Bu kategori için Generic Unit bulunamadı. Lütfen önce Generic Unit oluşturun.'
+        );
         return;
       }
       setFormData((prev) => ({ ...prev, guId: categoryGu.id }));
@@ -264,7 +321,11 @@ export function ForecastingUnitManagementPage() {
         handleCreateDialogClose();
       } catch (error: any) {
         console.error('FU oluşturma hatası:', error);
-        toast.error(error?.response?.data?.message || error?.message || 'FU oluşturulurken hata oluştu');
+        toast.error(
+          error?.response?.data?.message ||
+            error?.message ||
+            'FU oluşturulurken hata oluştu'
+        );
       }
     }
   };
@@ -284,7 +345,7 @@ export function ForecastingUnitManagementPage() {
   };
 
   const handleDelete = (id: string) => {
-    if (window.confirm('Bu FU\'yu silmek istediğinizden emin misiniz?')) {
+    if (window.confirm("Bu FU'yu silmek istediğinizden emin misiniz?")) {
       deleteMutation.mutate(id);
     }
   };
@@ -306,19 +367,25 @@ export function ForecastingUnitManagementPage() {
   const availableSkusForSelection = useMemo(() => {
     if (!formData.categoryId) return [];
     if (!allSkus || allSkus.length === 0) return [];
-    
+
     let filtered = allSkus.filter((sku: any) => {
       if (!sku) return false;
       // Filter by category (through GU)
       // SKU might have genericUnit relation loaded or just categoryId
-      const skuCategoryId = sku.genericUnit?.categoryId || sku.genericUnit?.category?.id || sku.categoryId;
+      const skuCategoryId =
+        sku.genericUnit?.categoryId ||
+        sku.genericUnit?.category?.id ||
+        sku.categoryId;
       const matchesCategory = skuCategoryId === formData.categoryId;
-      
+
       // Filter by search term
-      const matchesSearch = !skuSearchTerm || 
-        (sku.code && sku.code.toLowerCase().includes(skuSearchTerm.toLowerCase())) ||
-        (sku.name && sku.name.toLowerCase().includes(skuSearchTerm.toLowerCase()));
-      
+      const matchesSearch =
+        !skuSearchTerm ||
+        (sku.code &&
+          sku.code.toLowerCase().includes(skuSearchTerm.toLowerCase())) ||
+        (sku.name &&
+          sku.name.toLowerCase().includes(skuSearchTerm.toLowerCase()));
+
       return matchesCategory && matchesSearch;
     });
     return filtered;
@@ -334,7 +401,8 @@ export function ForecastingUnitManagementPage() {
       if (!sku) return total;
       // Use defaultBaseVolume or unitPrice as volume indicator
       const skuVolume = sku.defaultBaseVolume || sku.unitPrice || 0;
-      const numericVolume = typeof skuVolume === 'number' ? skuVolume : parseFloat(skuVolume) || 0;
+      const numericVolume =
+        typeof skuVolume === 'number' ? skuVolume : parseFloat(skuVolume) || 0;
       return total + numericVolume;
     }, 0);
     return isNaN(volume) ? 0 : volume;
@@ -360,7 +428,9 @@ export function ForecastingUnitManagementPage() {
   // Filter GU by category
   const filteredGenericUnits = useMemo(() => {
     if (!formData.categoryId) return genericUnits;
-    return genericUnits.filter((gu: any) => gu.categoryId === formData.categoryId);
+    return genericUnits.filter(
+      (gu: any) => gu.categoryId === formData.categoryId
+    );
   }, [genericUnits, formData.categoryId]);
 
   return (
@@ -369,7 +439,8 @@ export function ForecastingUnitManagementPage() {
         <div>
           <h1 className="text-3xl font-bold">FU Yönetimi</h1>
           <p className="text-gray-600 mt-2">
-            Forecasting Unit'lar (FU), SKU'ların planlama için gruplandığı birimlerdir.
+            Forecasting Unit'lar (FU), SKU'ların planlama için gruplandığı
+            birimlerdir.
           </p>
         </div>
         <Button onClick={handleCreate}>
@@ -417,7 +488,9 @@ export function ForecastingUnitManagementPage() {
             <Card key={fu.id} className="hover:shadow-lg transition-shadow">
               <CardContent className="p-6">
                 <div className="flex justify-between items-start mb-4">
-                  <span className="text-sm font-mono text-gray-500">{fu.code}</span>
+                  <span className="text-sm font-mono text-gray-500">
+                    {fu.code}
+                  </span>
                   <Badge variant="outline">
                     {fu.genericUnit?.category?.code || 'N/A'}
                   </Badge>
@@ -446,12 +519,18 @@ export function ForecastingUnitManagementPage() {
                 )}
                 <div className="grid grid-cols-2 gap-4 mb-4">
                   <div>
-                    <div className="text-xs text-gray-500 mb-1">TOPLAM BASE VOL</div>
-                    <div className="text-lg font-semibold">{fu.totalBaseVol.toFixed(3)}</div>
+                    <div className="text-xs text-gray-500 mb-1">
+                      TOPLAM BASE VOL
+                    </div>
+                    <div className="text-lg font-semibold">
+                      {fu.totalBaseVol.toFixed(3)}
+                    </div>
                   </div>
                   <div>
                     <div className="text-xs text-gray-500 mb-1">AKTİF PLAN</div>
-                    <div className="text-lg font-semibold text-green-600">{fu.activePlans}</div>
+                    <div className="text-lg font-semibold text-green-600">
+                      {fu.activePlans}
+                    </div>
                   </div>
                 </div>
                 <div className="flex gap-2">
@@ -502,7 +581,12 @@ export function ForecastingUnitManagementPage() {
                   <CategorySelect
                     value={formData.categoryId}
                     onChange={(value) => {
-                      setFormData({ ...formData, categoryId: value, guId: '', selectedSkuIds: [] });
+                      setFormData({
+                        ...formData,
+                        categoryId: value,
+                        guId: '',
+                        selectedSkuIds: [],
+                      });
                     }}
                     label={undefined}
                     required
@@ -513,7 +597,9 @@ export function ForecastingUnitManagementPage() {
                   <Input
                     id="code"
                     value={formData.code}
-                    onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, code: e.target.value })
+                    }
                     placeholder="ÖRN: FU-HC-001"
                     required
                   />
@@ -523,7 +609,9 @@ export function ForecastingUnitManagementPage() {
                   <Input
                     id="name"
                     value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, name: e.target.value })
+                    }
                     placeholder="Örn: Wella SP Balance Range"
                     required
                   />
@@ -533,13 +621,19 @@ export function ForecastingUnitManagementPage() {
                   <Textarea
                     id="description"
                     value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, description: e.target.value })
+                    }
                     placeholder="FU kapsamı hakkında bilgi..."
                     rows={3}
                   />
                 </div>
                 <div className="flex justify-end gap-2">
-                  <Button type="button" variant="outline" onClick={handleCreateDialogClose}>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleCreateDialogClose}
+                  >
                     İptal
                   </Button>
                   <Button type="submit">Devam Et →</Button>
@@ -575,12 +669,17 @@ export function ForecastingUnitManagementPage() {
                         >
                           <div className="flex items-center gap-3 flex-1">
                             <Checkbox
-                              checked={formData.selectedSkuIds?.includes(sku.id) || false}
+                              checked={
+                                formData.selectedSkuIds?.includes(sku.id) ||
+                                false
+                              }
                               onCheckedChange={() => handleSkuToggle(sku.id)}
                             />
                             <div className="flex-1">
                               <div className="font-medium">{sku.code}</div>
-                              <div className="text-sm text-gray-500">{sku.name}</div>
+                              <div className="text-sm text-gray-500">
+                                {sku.name}
+                              </div>
                             </div>
                           </div>
                         </label>
@@ -593,7 +692,10 @@ export function ForecastingUnitManagementPage() {
                     {formData.selectedSkuIds?.length || 0} SKU Seçildi
                   </div>
                   <div className="text-sm text-gray-600">
-                    Toplam Hacim: {typeof totalVolume === 'number' && !isNaN(totalVolume) ? totalVolume.toFixed(2) : '0.00'}
+                    Toplam Hacim:{' '}
+                    {typeof totalVolume === 'number' && !isNaN(totalVolume)
+                      ? totalVolume.toFixed(2)
+                      : '0.00'}
                   </div>
                 </div>
                 <div className="flex justify-end gap-2">
@@ -604,8 +706,14 @@ export function ForecastingUnitManagementPage() {
                   >
                     ← Geri
                   </Button>
-                  <Button type="submit" disabled={createMutation.isPending} className="bg-green-600 hover:bg-green-700">
-                    {createMutation.isPending ? 'Oluşturuluyor...' : (
+                  <Button
+                    type="submit"
+                    disabled={createMutation.isPending}
+                    className="bg-green-600 hover:bg-green-700"
+                  >
+                    {createMutation.isPending ? (
+                      'Oluşturuluyor...'
+                    ) : (
                       <>
                         <Check className="h-4 w-4 mr-2" />
                         Oluştur
@@ -631,7 +739,9 @@ export function ForecastingUnitManagementPage() {
               <Input
                 id="edit-code"
                 value={formData.code}
-                onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, code: e.target.value })
+                }
                 required
               />
             </div>
@@ -640,7 +750,9 @@ export function ForecastingUnitManagementPage() {
               <Input
                 id="edit-name"
                 value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
                 required
               />
             </div>
@@ -649,12 +761,18 @@ export function ForecastingUnitManagementPage() {
               <Textarea
                 id="edit-description"
                 value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, description: e.target.value })
+                }
                 rows={3}
               />
             </div>
             <div className="flex justify-end gap-2">
-              <Button type="button" variant="outline" onClick={handleEditDialogClose}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleEditDialogClose}
+              >
                 İptal
               </Button>
               <Button type="submit" disabled={updateMutation.isPending}>
@@ -666,7 +784,10 @@ export function ForecastingUnitManagementPage() {
       </Dialog>
 
       {/* Assign SKU Dialog */}
-      <Dialog open={isAssignSkuDialogOpen} onOpenChange={() => setIsAssignSkuDialogOpen(false)}>
+      <Dialog
+        open={isAssignSkuDialogOpen}
+        onOpenChange={() => setIsAssignSkuDialogOpen(false)}
+      >
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>SKU Ata: {selectedFuForSku?.name}</DialogTitle>
@@ -676,7 +797,9 @@ export function ForecastingUnitManagementPage() {
           </DialogHeader>
           <div className="space-y-2 max-h-[400px] overflow-y-auto">
             {availableSkus.length === 0 ? (
-              <p className="text-gray-500 text-center py-4">Atanabilir SKU bulunmamaktadır</p>
+              <p className="text-gray-500 text-center py-4">
+                Atanabilir SKU bulunmamaktadır
+              </p>
             ) : (
               availableSkus.map((sku: any) => {
                 const isAssigned = sku.fuId === selectedFuForSku?.id;
@@ -684,7 +807,9 @@ export function ForecastingUnitManagementPage() {
                   <div
                     key={sku.id}
                     className={`flex items-center justify-between p-3 border rounded-lg ${
-                      isAssigned ? 'bg-green-50 border-green-200' : 'hover:bg-gray-50'
+                      isAssigned
+                        ? 'bg-green-50 border-green-200'
+                        : 'hover:bg-gray-50'
                     }`}
                   >
                     <div>

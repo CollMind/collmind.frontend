@@ -3,8 +3,23 @@ import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { EmptyState } from '@/components/common/EmptyState';
 import { EnumBadge } from '@/components/common/EnumBadge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Edit, Mail, Phone, Building, MapPin, Calendar, Globe, Briefcase } from 'lucide-react';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import {
+  Edit,
+  Mail,
+  Phone,
+  Building,
+  MapPin,
+  Calendar,
+  Globe,
+  Briefcase,
+} from 'lucide-react';
 import { format } from 'date-fns';
 import { tr } from 'date-fns/locale';
 
@@ -101,7 +116,9 @@ export function TenantDetail({ tenantId, onEdit }: TenantDetailProps) {
               <div className="flex items-start gap-3">
                 <Mail className="h-5 w-5 text-gray-400 mt-0.5" />
                 <div>
-                  <p className="text-sm font-medium text-gray-500">İletişim Email</p>
+                  <p className="text-sm font-medium text-gray-500">
+                    İletişim Email
+                  </p>
                   <p className="text-sm text-gray-900">{tenant.contactEmail}</p>
                 </div>
               </div>
@@ -111,7 +128,9 @@ export function TenantDetail({ tenantId, onEdit }: TenantDetailProps) {
               <div className="flex items-start gap-3">
                 <Phone className="h-5 w-5 text-gray-400 mt-0.5" />
                 <div>
-                  <p className="text-sm font-medium text-gray-500">İletişim Telefon</p>
+                  <p className="text-sm font-medium text-gray-500">
+                    İletişim Telefon
+                  </p>
                   <p className="text-sm text-gray-900">{tenant.contactPhone}</p>
                 </div>
               </div>
@@ -121,8 +140,12 @@ export function TenantDetail({ tenantId, onEdit }: TenantDetailProps) {
               <div className="flex items-start gap-3">
                 <Building className="h-5 w-5 text-gray-400 mt-0.5" />
                 <div>
-                  <p className="text-sm font-medium text-gray-500">İletişim Kişisi</p>
-                  <p className="text-sm text-gray-900">{tenant.contactPerson}</p>
+                  <p className="text-sm font-medium text-gray-500">
+                    İletişim Kişisi
+                  </p>
+                  <p className="text-sm text-gray-900">
+                    {tenant.contactPerson}
+                  </p>
                 </div>
               </div>
             )}
@@ -131,7 +154,10 @@ export function TenantDetail({ tenantId, onEdit }: TenantDetailProps) {
       </Card>
 
       {/* Address Card */}
-      {(tenant.address || tenant.city || tenant.country || tenant.postalCode) && (
+      {(tenant.address ||
+        tenant.city ||
+        tenant.country ||
+        tenant.postalCode) && (
         <Card>
           <CardHeader>
             <CardTitle>Adres Bilgileri</CardTitle>
@@ -165,7 +191,9 @@ export function TenantDetail({ tenantId, onEdit }: TenantDetailProps) {
 
               {tenant.postalCode && (
                 <div>
-                  <p className="text-sm font-medium text-gray-500">Posta Kodu</p>
+                  <p className="text-sm font-medium text-gray-500">
+                    Posta Kodu
+                  </p>
                   <p className="text-sm text-gray-900">{tenant.postalCode}</p>
                 </div>
               )}
@@ -184,36 +212,50 @@ export function TenantDetail({ tenantId, onEdit }: TenantDetailProps) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {tenant.taxNumber && (
               <div>
-                <p className="text-sm font-medium text-gray-500">Vergi Numarası</p>
+                <p className="text-sm font-medium text-gray-500">
+                  Vergi Numarası
+                </p>
                 <p className="text-sm text-gray-900">{tenant.taxNumber}</p>
               </div>
             )}
 
             {tenant.companyRegistrationNumber && (
               <div>
-                <p className="text-sm font-medium text-gray-500">Şirket Kayıt Numarası</p>
-                <p className="text-sm text-gray-900">{tenant.companyRegistrationNumber}</p>
+                <p className="text-sm font-medium text-gray-500">
+                  Şirket Kayıt Numarası
+                </p>
+                <p className="text-sm text-gray-900">
+                  {tenant.companyRegistrationNumber}
+                </p>
               </div>
             )}
 
             {tenant.maxUsers && (
               <div>
-                <p className="text-sm font-medium text-gray-500">Maksimum Kullanıcı</p>
+                <p className="text-sm font-medium text-gray-500">
+                  Maksimum Kullanıcı
+                </p>
                 <p className="text-sm text-gray-900">{tenant.maxUsers}</p>
               </div>
             )}
 
             {tenant.maxStorageGB && (
               <div>
-                <p className="text-sm font-medium text-gray-500">Maksimum Depolama (GB)</p>
+                <p className="text-sm font-medium text-gray-500">
+                  Maksimum Depolama (GB)
+                </p>
                 <p className="text-sm text-gray-900">{tenant.maxStorageGB}</p>
               </div>
             )}
 
             {tenant.currentStorageGB !== undefined && (
               <div>
-                <p className="text-sm font-medium text-gray-500">Kullanılan Depolama (GB)</p>
-                <p className="text-sm text-gray-900">{tenant.currentStorageGB}</p>
+                <p className="text-sm font-medium text-gray-500">
+                  Kullanılan Depolama (GB)
+                </p>
+                <p className="text-sm text-gray-900">
+                  {tenant.currentStorageGB}
+                </p>
               </div>
             )}
 
@@ -221,11 +263,17 @@ export function TenantDetail({ tenantId, onEdit }: TenantDetailProps) {
               <div className="flex items-start gap-3">
                 <Calendar className="h-5 w-5 text-gray-400 mt-0.5" />
                 <div>
-                  <p className="text-sm font-medium text-gray-500">Abonelik Başlangıç</p>
+                  <p className="text-sm font-medium text-gray-500">
+                    Abonelik Başlangıç
+                  </p>
                   <p className="text-sm text-gray-900">
-                    {format(new Date(tenant.subscriptionStartDate), 'dd MMMM yyyy', {
-                      locale: tr,
-                    })}
+                    {format(
+                      new Date(tenant.subscriptionStartDate),
+                      'dd MMMM yyyy',
+                      {
+                        locale: tr,
+                      }
+                    )}
                   </p>
                 </div>
               </div>
@@ -235,11 +283,17 @@ export function TenantDetail({ tenantId, onEdit }: TenantDetailProps) {
               <div className="flex items-start gap-3">
                 <Calendar className="h-5 w-5 text-gray-400 mt-0.5" />
                 <div>
-                  <p className="text-sm font-medium text-gray-500">Abonelik Bitiş</p>
+                  <p className="text-sm font-medium text-gray-500">
+                    Abonelik Bitiş
+                  </p>
                   <p className="text-sm text-gray-900">
-                    {format(new Date(tenant.subscriptionEndDate), 'dd MMMM yyyy', {
-                      locale: tr,
-                    })}
+                    {format(
+                      new Date(tenant.subscriptionEndDate),
+                      'dd MMMM yyyy',
+                      {
+                        locale: tr,
+                      }
+                    )}
                   </p>
                 </div>
               </div>
@@ -248,7 +302,9 @@ export function TenantDetail({ tenantId, onEdit }: TenantDetailProps) {
             <div className="flex items-start gap-3">
               <Calendar className="h-5 w-5 text-gray-400 mt-0.5" />
               <div>
-                <p className="text-sm font-medium text-gray-500">Oluşturulma Tarihi</p>
+                <p className="text-sm font-medium text-gray-500">
+                  Oluşturulma Tarihi
+                </p>
                 <p className="text-sm text-gray-900">
                   {format(new Date(tenant.createdAt), 'dd MMMM yyyy, HH:mm', {
                     locale: tr,
@@ -260,7 +316,9 @@ export function TenantDetail({ tenantId, onEdit }: TenantDetailProps) {
             <div className="flex items-start gap-3">
               <Calendar className="h-5 w-5 text-gray-400 mt-0.5" />
               <div>
-                <p className="text-sm font-medium text-gray-500">Güncellenme Tarihi</p>
+                <p className="text-sm font-medium text-gray-500">
+                  Güncellenme Tarihi
+                </p>
                 <p className="text-sm text-gray-900">
                   {format(new Date(tenant.updatedAt), 'dd MMMM yyyy, HH:mm', {
                     locale: tr,
@@ -283,36 +341,56 @@ export function TenantDetail({ tenantId, onEdit }: TenantDetailProps) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {tenant.settings.defaultCurrency && (
                 <div>
-                  <p className="text-sm font-medium text-gray-500">Varsayılan Para Birimi</p>
-                  <p className="text-sm text-gray-900">{tenant.settings.defaultCurrency}</p>
+                  <p className="text-sm font-medium text-gray-500">
+                    Varsayılan Para Birimi
+                  </p>
+                  <p className="text-sm text-gray-900">
+                    {tenant.settings.defaultCurrency}
+                  </p>
                 </div>
               )}
 
               {tenant.settings.timezone && (
                 <div>
-                  <p className="text-sm font-medium text-gray-500">Saat Dilimi</p>
-                  <p className="text-sm text-gray-900">{tenant.settings.timezone}</p>
+                  <p className="text-sm font-medium text-gray-500">
+                    Saat Dilimi
+                  </p>
+                  <p className="text-sm text-gray-900">
+                    {tenant.settings.timezone}
+                  </p>
                 </div>
               )}
 
               {tenant.settings.dateFormat && (
                 <div>
-                  <p className="text-sm font-medium text-gray-500">Tarih Formatı</p>
-                  <p className="text-sm text-gray-900">{tenant.settings.dateFormat}</p>
+                  <p className="text-sm font-medium text-gray-500">
+                    Tarih Formatı
+                  </p>
+                  <p className="text-sm text-gray-900">
+                    {tenant.settings.dateFormat}
+                  </p>
                 </div>
               )}
 
               {tenant.settings.numberFormat && (
                 <div>
-                  <p className="text-sm font-medium text-gray-500">Sayı Formatı</p>
-                  <p className="text-sm text-gray-900">{tenant.settings.numberFormat}</p>
+                  <p className="text-sm font-medium text-gray-500">
+                    Sayı Formatı
+                  </p>
+                  <p className="text-sm text-gray-900">
+                    {tenant.settings.numberFormat}
+                  </p>
                 </div>
               )}
 
               {tenant.settings.fiscalYearStart && (
                 <div>
-                  <p className="text-sm font-medium text-gray-500">Mali Yıl Başlangıcı</p>
-                  <p className="text-sm text-gray-900">{tenant.settings.fiscalYearStart}</p>
+                  <p className="text-sm font-medium text-gray-500">
+                    Mali Yıl Başlangıcı
+                  </p>
+                  <p className="text-sm text-gray-900">
+                    {tenant.settings.fiscalYearStart}
+                  </p>
                 </div>
               )}
             </div>

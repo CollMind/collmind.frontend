@@ -34,7 +34,12 @@ import { setSidebarOpen } from '@/store/slices/ui.slice';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { useMe } from '@/services/users.service';
 import { hasAnyRole } from '@/utils/roleUtils';
 import { UserRole } from '@/types/user.types';
@@ -599,25 +604,29 @@ export function Sidebar() {
 
   const isActive = (href?: string) => {
     if (!href) return false;
-    return location.pathname === href || location.pathname.startsWith(`${href}/`);
+    return (
+      location.pathname === href || location.pathname.startsWith(`${href}/`)
+    );
   };
 
   const hasActiveChild = (item: NavItem): boolean => {
     if (!item.children) return false;
-    return item.children.some((child) => isActive(child.href) || hasActiveChild(child));
+    return item.children.some(
+      (child) => isActive(child.href) || hasActiveChild(child)
+    );
   };
 
   // Auto-expand items with active children, and always expand Admin menu for ADMIN users
   useEffect(() => {
     if (!sidebarOpen) return;
-    
+
     const newExpanded = new Set<string>();
-    
+
     // Always expand Admin menu for ADMIN users
     if (user?.role === 'ADMIN') {
       newExpanded.add('Admin');
     }
-    
+
     const checkAndExpand = (items: NavItem[]) => {
       items.forEach((item) => {
         if (item.children && hasActiveChild(item)) {
@@ -628,7 +637,7 @@ export function Sidebar() {
         }
       });
     };
-    
+
     checkAndExpand(filteredNavigation);
     setExpandedItems(newExpanded);
   }, [location.pathname, sidebarOpen, filteredNavigation, user?.role]);
@@ -656,7 +665,10 @@ export function Sidebar() {
 
     if (hasChildren) {
       return (
-        <div key={item.title} className={cn('space-y-1', isAdminHeader && 'mb-1')}>
+        <div
+          key={item.title}
+          className={cn('space-y-1', isAdminHeader && 'mb-1')}
+        >
           <button
             onClick={() => sidebarOpen && toggleExpand(item.title)}
             className={cn(
@@ -664,8 +676,8 @@ export function Sidebar() {
               isAdminHeader
                 ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400 rounded-none'
                 : hasActive
-                ? 'bg-primary-50 text-primary-700 dark:bg-primary-900/20 dark:text-primary-400 rounded-lg'
-                : 'text-gray-700 dark:text-gray-300 rounded-lg',
+                  ? 'bg-primary-50 text-primary-700 dark:bg-primary-900/20 dark:text-primary-400 rounded-lg'
+                  : 'text-gray-700 dark:text-gray-300 rounded-lg',
               isAdminHeader ? '' : 'hover:bg-gray-100 dark:hover:bg-gray-800',
               indentClass
             )}
@@ -676,8 +688,8 @@ export function Sidebar() {
                 isAdminHeader
                   ? 'text-blue-600 dark:text-blue-400'
                   : hasActive
-                  ? 'text-primary-600 dark:text-primary-400'
-                  : 'text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300'
+                    ? 'text-primary-600 dark:text-primary-400'
+                    : 'text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300'
               )}
             />
             <span className={cn('flex-1 text-left', !sidebarOpen && 'sr-only')}>
@@ -853,7 +865,9 @@ export function Sidebar() {
                 <nav className="space-y-1">
                   {filteredNavigation.map((item) => {
                     const Icon = item.icon;
-                    const active = item.href ? isActive(item.href) : hasActiveChild(item);
+                    const active = item.href
+                      ? isActive(item.href)
+                      : hasActiveChild(item);
 
                     return (
                       <TooltipProvider key={item.title} delayDuration={0}>

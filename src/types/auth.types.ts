@@ -17,4 +17,3 @@ export interface LoginResponse {
     tenantId: string;
   };
 }
-

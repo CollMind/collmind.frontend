@@ -1,6 +1,6 @@
 /**
  * Budget Types
- * 
+ *
  * Budget envelope ve reservation ile ilgili type tanımlamaları
  */
 

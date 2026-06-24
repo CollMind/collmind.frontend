@@ -7,11 +7,8 @@ export const notificationEndpoints = {
     return apiClient.get<Notification[]>('/notifications', { params });
   },
 
-  getUnread: () =>
-    apiClient.get<Notification[]>('/notifications/unread'),
+  getUnread: () => apiClient.get<Notification[]>('/notifications/unread'),
 
   markAsRead: (id: string) =>
     apiClient.post<Notification>(`/notifications/${id}/read`),
 };
-
-

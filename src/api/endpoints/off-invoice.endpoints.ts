@@ -50,9 +50,27 @@ export interface UploadFileResponse {
   validCount: number;
   invalidCount: number;
   warningCount: number;
-  validRows: Array<CreateOffInvoiceTransactionDto & { rowNumber: number; fiscalPeriod?: string }>;
-  invalidRows: Array<CreateOffInvoiceTransactionDto & { rowNumber: number; errors: ValidationError[]; warnings: ValidationError[]; fiscalPeriod?: string }>;
-  warningRows: Array<CreateOffInvoiceTransactionDto & { rowNumber: number; warnings: ValidationError[]; fiscalPeriod?: string }>;
+  validRows: Array<
+    CreateOffInvoiceTransactionDto & {
+      rowNumber: number;
+      fiscalPeriod?: string;
+    }
+  >;
+  invalidRows: Array<
+    CreateOffInvoiceTransactionDto & {
+      rowNumber: number;
+      errors: ValidationError[];
+      warnings: ValidationError[];
+      fiscalPeriod?: string;
+    }
+  >;
+  warningRows: Array<
+    CreateOffInvoiceTransactionDto & {
+      rowNumber: number;
+      warnings: ValidationError[];
+      fiscalPeriod?: string;
+    }
+  >;
   summary: {
     totalAmount: number;
     affectedAgreements: number;
@@ -125,9 +143,12 @@ export const offInvoiceEndpoints = {
    * Download Excel template
    */
   downloadExcelTemplate: async (): Promise<Blob> => {
-    const response = await apiClient.get('/agreement-transactions/template/excel', {
-      responseType: 'blob',
-    });
+    const response = await apiClient.get(
+      '/agreement-transactions/template/excel',
+      {
+        responseType: 'blob',
+      }
+    );
     return response.data;
   },
 
@@ -135,9 +156,12 @@ export const offInvoiceEndpoints = {
    * Download CSV template
    */
   downloadCSVTemplate: async (): Promise<Blob> => {
-    const response = await apiClient.get('/agreement-transactions/template/csv', {
-      responseType: 'blob',
-    });
+    const response = await apiClient.get(
+      '/agreement-transactions/template/csv',
+      {
+        responseType: 'blob',
+      }
+    );
     return response.data;
   },
 
@@ -172,7 +196,9 @@ export const offInvoiceEndpoints = {
   /**
    * Get transactions by agreement ID
    */
-  getTransactionsByAgreement: async (agreementId: string): Promise<AgreementTransaction[]> => {
+  getTransactionsByAgreement: async (
+    agreementId: string
+  ): Promise<AgreementTransaction[]> => {
     const response = await apiClient.get<AgreementTransaction[]>(
       `/agreement-transactions/agreement/${agreementId}`
     );
@@ -182,7 +208,9 @@ export const offInvoiceEndpoints = {
   /**
    * Get transactions by batch ID
    */
-  getTransactionsByBatch: async (batchId: string): Promise<AgreementTransaction[]> => {
+  getTransactionsByBatch: async (
+    batchId: string
+  ): Promise<AgreementTransaction[]> => {
     const response = await apiClient.get<AgreementTransaction[]>(
       `/agreement-transactions/batch/${batchId}`
     );
@@ -207,9 +235,10 @@ export const offInvoiceEndpoints = {
    * Get total transaction amount for agreement
    */
   getTotalByAgreement: async (agreementId: string): Promise<number> => {
-    const response = await apiClient.get<{ agreementId: string; total: number }>(
-      `/agreement-transactions/agreement/${agreementId}/total`
-    );
+    const response = await apiClient.get<{
+      agreementId: string;
+      total: number;
+    }>(`/agreement-transactions/agreement/${agreementId}/total`);
     return response.data.total;
   },
 
@@ -243,7 +272,9 @@ export const offInvoiceEndpoints = {
   /**
    * Create single transaction
    */
-  createTransaction: async (dto: CreateOffInvoiceTransactionDto): Promise<AgreementTransaction> => {
+  createTransaction: async (
+    dto: CreateOffInvoiceTransactionDto
+  ): Promise<AgreementTransaction> => {
     const response = await apiClient.post<AgreementTransaction>(
       '/agreement-transactions',
       dto

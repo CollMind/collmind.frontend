@@ -23,8 +23,12 @@ export const auditEndpoints = {
     apiClient.get<AuditLog[]>('/admin/audit-log', { params: { limit } }),
 
   getByAdmin: (adminId: string, limit = 100) =>
-    apiClient.get<AuditLog[]>(`/admin/audit-log`, { params: { adminId, limit } }),
+    apiClient.get<AuditLog[]>(`/admin/audit-log`, {
+      params: { adminId, limit },
+    }),
 
   getHighRisk: (limit = 50) =>
-    apiClient.get<AuditLog[]>('/admin/audit-log/high-risk', { params: { limit } }),
+    apiClient.get<AuditLog[]>('/admin/audit-log/high-risk', {
+      params: { limit },
+    }),
 };

@@ -13,7 +13,14 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { ChevronDown, ChevronRight, Plus, Maximize2, RefreshCw, Trash2 } from 'lucide-react';
+import {
+  ChevronDown,
+  ChevronRight,
+  Plus,
+  Maximize2,
+  RefreshCw,
+  Trash2,
+} from 'lucide-react';
 import { useToast } from '@/hooks/useToast';
 import { AddFuDialog } from './AddFuDialog';
 import { planEndpoints } from '@/api/endpoints/plans.endpoints';
@@ -67,7 +74,7 @@ const getRagBadge = (status?: string) => {
 const formatKpiValue = (
   value: number | null | undefined,
   displayFormat: string,
-  decimalPlaces: number,
+  decimalPlaces: number
 ) => {
   if (value === null || value === undefined) return '-';
   switch (displayFormat) {
@@ -81,7 +88,10 @@ const formatKpiValue = (
 };
 
 // Map KPI codes to known SKU fields
-const getSkuValueForKpi = (planSku: PlanSku, kpiCode: string): number | null => {
+const getSkuValueForKpi = (
+  planSku: PlanSku,
+  kpiCode: string
+): number | null => {
   // ÖNCE: calculated_kpis'ten kontrol et
   if (planSku.calculatedKpis?.[kpiCode]) {
     return planSku.calculatedKpis[kpiCode].value;
@@ -89,20 +99,32 @@ const getSkuValueForKpi = (planSku: PlanSku, kpiCode: string): number | null => 
 
   // FALLBACK: Mevcut hardcoded mapping (geriye dönük uyumluluk)
   switch (kpiCode) {
-    case 'BASE_VOL': return planSku.baseVolume ?? null;
-    case 'PLAN_VOL': return planSku.plannedVolume ?? null;
-    case 'INCR_VOL': return planSku.incrementalVolume ?? null;
+    case 'BASE_VOL':
+      return planSku.baseVolume ?? null;
+    case 'PLAN_VOL':
+      return planSku.plannedVolume ?? null;
+    case 'INCR_VOL':
+      return planSku.incrementalVolume ?? null;
     case 'UPLIFT_PCT':
       if (!planSku.baseVolume) return null;
-      return ((planSku.plannedVolume || 0) - (planSku.baseVolume || 0)) / planSku.baseVolume * 100;
-    case 'PLAN_TURNOVER': return planSku.plannedTurnover ?? null;
-    case 'TACTIC_SPEND': return planSku.tacticSpend ?? null;
-    case 'GP': return planSku.plannedGp ?? null;
-    case 'GP_ROI_PCT': return planSku.gpRoi ?? null;
+      return (
+        (((planSku.plannedVolume || 0) - (planSku.baseVolume || 0)) /
+          planSku.baseVolume) *
+        100
+      );
+    case 'PLAN_TURNOVER':
+      return planSku.plannedTurnover ?? null;
+    case 'TACTIC_SPEND':
+      return planSku.tacticSpend ?? null;
+    case 'GP':
+      return planSku.plannedGp ?? null;
+    case 'GP_ROI_PCT':
+      return planSku.gpRoi ?? null;
     case 'GP_MARGIN_PCT':
       if (!planSku.plannedTurnover) return null;
       return (planSku.plannedGp / planSku.plannedTurnover) * 100;
-    default: return null;
+    default:
+      return null;
   }
 };
 
@@ -116,31 +138,58 @@ const getFuValueForKpi = (planFu: PlanFu, kpiCode: string): number | null => {
   // FALLBACK: Mevcut hesaplama (geriye dönük uyumluluk)
   switch (kpiCode) {
     case 'BASE_VOL':
-      return planFu.planSkus?.reduce((s, sku) => s + (Number(sku.baseVolume) || 0), 0) ?? null;
+      return (
+        planFu.planSkus?.reduce(
+          (s, sku) => s + (Number(sku.baseVolume) || 0),
+          0
+        ) ?? null
+      );
     case 'PLAN_VOL':
       return Number(planFu.totalPlannedVolume) || null;
     case 'INCR_VOL': {
-      const base = planFu.planSkus?.reduce((s, sku) => s + (Number(sku.baseVolume) || 0), 0) || 0;
+      const base =
+        planFu.planSkus?.reduce(
+          (s, sku) => s + (Number(sku.baseVolume) || 0),
+          0
+        ) || 0;
       return (Number(planFu.totalPlannedVolume) || 0) - base;
     }
     case 'UPLIFT_PCT': {
-      const baseVol = planFu.planSkus?.reduce((s, sku) => s + (Number(sku.baseVolume) || 0), 0) || 0;
+      const baseVol =
+        planFu.planSkus?.reduce(
+          (s, sku) => s + (Number(sku.baseVolume) || 0),
+          0
+        ) || 0;
       if (!baseVol) return null;
-      return ((Number(planFu.totalPlannedVolume) || 0) - baseVol) / baseVol * 100;
+      return (
+        (((Number(planFu.totalPlannedVolume) || 0) - baseVol) / baseVol) * 100
+      );
     }
     case 'PLAN_TURNOVER':
-      return planFu.planSkus?.reduce((s, sku) => s + (Number(sku.plannedTurnover) || 0), 0) ?? null;
-    case 'TACTIC_SPEND': return Number(planFu.totalSpend) || null;
-    case 'GP': return Number(planFu.totalGp) || null;
-    case 'GP_ROI_PCT': return planFu.gpRoi ? Number(planFu.gpRoi) : null;
-    default: return null;
+      return (
+        planFu.planSkus?.reduce(
+          (s, sku) => s + (Number(sku.plannedTurnover) || 0),
+          0
+        ) ?? null
+      );
+    case 'TACTIC_SPEND':
+      return Number(planFu.totalSpend) || null;
+    case 'GP':
+      return Number(planFu.totalGp) || null;
+    case 'GP_ROI_PCT':
+      return planFu.gpRoi ? Number(planFu.gpRoi) : null;
+    default:
+      return null;
   }
 };
 
 export function PlanningGrid({ plan, canEdit }: PlanningGridProps) {
   const [expandedFus, setExpandedFus] = useState<Set<string>>(new Set());
   const [isAddFuDialogOpen, setIsAddFuDialogOpen] = useState(false);
-  const [editingCell, setEditingCell] = useState<{ skuId: string; field: string } | null>(null);
+  const [editingCell, setEditingCell] = useState<{
+    skuId: string;
+    field: string;
+  } | null>(null);
   const editInputRef = useRef<HTMLInputElement>(null);
   const toast = useToast();
   const queryClient = useQueryClient();
@@ -170,25 +219,92 @@ export function PlanningGrid({ plan, canEdit }: PlanningGridProps) {
   const hasKpiDefinitions = gridKpis.length > 0;
 
   // Separate KPIs by calculation level (SKU vs FU)
-  const skuLevelKpis = gridKpis.filter(kpi => kpi.calculationLevel === 'sku');
-  const fuLevelKpis = gridKpis.filter(kpi => kpi.calculationLevel === 'fu');
+  const skuLevelKpis = gridKpis.filter((kpi) => kpi.calculationLevel === 'sku');
+  const fuLevelKpis = gridKpis.filter((kpi) => kpi.calculationLevel === 'fu');
 
   // Base columns (always shown)
   const baseColumns = [
-    { code: 'COGS', name: 'COGS', format: 'currency', decimals: 0, editable: false, isKpi: false, calculationLevel: null },
-    { code: 'BPTT', name: 'Liste Fiyatı', format: 'currency', decimals: 0, editable: false, isKpi: false, calculationLevel: null },
+    {
+      code: 'COGS',
+      name: 'COGS',
+      format: 'currency',
+      decimals: 0,
+      editable: false,
+      isKpi: false,
+      calculationLevel: null,
+    },
+    {
+      code: 'BPTT',
+      name: 'Liste Fiyatı',
+      format: 'currency',
+      decimals: 0,
+      editable: false,
+      isKpi: false,
+      calculationLevel: null,
+    },
   ];
 
   // Static columns fallback
   const staticColumns = [
     ...baseColumns,
-    { code: 'BASE_VOL', name: 'Base Volume', format: 'number', decimals: 0, editable: true, isKpi: false, calculationLevel: 'sku' },
-    { code: 'PLAN_VOL', name: 'Planned Volume', format: 'number', decimals: 0, editable: true, isKpi: false, calculationLevel: 'sku' },
-    { code: 'INCR_VOL', name: 'Incremental', format: 'number', decimals: 0, isKpi: false, calculationLevel: 'sku' },
-    { code: 'PLAN_TURNOVER', name: 'Planned Turnover', format: 'currency', decimals: 0, isKpi: false, calculationLevel: 'sku' },
-    { code: 'TACTIC_SPEND', name: 'Tactic Spend', format: 'currency', decimals: 0, isKpi: false, calculationLevel: 'fu' },
-    { code: 'GP', name: 'Planned GP', format: 'currency', decimals: 0, isKpi: false, calculationLevel: 'sku' },
-    { code: 'GP_ROI_PCT', name: 'GP ROI', format: 'percentage', decimals: 1, isKpi: false, calculationLevel: 'sku' },
+    {
+      code: 'BASE_VOL',
+      name: 'Base Volume',
+      format: 'number',
+      decimals: 0,
+      editable: true,
+      isKpi: false,
+      calculationLevel: 'sku',
+    },
+    {
+      code: 'PLAN_VOL',
+      name: 'Planned Volume',
+      format: 'number',
+      decimals: 0,
+      editable: true,
+      isKpi: false,
+      calculationLevel: 'sku',
+    },
+    {
+      code: 'INCR_VOL',
+      name: 'Incremental',
+      format: 'number',
+      decimals: 0,
+      isKpi: false,
+      calculationLevel: 'sku',
+    },
+    {
+      code: 'PLAN_TURNOVER',
+      name: 'Planned Turnover',
+      format: 'currency',
+      decimals: 0,
+      isKpi: false,
+      calculationLevel: 'sku',
+    },
+    {
+      code: 'TACTIC_SPEND',
+      name: 'Tactic Spend',
+      format: 'currency',
+      decimals: 0,
+      isKpi: false,
+      calculationLevel: 'fu',
+    },
+    {
+      code: 'GP',
+      name: 'Planned GP',
+      format: 'currency',
+      decimals: 0,
+      isKpi: false,
+      calculationLevel: 'sku',
+    },
+    {
+      code: 'GP_ROI_PCT',
+      name: 'GP ROI',
+      format: 'percentage',
+      decimals: 1,
+      isKpi: false,
+      calculationLevel: 'sku',
+    },
   ];
 
   // Build dynamic columns from KPI definitions
@@ -203,7 +319,7 @@ export function PlanningGrid({ plan, canEdit }: PlanningGridProps) {
         ...baseColumns,
         ...allKpisForColumns
           .sort((a, b) => (a.columnOrder || 999) - (b.columnOrder || 999))
-          .map(kpi => ({
+          .map((kpi) => ({
             code: kpi.kpiCode,
             name: kpi.kpiName,
             format: kpi.displayFormat,
@@ -213,7 +329,7 @@ export function PlanningGrid({ plan, canEdit }: PlanningGridProps) {
             calculationLevel: kpi.calculationLevel,
           })),
       ]
-    : staticColumns.map(c => ({ ...c, isKpi: false }));
+    : staticColumns.map((c) => ({ ...c, isKpi: false }));
 
   const addFuMutation = useMutation({
     mutationFn: async (fuIds: string[]) => {
@@ -222,18 +338,30 @@ export function PlanningGrid({ plan, canEdit }: PlanningGridProps) {
       }
     },
     onSuccess: () => {
-      toast.success('FU\'lar başarıyla eklendi');
+      toast.success("FU'lar başarıyla eklendi");
       queryClient.invalidateQueries({ queryKey: ['plan', plan.id] });
     },
     onError: (error: any) => {
-      toast.error(error?.response?.data?.message || 'FU eklenirken hata oluştu');
+      toast.error(
+        error?.response?.data?.message || 'FU eklenirken hata oluştu'
+      );
     },
   });
 
   const updateVolumeMutation = useMutation({
     mutationFn: async ({
-      planId, fuId, skuId, field, value,
-    }: { planId: string; fuId: string; skuId: string; field: string; value: number }) => {
+      planId,
+      fuId,
+      skuId,
+      field,
+      value,
+    }: {
+      planId: string;
+      fuId: string;
+      skuId: string;
+      field: string;
+      value: number;
+    }) => {
       const data: any = {};
       if (field === 'BASE_VOL') data.baseVolume = value;
       if (field === 'PLAN_VOL') data.plannedVolume = value;
@@ -243,7 +371,9 @@ export function PlanningGrid({ plan, canEdit }: PlanningGridProps) {
       queryClient.invalidateQueries({ queryKey: ['plan', plan.id] });
     },
     onError: (error: any) => {
-      toast.error(error?.response?.data?.message || 'Değer güncellenirken hata oluştu');
+      toast.error(
+        error?.response?.data?.message || 'Değer güncellenirken hata oluştu'
+      );
     },
   });
 
@@ -256,7 +386,9 @@ export function PlanningGrid({ plan, canEdit }: PlanningGridProps) {
       queryClient.invalidateQueries({ queryKey: ['plan', plan.id] });
     },
     onError: (error: any) => {
-      toast.error(error?.response?.data?.message || 'FU kaldırılırken hata oluştu');
+      toast.error(
+        error?.response?.data?.message || 'FU kaldırılırken hata oluştu'
+      );
     },
   });
 
@@ -268,61 +400,72 @@ export function PlanningGrid({ plan, canEdit }: PlanningGridProps) {
     },
   });
 
-  const handleRemoveFu = useCallback((fuId: string, fuName: string) => {
-    if (confirm(`"${fuName}" FU'sunu plandan kaldırmak istediğinize emin misiniz? İlişkili tüm SKU verileri silinecektir.`)) {
-      removeFuMutation.mutate(fuId);
-    }
-  }, [removeFuMutation]);
+  const handleRemoveFu = useCallback(
+    (fuId: string, fuName: string) => {
+      if (
+        confirm(
+          `"${fuName}" FU'sunu plandan kaldırmak istediğinize emin misiniz? İlişkili tüm SKU verileri silinecektir.`
+        )
+      ) {
+        removeFuMutation.mutate(fuId);
+      }
+    },
+    [removeFuMutation]
+  );
 
   const handleAddFu = async (fuIds: string[]) => {
     await addFuMutation.mutateAsync(fuIds);
   };
 
   const toggleFu = (fuId: string) => {
-    setExpandedFus(prev => {
+    setExpandedFus((prev) => {
       const next = new Set(prev);
       next.has(fuId) ? next.delete(fuId) : next.add(fuId);
       return next;
     });
   };
 
-  const expandAll = () => setExpandedFus(new Set(plan.planFus?.map(fu => fu.id) || []));
+  const expandAll = () =>
+    setExpandedFus(new Set(plan.planFus?.map((fu) => fu.id) || []));
   const collapseAll = () => setExpandedFus(new Set());
 
-  const handleCellEdit = useCallback((skuId: string, field: string) => {
-    if (!canEdit) return;
-    setEditingCell({ skuId, field });
-    setTimeout(() => editInputRef.current?.focus(), 50);
-  }, [canEdit]);
+  const handleCellEdit = useCallback(
+    (skuId: string, field: string) => {
+      if (!canEdit) return;
+      setEditingCell({ skuId, field });
+      setTimeout(() => editInputRef.current?.focus(), 50);
+    },
+    [canEdit]
+  );
 
-  const handleCellSave = useCallback((
-    planFu: PlanFu,
-    planSku: PlanSku,
-    field: string,
-    value: string,
-  ) => {
-    const numValue = parseFloat(value);
-    if (isNaN(numValue) || numValue < 0) {
+  const handleCellSave = useCallback(
+    (planFu: PlanFu, planSku: PlanSku, field: string, value: string) => {
+      const numValue = parseFloat(value);
+      if (isNaN(numValue) || numValue < 0) {
+        setEditingCell(null);
+        return;
+      }
+      updateVolumeMutation.mutate({
+        planId: plan.id,
+        fuId: planFu.fuId,
+        skuId: planSku.skuId,
+        field,
+        value: numValue,
+      });
       setEditingCell(null);
-      return;
-    }
-    updateVolumeMutation.mutate({
-      planId: plan.id,
-      fuId: planFu.fuId,
-      skuId: planSku.skuId,
-      field,
-      value: numValue,
-    });
-    setEditingCell(null);
-  }, [plan.id, updateVolumeMutation]);
+    },
+    [plan.id, updateVolumeMutation]
+  );
 
   const getSkuCellValue = (planSku: PlanSku, colCode: string): string => {
     switch (colCode) {
-      case 'COGS': return formatCurrency(planSku.sku?.cogs || 0);
-      case 'BPTT': return formatCurrency(planSku.sku?.unitPrice || 0);
+      case 'COGS':
+        return formatCurrency(planSku.sku?.cogs || 0);
+      case 'BPTT':
+        return formatCurrency(planSku.sku?.unitPrice || 0);
       default: {
         // Only show SKU-level KPIs in SKU rows
-        const col = dynamicColumns.find(c => c.code === colCode);
+        const col = dynamicColumns.find((c) => c.code === colCode);
         if (col?.calculationLevel === 'fu') {
           return '-'; // FU-level KPIs are not shown in SKU rows
         }
@@ -340,7 +483,7 @@ export function PlanningGrid({ plan, canEdit }: PlanningGridProps) {
       default: {
         // Show both SKU-level (aggregated) and FU-level KPIs in FU rows
         const val = getFuValueForKpi(planFu, colCode);
-        const col = dynamicColumns.find(c => c.code === colCode);
+        const col = dynamicColumns.find((c) => c.code === colCode);
         return formatKpiValue(val, col?.format || 'number', col?.decimals || 0);
       }
     }
@@ -353,7 +496,11 @@ export function PlanningGrid({ plan, canEdit }: PlanningGridProps) {
         <div className="p-3 border-b flex items-center justify-between">
           <div className="flex gap-2">
             {canEdit && (
-              <Button size="sm" variant="default" onClick={() => setIsAddFuDialogOpen(true)}>
+              <Button
+                size="sm"
+                variant="default"
+                onClick={() => setIsAddFuDialogOpen(true)}
+              >
                 <Plus className="mr-1.5 h-4 w-4" />
                 FU Ekle
               </Button>
@@ -373,7 +520,9 @@ export function PlanningGrid({ plan, canEdit }: PlanningGridProps) {
                 onClick={() => recalcMutation.mutate()}
                 disabled={recalcMutation.isPending}
               >
-                <RefreshCw className={`h-4 w-4 mr-1 ${recalcMutation.isPending ? 'animate-spin' : ''}`} />
+                <RefreshCw
+                  className={`h-4 w-4 mr-1 ${recalcMutation.isPending ? 'animate-spin' : ''}`}
+                />
                 Yeniden Hesapla
               </Button>
             )}
@@ -396,13 +545,20 @@ export function PlanningGrid({ plan, canEdit }: PlanningGridProps) {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[200px] sticky left-0 bg-white z-20 border-r border-gray-200 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)]">ÜRÜN / FU</TableHead>
-                {dynamicColumns.map(col => (
-                  <TableHead key={col.code} className="text-right whitespace-nowrap text-xs min-w-[100px]">
+                <TableHead className="w-[200px] sticky left-0 bg-white z-20 border-r border-gray-200 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)]">
+                  ÜRÜN / FU
+                </TableHead>
+                {dynamicColumns.map((col) => (
+                  <TableHead
+                    key={col.code}
+                    className="text-right whitespace-nowrap text-xs min-w-[100px]"
+                  >
                     {col.name}
                   </TableHead>
                 ))}
-                <TableHead className="text-center text-xs sticky right-0 bg-white z-20 border-l border-gray-200 shadow-[-2px_0_4px_-2px_rgba(0,0,0,0.1)] min-w-[80px]">RAG</TableHead>
+                <TableHead className="text-center text-xs sticky right-0 bg-white z-20 border-l border-gray-200 shadow-[-2px_0_4px_-2px_rgba(0,0,0,0.1)] min-w-[80px]">
+                  RAG
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -432,8 +588,12 @@ export function PlanningGrid({ plan, canEdit }: PlanningGridProps) {
                 })
               ) : (
                 <TableRow>
-                  <TableCell colSpan={dynamicColumns.length + 2} className="text-center py-8 text-gray-500">
-                    Henüz FU eklenmemiş. {canEdit && '"FU Ekle"'} butonuna tıklayarak FU ekleyebilirsiniz.
+                  <TableCell
+                    colSpan={dynamicColumns.length + 2}
+                    className="text-center py-8 text-gray-500"
+                  >
+                    Henüz FU eklenmemiş. {canEdit && '"FU Ekle"'} butonuna
+                    tıklayarak FU ekleyebilirsiniz.
                   </TableCell>
                 </TableRow>
               )}
@@ -471,18 +631,35 @@ function FuRow({
 }: {
   planFu: PlanFu;
   isExpanded: boolean;
-  columns: Array<{ code: string; name: string; format: string; decimals: number; editable?: boolean; calculationLevel?: string | null; isKpi?: boolean }>;
+  columns: Array<{
+    code: string;
+    name: string;
+    format: string;
+    decimals: number;
+    editable?: boolean;
+    calculationLevel?: string | null;
+    isKpi?: boolean;
+  }>;
   canEdit: boolean;
   editingCell: { skuId: string; field: string } | null;
   editInputRef: React.RefObject<HTMLInputElement>;
   onToggle: () => void;
   onCellEdit: (skuId: string, field: string) => void;
-  onCellSave: (planFu: PlanFu, planSku: PlanSku, field: string, value: string) => void;
+  onCellSave: (
+    planFu: PlanFu,
+    planSku: PlanSku,
+    field: string,
+    value: string
+  ) => void;
   getSkuCellValue: (planSku: PlanSku, colCode: string) => string;
   getFuCellValue: (planFu: PlanFu, colCode: string) => string;
   onRemoveFu: (fuId: string, fuName: string) => void;
   isRemovingFu: boolean;
-  gridKpis: Array<{ kpiCode: string; formulaType?: string; calculationLevel?: string }>;
+  gridKpis: Array<{
+    kpiCode: string;
+    formulaType?: string;
+    calculationLevel?: string;
+  }>;
 }) {
   return (
     <>
@@ -490,10 +667,19 @@ function FuRow({
       <TableRow className="bg-gray-50 hover:bg-gray-100">
         <TableCell className="sticky left-0 bg-gray-50 z-20 border-r border-gray-200 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)]">
           <div className="flex items-center gap-2">
-            <button onClick={onToggle} className="p-0.5 hover:bg-gray-200 rounded">
-              {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+            <button
+              onClick={onToggle}
+              className="p-0.5 hover:bg-gray-200 rounded"
+            >
+              {isExpanded ? (
+                <ChevronDown className="h-4 w-4" />
+              ) : (
+                <ChevronRight className="h-4 w-4" />
+              )}
             </button>
-            <span className="font-semibold text-sm">{planFu.fu?.name || 'N/A'}</span>
+            <span className="font-semibold text-sm">
+              {planFu.fu?.name || 'N/A'}
+            </span>
             <span className="text-xs text-gray-400">
               ({planFu.planSkus?.length || 0} SKU)
             </span>
@@ -512,76 +698,112 @@ function FuRow({
             )}
           </div>
         </TableCell>
-        {columns.map(col => (
+        {columns.map((col) => (
           <TableCell key={col.code} className="text-right text-sm font-medium">
             {getFuCellValue(planFu, col.code)}
           </TableCell>
         ))}
-        <TableCell className="text-center sticky right-0 bg-gray-50 z-20 border-l border-gray-200 shadow-[-2px_0_4px_-2px_rgba(0,0,0,0.1)]">{getRagBadge(planFu.ragStatus)}</TableCell>
+        <TableCell className="text-center sticky right-0 bg-gray-50 z-20 border-l border-gray-200 shadow-[-2px_0_4px_-2px_rgba(0,0,0,0.1)]">
+          {getRagBadge(planFu.ragStatus)}
+        </TableCell>
       </TableRow>
 
       {/* SKU Rows */}
-      {isExpanded && planFu.planSkus?.map((planSku) => (
-        <TableRow key={planSku.id} className="hover:bg-blue-50/50">
-          <TableCell className="pl-10 sticky left-0 bg-white z-20 border-r border-gray-200 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)]">
-            <span className="text-sm text-gray-700">{planSku.sku?.name || 'N/A'}</span>
-            <span className="text-xs text-gray-400 ml-1">({planSku.sku?.code})</span>
-          </TableCell>
-          {columns.map(col => {
-            // Skip FU-level KPIs in SKU rows
-            if (col.calculationLevel === 'fu') {
+      {isExpanded &&
+        planFu.planSkus?.map((planSku) => (
+          <TableRow key={planSku.id} className="hover:bg-blue-50/50">
+            <TableCell className="pl-10 sticky left-0 bg-white z-20 border-r border-gray-200 shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)]">
+              <span className="text-sm text-gray-700">
+                {planSku.sku?.name || 'N/A'}
+              </span>
+              <span className="text-xs text-gray-400 ml-1">
+                ({planSku.sku?.code})
+              </span>
+            </TableCell>
+            {columns.map((col) => {
+              // Skip FU-level KPIs in SKU rows
+              if (col.calculationLevel === 'fu') {
+                return (
+                  <TableCell
+                    key={col.code}
+                    className="text-right text-sm text-gray-300"
+                  >
+                    -
+                  </TableCell>
+                );
+              }
+
+              const isEditing =
+                editingCell?.skuId === planSku.id &&
+                editingCell?.field === col.code;
+              const kpi = gridKpis.find((k) => k.kpiCode === col.code);
+              const isEditable =
+                col.editable &&
+                canEdit &&
+                (col.code === 'BASE_VOL' ||
+                  col.code === 'PLAN_VOL' ||
+                  kpi?.formulaType === 'user_input');
+
+              if (isEditing) {
+                const currentValue =
+                  col.code === 'BASE_VOL'
+                    ? (planSku.baseVolume ?? 0)
+                    : col.code === 'PLAN_VOL'
+                      ? (planSku.plannedVolume ?? 0)
+                      : (getSkuValueForKpi(planSku, col.code) ?? 0);
+
+                return (
+                  <TableCell key={col.code} className="text-right p-1">
+                    <Input
+                      ref={editInputRef as any}
+                      type="number"
+                      defaultValue={currentValue}
+                      className="h-7 text-right text-sm w-24 ml-auto"
+                      onBlur={(e) =>
+                        onCellSave(planFu, planSku, col.code, e.target.value)
+                      }
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          onCellSave(
+                            planFu,
+                            planSku,
+                            col.code,
+                            (e.target as HTMLInputElement).value
+                          );
+                        }
+                        if (e.key === 'Escape') {
+                          onCellSave(
+                            planFu,
+                            planSku,
+                            col.code,
+                            String(currentValue)
+                          );
+                        }
+                      }}
+                    />
+                  </TableCell>
+                );
+              }
+
               return (
-                <TableCell key={col.code} className="text-right text-sm text-gray-300">
-                  -
+                <TableCell
+                  key={col.code}
+                  className={`text-right text-sm ${isEditable ? 'cursor-pointer hover:bg-blue-100 transition-colors' : ''}`}
+                  onClick={
+                    isEditable
+                      ? () => onCellEdit(planSku.id, col.code)
+                      : undefined
+                  }
+                >
+                  {getSkuCellValue(planSku, col.code)}
                 </TableCell>
               );
-            }
-
-            const isEditing = editingCell?.skuId === planSku.id && editingCell?.field === col.code;
-            const kpi = gridKpis.find(k => k.kpiCode === col.code);
-            const isEditable = col.editable && canEdit && (col.code === 'BASE_VOL' || col.code === 'PLAN_VOL' || kpi?.formulaType === 'user_input');
-
-            if (isEditing) {
-              const currentValue = col.code === 'BASE_VOL'
-                ? planSku.baseVolume ?? 0
-                : col.code === 'PLAN_VOL'
-                  ? planSku.plannedVolume ?? 0
-                  : getSkuValueForKpi(planSku, col.code) ?? 0;
-
-              return (
-                <TableCell key={col.code} className="text-right p-1">
-                  <Input
-                    ref={editInputRef as any}
-                    type="number"
-                    defaultValue={currentValue}
-                    className="h-7 text-right text-sm w-24 ml-auto"
-                    onBlur={(e) => onCellSave(planFu, planSku, col.code, e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        onCellSave(planFu, planSku, col.code, (e.target as HTMLInputElement).value);
-                      }
-                      if (e.key === 'Escape') {
-                        onCellSave(planFu, planSku, col.code, String(currentValue));
-                      }
-                    }}
-                  />
-                </TableCell>
-              );
-            }
-
-            return (
-              <TableCell
-                key={col.code}
-                className={`text-right text-sm ${isEditable ? 'cursor-pointer hover:bg-blue-100 transition-colors' : ''}`}
-                onClick={isEditable ? () => onCellEdit(planSku.id, col.code) : undefined}
-              >
-                {getSkuCellValue(planSku, col.code)}
-              </TableCell>
-            );
-          })}
-          <TableCell className="text-center sticky right-0 bg-white z-20 border-l border-gray-200 shadow-[-2px_0_4px_-2px_rgba(0,0,0,0.1)]">{getRagBadge(planSku.ragStatus)}</TableCell>
-        </TableRow>
-      ))}
+            })}
+            <TableCell className="text-center sticky right-0 bg-white z-20 border-l border-gray-200 shadow-[-2px_0_4px_-2px_rgba(0,0,0,0.1)]">
+              {getRagBadge(planSku.ragStatus)}
+            </TableCell>
+          </TableRow>
+        ))}
     </>
   );
 }

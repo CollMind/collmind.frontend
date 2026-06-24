@@ -1,6 +1,16 @@
 import React from 'react';
-import { Notification, NotificationType, NotificationPriority } from '@/types/notification.types';
-import { CheckCircle2, XCircle, AlertTriangle, Clock, Bell } from 'lucide-react';
+import {
+  Notification,
+  NotificationType,
+  NotificationPriority,
+} from '@/types/notification.types';
+import {
+  CheckCircle2,
+  XCircle,
+  AlertTriangle,
+  Clock,
+  Bell,
+} from 'lucide-react';
 
 // Dynamic import for date-fns to handle cases where it's not installed
 let formatDistanceToNow: any;
@@ -10,7 +20,9 @@ try {
   formatDistanceToNow = dateFns.formatDistanceToNow;
   tr = require('date-fns/locale').tr;
 } catch (e) {
-  console.warn('date-fns package not installed. Date formatting will use fallback.');
+  console.warn(
+    'date-fns package not installed. Date formatting will use fallback.'
+  );
   formatDistanceToNow = (date: Date) => {
     const seconds = Math.floor((new Date().getTime() - date.getTime()) / 1000);
     if (seconds < 60) return `${seconds} saniye önce`;
@@ -55,7 +67,10 @@ const getPriorityColor = (priority: NotificationPriority): string => {
   return colors[priority] || 'border-gray-200';
 };
 
-export function NotificationItem({ notification, onClick }: NotificationItemProps) {
+export function NotificationItem({
+  notification,
+  onClick,
+}: NotificationItemProps) {
   const isUnread = !notification.readAt;
 
   return (
@@ -70,7 +85,9 @@ export function NotificationItem({ notification, onClick }: NotificationItemProp
           {getNotificationIcon(notification.type)}
         </div>
         <div className="flex-1 min-w-0">
-          <p className={`text-sm font-medium ${isUnread ? 'font-semibold' : ''}`}>
+          <p
+            className={`text-sm font-medium ${isUnread ? 'font-semibold' : ''}`}
+          >
             {notification.subject}
           </p>
           <p className="text-xs text-gray-600 mt-1 line-clamp-2">
@@ -94,4 +111,3 @@ export function NotificationItem({ notification, onClick }: NotificationItemProp
     </div>
   );
 }
-

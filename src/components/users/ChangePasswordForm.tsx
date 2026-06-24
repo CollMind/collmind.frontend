@@ -16,7 +16,10 @@ import {
   ChangePasswordFormData,
   ChangeUserPasswordFormData,
 } from '@/schemas/user.schema';
-import { useChangeMyPassword, useChangeUserPassword } from '@/services/users.service';
+import {
+  useChangeMyPassword,
+  useChangeUserPassword,
+} from '@/services/users.service';
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/useToast';
 
@@ -46,7 +49,9 @@ export function ChangePasswordForm({
     },
   });
 
-  const onSubmit = async (data: ChangePasswordFormData | ChangeUserPasswordFormData) => {
+  const onSubmit = async (
+    data: ChangePasswordFormData | ChangeUserPasswordFormData
+  ) => {
     try {
       if (userId) {
         // Admin changing user's password - no current password needed
@@ -74,7 +79,7 @@ export function ChangePasswordForm({
         error?.message ||
         'Şifre değiştirme işlemi başarısız oldu';
       toast.error(errorMessage);
-      
+
       // If current password is wrong, clear it (only for self-service password change)
       if (!userId && error?.response?.status === 400) {
         form.setError('currentPassword', {

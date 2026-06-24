@@ -1,5 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
-import { financeReportingEndpoints, ReportFilters } from '@/api/endpoints/finance-reporting.endpoints';
+import {
+  financeReportingEndpoints,
+  ReportFilters,
+} from '@/api/endpoints/finance-reporting.endpoints';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import {
   Table,
@@ -14,11 +17,16 @@ interface CashFlowProjectionWidgetProps {
   filters: ReportFilters;
 }
 
-export function CashFlowProjectionWidget({ filters }: CashFlowProjectionWidgetProps) {
+export function CashFlowProjectionWidget({
+  filters,
+}: CashFlowProjectionWidgetProps) {
   const { data, isLoading, error } = useQuery({
     queryKey: ['cash-flow-projection', filters],
     queryFn: async () => {
-      const res = await financeReportingEndpoints.getCashFlowProjection(filters, 12);
+      const res = await financeReportingEndpoints.getCashFlowProjection(
+        filters,
+        12
+      );
       return res.data;
     },
     staleTime: 30000,
@@ -29,7 +37,9 @@ export function CashFlowProjectionWidget({ filters }: CashFlowProjectionWidgetPr
   }
 
   if (error || !data) {
-    return <div className="text-red-500 text-sm">Veri yüklenirken hata oluştu</div>;
+    return (
+      <div className="text-red-500 text-sm">Veri yüklenirken hata oluştu</div>
+    );
   }
 
   const formatCurrency = (amount: number) => {
@@ -78,10 +88,13 @@ export function CashFlowProjectionWidget({ filters }: CashFlowProjectionWidgetPr
             {data.projections.map((projection) => (
               <TableRow key={projection.month}>
                 <TableCell className="font-medium">
-                  {new Date(projection.month + '-01').toLocaleDateString('tr-TR', {
-                    month: 'long',
-                    year: 'numeric',
-                  })}
+                  {new Date(projection.month + '-01').toLocaleDateString(
+                    'tr-TR',
+                    {
+                      month: 'long',
+                      year: 'numeric',
+                    }
+                  )}
                 </TableCell>
                 <TableCell className="text-right text-blue-600">
                   {formatCurrency(projection.onInvoiceOutflow)}

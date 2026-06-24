@@ -3,8 +3,14 @@ import { UserRole, UserStatus } from '@/types/user.types';
 
 export const createUserSchema = z.object({
   email: z.string().email('Invalid email address'),
-  password: z.string().min(8, 'Password must be at least 8 characters').max(100),
-  fullName: z.string().min(2, 'Full name must be at least 2 characters').max(200),
+  password: z
+    .string()
+    .min(8, 'Password must be at least 8 characters')
+    .max(100),
+  fullName: z
+    .string()
+    .min(2, 'Full name must be at least 2 characters')
+    .max(200),
   firstName: z.string().optional(),
   lastName: z.string().optional(),
   role: z.nativeEnum(UserRole),
@@ -52,5 +58,6 @@ export const changeUserPasswordSchema = z
 export type CreateUserFormData = z.infer<typeof createUserSchema>;
 export type UpdateUserFormData = z.infer<typeof updateUserSchema>;
 export type ChangePasswordFormData = z.infer<typeof changePasswordSchema>;
-export type ChangeUserPasswordFormData = z.infer<typeof changeUserPasswordSchema>;
-
+export type ChangeUserPasswordFormData = z.infer<
+  typeof changeUserPasswordSchema
+>;

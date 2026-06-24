@@ -17,7 +17,16 @@ import {
 } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Plus, Save, Send, Info, Check, ChevronRight, Trash2 } from 'lucide-react';
+import {
+  ArrowLeft,
+  Plus,
+  Save,
+  Send,
+  Info,
+  Check,
+  ChevronRight,
+  Trash2,
+} from 'lucide-react';
 import { toNumber } from '@/utils/numberUtils';
 import { ChannelSelect } from '@/components/common/ChannelSelect';
 import { CategorySelect } from '@/components/common/CategorySelect';
@@ -53,11 +62,16 @@ export function LTAAgreementForm({
     description: initialData?.description || '',
     agreementType: AgreementType.LTA,
     cplId: extractId(initialData?.cplId),
-    channelId: extractId(initialData?.channelId || (initialData as any)?.channel),
-    categoryId: extractId(initialData?.categoryId || (initialData as any)?.category),
+    channelId: extractId(
+      initialData?.channelId || (initialData as any)?.channel
+    ),
+    categoryId: extractId(
+      initialData?.categoryId || (initialData as any)?.category
+    ),
     startDate: initialData?.startDate || '',
     endDate: initialData?.endDate || '',
-    reconciliationPeriod: initialData?.reconciliationPeriod || ReconciliationPeriod.MONTHLY,
+    reconciliationPeriod:
+      initialData?.reconciliationPeriod || ReconciliationPeriod.MONTHLY,
     capTotalAmount: initialData?.capTotalAmount || 0,
     notes: initialData?.notes || '',
     justification: initialData?.justification || '',
@@ -65,11 +79,13 @@ export function LTAAgreementForm({
     // Required fields with defaults
     fuId: extractId(initialData?.fuId || (initialData as any)?.forecastingUnit),
     tacticId: extractId(initialData?.tacticId || (initialData as any)?.tactic),
-    mechanicId: extractId(initialData?.mechanicId || (initialData as any)?.mechanic),
+    mechanicId: extractId(
+      initialData?.mechanicId || (initialData as any)?.mechanic
+    ),
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
-  
+
   // Tactic selection state
   interface SelectedTactic {
     id: string;
@@ -80,29 +96,46 @@ export function LTAAgreementForm({
     mechanicId?: string;
     value?: number;
   }
-  
+
   const [selectedTactics, setSelectedTactics] = useState<SelectedTactic[]>([]);
   const [showTacticDropdown, setShowTacticDropdown] = useState(false);
-  const [tacticsMechanics, setTacticsMechanics] = useState<Record<string, any[]>>({});
+  const [tacticsMechanics, setTacticsMechanics] = useState<
+    Record<string, any[]>
+  >({});
   const [pendingTactic, setPendingTactic] = useState<any>(null);
-  
+
   // Fetch available tactics when channel and category are selected
   const { data: availableTactics, isLoading: tacticsLoading } = useQuery({
-    queryKey: ['available-tactics-lta', formData.channelId, formData.categoryId],
+    queryKey: [
+      'available-tactics-lta',
+      formData.channelId,
+      formData.categoryId,
+    ],
     queryFn: () =>
-      agreementEndpoints.getAvailableTactics(formData.channelId || '', formData.categoryId).then((res) => res.data),
+      agreementEndpoints
+        .getAvailableTactics(formData.channelId || '', formData.categoryId)
+        .then((res) => res.data),
     enabled: !!formData.channelId && !!formData.categoryId,
   });
-  
+
   // Load initial tactic and mechanic if editing
   useEffect(() => {
-    if (initialData?.tacticId && initialData?.mechanicId && availableTactics && availableTactics.length > 0) {
-      const tactic = availableTactics.find(t => t.id === initialData.tacticId);
+    if (
+      initialData?.tacticId &&
+      initialData?.mechanicId &&
+      availableTactics &&
+      availableTactics.length > 0
+    ) {
+      const tactic = availableTactics.find(
+        (t) => t.id === initialData.tacticId
+      );
       if (tactic) {
         const mechanics = tactic.mechanics || [];
         setTacticsMechanics({ [tactic.id]: mechanics });
-        
-        const selectedMechanic = mechanics.find((m: any) => m.id === initialData.mechanicId);
+
+        const selectedMechanic = mechanics.find(
+          (m: any) => m.id === initialData.mechanicId
+        );
         const selectedTactic: SelectedTactic = {
           id: tactic.id,
           name: tactic.name,
@@ -112,11 +145,16 @@ export function LTAAgreementForm({
           mechanicId: initialData.mechanicId,
           value: initialData.mechanicValue,
         };
-        
+
         setSelectedTactics([selectedTactic]);
       }
     }
-  }, [initialData?.tacticId, initialData?.mechanicId, initialData?.mechanicValue, availableTactics]);
+  }, [
+    initialData?.tacticId,
+    initialData?.mechanicId,
+    initialData?.mechanicValue,
+    availableTactics,
+  ]);
 
   // Calculate period days
   const periodDays = useMemo(() => {
@@ -188,15 +226,18 @@ export function LTAAgreementForm({
       }
     }
 
-    const capAmount = typeof formData.capTotalAmount === 'number' ? formData.capTotalAmount : toNumber(formData.capTotalAmount);
+    const capAmount =
+      typeof formData.capTotalAmount === 'number'
+        ? formData.capTotalAmount
+        : toNumber(formData.capTotalAmount);
     if (!capAmount || capAmount <= 0) {
-      newErrors.capTotalAmount = 'Bütçe cap değeri 0\'dan büyük olmalıdır';
+      newErrors.capTotalAmount = "Bütçe cap değeri 0'dan büyük olmalıdır";
     }
-    
+
     if (selectedTactics.length === 0) {
       newErrors.tactics = 'En az bir taktik seçilmelidir';
     }
-    
+
     if (!formData.justification?.trim()) {
       newErrors.justification = 'Gerekçe zorunludur';
     }
@@ -204,38 +245,41 @@ export function LTAAgreementForm({
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
-  
+
   const handleAddTactic = (tactic: any) => {
     if (!selectedTactics.find((t) => t.id === tactic.id)) {
       const mechanics = tactic.mechanics || [];
-      
-      setTacticsMechanics(prev => ({ ...prev, [tactic.id]: mechanics }));
-      
+
+      setTacticsMechanics((prev) => ({ ...prev, [tactic.id]: mechanics }));
+
       if (mechanics.length === 0) {
-        setErrors({ ...errors, tactics: `"${tactic.name}" taktiği için mekanik bulunamadı. Lütfen admin panelinden bu taktik için mekanik ekleyin.` });
+        setErrors({
+          ...errors,
+          tactics: `"${tactic.name}" taktiği için mekanik bulunamadı. Lütfen admin panelinden bu taktik için mekanik ekleyin.`,
+        });
         setShowTacticDropdown(false);
         return;
       }
-      
+
       if (mechanics.length === 1) {
         const mechanic = mechanics[0];
-        const newTactic: SelectedTactic = { 
+        const newTactic: SelectedTactic = {
           id: tactic.id,
           name: tactic.name,
           code: tactic.code,
           spendType: tactic.spendType || 'ON_INVOICE',
           mechanicType: mechanic.mechanicType,
           value: undefined,
-          mechanicId: mechanic.id 
+          mechanicId: mechanic.id,
         };
-        
+
         setSelectedTactics([...selectedTactics, newTactic]);
-        
+
         if (selectedTactics.length === 0) {
-          setFormData({ 
-            ...formData, 
+          setFormData({
+            ...formData,
             tacticId: tactic.id,
-            mechanicId: mechanic.id 
+            mechanicId: mechanic.id,
           });
         }
         setShowTacticDropdown(false);
@@ -247,55 +291,59 @@ export function LTAAgreementForm({
       setShowTacticDropdown(false);
     }
   };
-  
+
   const handleSelectMechanic = (tactic: any, mechanicId: string) => {
     const mechanics = tacticsMechanics[tactic.id] || tactic.mechanics || [];
     const selectedMechanic = mechanics.find((m: any) => m.id === mechanicId);
-    
+
     if (!selectedMechanic) {
       setErrors({ ...errors, tactics: 'Seçilen mekanik bulunamadı' });
       return;
     }
-    
-    const newTactic: SelectedTactic = { 
+
+    const newTactic: SelectedTactic = {
       id: tactic.id,
       name: tactic.name,
       code: tactic.code,
       spendType: tactic.spendType || 'ON_INVOICE',
       mechanicType: selectedMechanic.mechanicType,
       value: undefined,
-      mechanicId: selectedMechanic.id 
+      mechanicId: selectedMechanic.id,
     };
-    
+
     setSelectedTactics([...selectedTactics, newTactic]);
-    
+
     if (selectedTactics.length === 0) {
-      setFormData({ 
-        ...formData, 
+      setFormData({
+        ...formData,
         tacticId: tactic.id,
-        mechanicId: selectedMechanic.id 
+        mechanicId: selectedMechanic.id,
       });
     }
-    
+
     setPendingTactic(null);
   };
-  
+
   const handleCancelMechanicSelection = () => {
     setPendingTactic(null);
   };
-  
+
   const handleRemoveTactic = (tacticId: string) => {
     setSelectedTactics(selectedTactics.filter((t) => t.id !== tacticId));
-    setTacticsMechanics(prev => {
+    setTacticsMechanics((prev) => {
       const newMechanics = { ...prev };
       delete newMechanics[tacticId];
       return newMechanics;
     });
     if (formData.tacticId === tacticId) {
-      setFormData({ ...formData, tacticId: selectedTactics[0]?.id || '', mechanicId: selectedTactics[0]?.mechanicId || '' });
+      setFormData({
+        ...formData,
+        tacticId: selectedTactics[0]?.id || '',
+        mechanicId: selectedTactics[0]?.mechanicId || '',
+      });
     }
   };
-  
+
   const handleTacticValueChange = (tacticId: string, value: number) => {
     setSelectedTactics(
       selectedTactics.map((t) => (t.id === tacticId ? { ...t, value } : t))
@@ -307,21 +355,21 @@ export function LTAAgreementForm({
     if (!validate()) {
       return;
     }
-    
+
     // Validate tactics are selected
     if (selectedTactics.length === 0) {
       setErrors({ tactics: 'En az bir taktik seçilmelidir' });
       return;
     }
-    
+
     // Use first selected tactic
     const firstTactic = selectedTactics[0];
-    
+
     if (!firstTactic.mechanicId) {
       setErrors({ tactics: 'Lütfen taktik için bir mekanik seçin' });
       return;
     }
-    
+
     const submitData: CreateAgreementDto = {
       ...formData,
       channelId: formData.channelId, // Ensure channelId is set
@@ -332,10 +380,10 @@ export function LTAAgreementForm({
       spendType: firstTactic.spendType as any,
       justification: formData.justification || '', // Ensure justification is set
     };
-    
+
     // Remove channel property if it exists (should not be sent to backend)
     delete (submitData as any).channel;
-    
+
     await onSubmit(submitData);
   };
 
@@ -389,7 +437,9 @@ export function LTAAgreementForm({
                   className={errors.agreementName ? 'border-red-500' : ''}
                 />
                 {errors.agreementName && (
-                  <p className="text-xs text-red-600 mt-1">{errors.agreementName}</p>
+                  <p className="text-xs text-red-600 mt-1">
+                    {errors.agreementName}
+                  </p>
                 )}
               </div>
               <div>
@@ -428,7 +478,9 @@ export function LTAAgreementForm({
                     className={errors.startDate ? 'border-red-500' : ''}
                   />
                   {errors.startDate && (
-                    <p className="text-xs text-red-600 mt-1">{errors.startDate}</p>
+                    <p className="text-xs text-red-600 mt-1">
+                      {errors.startDate}
+                    </p>
                   )}
                 </div>
                 <div>
@@ -445,7 +497,9 @@ export function LTAAgreementForm({
                     className={errors.endDate ? 'border-red-500' : ''}
                   />
                   {errors.endDate && (
-                    <p className="text-xs text-red-600 mt-1">{errors.endDate}</p>
+                    <p className="text-xs text-red-600 mt-1">
+                      {errors.endDate}
+                    </p>
                   )}
                 </div>
               </div>
@@ -457,11 +511,15 @@ export function LTAAgreementForm({
                       type="radio"
                       name="reconciliationPeriod"
                       value={ReconciliationPeriod.MONTHLY}
-                      checked={formData.reconciliationPeriod === ReconciliationPeriod.MONTHLY}
+                      checked={
+                        formData.reconciliationPeriod ===
+                        ReconciliationPeriod.MONTHLY
+                      }
                       onChange={(e) =>
                         setFormData({
                           ...formData,
-                          reconciliationPeriod: e.target.value as ReconciliationPeriod,
+                          reconciliationPeriod: e.target
+                            .value as ReconciliationPeriod,
                         })
                       }
                       className="w-4 h-4 text-purple-600"
@@ -473,11 +531,15 @@ export function LTAAgreementForm({
                       type="radio"
                       name="reconciliationPeriod"
                       value={ReconciliationPeriod.WEEKLY}
-                      checked={formData.reconciliationPeriod === ReconciliationPeriod.WEEKLY}
+                      checked={
+                        formData.reconciliationPeriod ===
+                        ReconciliationPeriod.WEEKLY
+                      }
                       onChange={(e) =>
                         setFormData({
                           ...formData,
-                          reconciliationPeriod: e.target.value as ReconciliationPeriod,
+                          reconciliationPeriod: e.target
+                            .value as ReconciliationPeriod,
                         })
                       }
                       className="w-4 h-4 text-purple-600"
@@ -489,11 +551,15 @@ export function LTAAgreementForm({
                       type="radio"
                       name="reconciliationPeriod"
                       value={ReconciliationPeriod.QUARTERLY}
-                      checked={formData.reconciliationPeriod === ReconciliationPeriod.QUARTERLY}
+                      checked={
+                        formData.reconciliationPeriod ===
+                        ReconciliationPeriod.QUARTERLY
+                      }
                       onChange={(e) =>
                         setFormData({
                           ...formData,
-                          reconciliationPeriod: e.target.value as ReconciliationPeriod,
+                          reconciliationPeriod: e.target
+                            .value as ReconciliationPeriod,
                         })
                       }
                       className="w-4 h-4 text-purple-600"
@@ -504,7 +570,9 @@ export function LTAAgreementForm({
                 <div className="flex items-start gap-2 mt-3 p-3 bg-blue-50 rounded-md">
                   <Info className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
                   <p className="text-xs text-blue-800">
-                    Uzun Vadeli Anlaşma (LTA) için 90 gün süre kısıtlaması yoktur. Genellikle 1 yıllık çerçeve anlaşmalar için kullanılır.
+                    Uzun Vadeli Anlaşma (LTA) için 90 gün süre kısıtlaması
+                    yoktur. Genellikle 1 yıllık çerçeve anlaşmalar için
+                    kullanılır.
                   </p>
                 </div>
               </div>
@@ -514,7 +582,9 @@ export function LTAAgreementForm({
           {/* Section 3: Kanal ve Müşteri Seçimi */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">3. Kanal ve Müşteri Seçimi</CardTitle>
+              <CardTitle className="text-lg">
+                3. Kanal ve Müşteri Seçimi
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
@@ -522,7 +592,12 @@ export function LTAAgreementForm({
                   <ChannelSelect
                     value={formData.channelId}
                     onChange={(value) => {
-                      setFormData({ ...formData, channelId: value, categoryId: '', cplId: '' });
+                      setFormData({
+                        ...formData,
+                        channelId: value,
+                        categoryId: '',
+                        cplId: '',
+                      });
                     }}
                     required
                     error={errors.channelId}
@@ -532,7 +607,11 @@ export function LTAAgreementForm({
                   <CategorySelect
                     value={formData.categoryId}
                     onChange={(value) => {
-                      setFormData({ ...formData, categoryId: value, cplId: '' });
+                      setFormData({
+                        ...formData,
+                        categoryId: value,
+                        cplId: '',
+                      });
                     }}
                     required
                     error={errors.categoryId}
@@ -549,7 +628,9 @@ export function LTAAgreementForm({
                     <div className="mt-2">
                       <CplSelect
                         value={formData.cplId}
-                        onChange={(value) => setFormData({ ...formData, cplId: value })}
+                        onChange={(value) =>
+                          setFormData({ ...formData, cplId: value })
+                        }
                         channelId={formData.channelId}
                         activeOnly={true}
                         required
@@ -562,7 +643,9 @@ export function LTAAgreementForm({
                     <div>
                       <FuSelect
                         value={formData.fuId}
-                        onChange={(value) => setFormData({ ...formData, fuId: value })}
+                        onChange={(value) =>
+                          setFormData({ ...formData, fuId: value })
+                        }
                         label="Forecasting Unit (FU)"
                         required
                         error={errors.fuId}
@@ -621,15 +704,24 @@ export function LTAAgreementForm({
                                 onClick={() => handleAddTactic(tactic)}
                               >
                                 <div className="flex items-center gap-3">
-                                  {selectedTactics.find((t) => t.id === tactic.id) && (
+                                  {selectedTactics.find(
+                                    (t) => t.id === tactic.id
+                                  ) && (
                                     <Check className="h-4 w-4 text-green-600" />
                                   )}
                                   <div>
-                                    <p className="text-sm font-medium text-gray-900">{tactic.name}</p>
-                                    <p className="text-xs text-gray-500">{tactic.code}</p>
+                                    <p className="text-sm font-medium text-gray-900">
+                                      {tactic.name}
+                                    </p>
+                                    <p className="text-xs text-gray-500">
+                                      {tactic.code}
+                                    </p>
                                   </div>
                                 </div>
-                                <Badge variant="outline" className="text-xs border-gray-200 text-gray-600 bg-gray-50">
+                                <Badge
+                                  variant="outline"
+                                  className="text-xs border-gray-200 text-gray-600 bg-gray-50"
+                                >
                                   {tactic.mechanics?.length || 0} Mekanik
                                 </Badge>
                               </div>
@@ -650,7 +742,8 @@ export function LTAAgreementForm({
                               {pendingTactic.name} için Mekanik Seçin
                             </Label>
                             <p className="text-xs text-blue-700 mt-1">
-                              Bu taktik için birden fazla mekanik mevcut. Lütfen birini seçin.
+                              Bu taktik için birden fazla mekanik mevcut. Lütfen
+                              birini seçin.
                             </p>
                           </div>
                           <Button
@@ -662,25 +755,38 @@ export function LTAAgreementForm({
                             ✕
                           </Button>
                         </div>
-                        
+
                         <div className="space-y-2">
-                          {(pendingTactic.mechanics || []).map((mechanic: any) => (
-                            <Button
-                              key={mechanic.id}
-                              type="button"
-                              variant="outline"
-                              className="w-full justify-start text-left"
-                              onClick={() => handleSelectMechanic(pendingTactic, mechanic.id)}
-                            >
-                              <div className="flex items-center justify-between w-full">
-                                <div>
-                                  <p className="text-sm font-medium">{mechanic.name}</p>
-                                  <p className="text-xs text-gray-500">{mechanic.code} - {mechanic.mechanicType}</p>
+                          {(pendingTactic.mechanics || []).map(
+                            (mechanic: any) => (
+                              <Button
+                                key={mechanic.id}
+                                type="button"
+                                variant="outline"
+                                className="w-full justify-start text-left"
+                                onClick={() =>
+                                  handleSelectMechanic(
+                                    pendingTactic,
+                                    mechanic.id
+                                  )
+                                }
+                              >
+                                <div className="flex items-center justify-between w-full">
+                                  <div>
+                                    <p className="text-sm font-medium">
+                                      {mechanic.name}
+                                    </p>
+                                    <p className="text-xs text-gray-500">
+                                      {mechanic.code} - {mechanic.mechanicType}
+                                    </p>
+                                  </div>
+                                  <Badge variant="outline">
+                                    {mechanic.mechanicType}
+                                  </Badge>
                                 </div>
-                                <Badge variant="outline">{mechanic.mechanicType}</Badge>
-                              </div>
-                            </Button>
-                          ))}
+                              </Button>
+                            )
+                          )}
                         </div>
                       </CardContent>
                     </Card>
@@ -694,14 +800,18 @@ export function LTAAgreementForm({
                   ) : (
                     selectedTactics.map((tactic) => {
                       const mechanics = tacticsMechanics[tactic.id] || [];
-                      
+
                       return (
                         <Card key={tactic.id} className="bg-white">
                           <CardContent className="p-4">
                             <div className="flex items-start justify-between mb-3">
                               <div>
-                                <Label className="text-sm font-medium">{tactic.name}</Label>
-                                <p className="text-xs text-gray-500">{tactic.spendType}</p>
+                                <Label className="text-sm font-medium">
+                                  {tactic.name}
+                                </Label>
+                                <p className="text-xs text-gray-500">
+                                  {tactic.spendType}
+                                </p>
                               </div>
                               <Button
                                 type="button"
@@ -712,21 +822,25 @@ export function LTAAgreementForm({
                                 <Trash2 className="h-4 w-4 text-red-600" />
                               </Button>
                             </div>
-                            
+
                             {/* Mechanic Selection */}
                             <div className="mb-3">
                               <MechanicSelect
                                 value={tactic.mechanicId}
                                 onChange={(mechanicId) => {
-                                  const selectedMechanic = mechanics.find((m: any) => m.id === mechanicId);
+                                  const selectedMechanic = mechanics.find(
+                                    (m: any) => m.id === mechanicId
+                                  );
                                   setSelectedTactics(
-                                    selectedTactics.map((t) => 
-                                      t.id === tactic.id 
-                                        ? { 
-                                            ...t, 
+                                    selectedTactics.map((t) =>
+                                      t.id === tactic.id
+                                        ? {
+                                            ...t,
                                             mechanicId,
-                                            mechanicType: selectedMechanic?.mechanicType || t.mechanicType
-                                          } 
+                                            mechanicType:
+                                              selectedMechanic?.mechanicType ||
+                                              t.mechanicType,
+                                          }
                                         : t
                                     )
                                   );
@@ -741,18 +855,22 @@ export function LTAAgreementForm({
                               />
                               {!tactic.mechanicId && mechanics.length === 0 && (
                                 <p className="text-xs text-amber-600 mt-1">
-                                  Bu taktik için mekanik bulunamadı. Lütfen admin panelinden mekanik ekleyin.
+                                  Bu taktik için mekanik bulunamadı. Lütfen
+                                  admin panelinden mekanik ekleyin.
                                 </p>
                               )}
                             </div>
-                            
+
                             <div className="flex items-center gap-2">
                               <Input
                                 type="number"
                                 placeholder="Değer"
                                 value={tactic.value || ''}
                                 onChange={(e) =>
-                                  handleTacticValueChange(tactic.id, parseFloat(e.target.value) || 0)
+                                  handleTacticValueChange(
+                                    tactic.id,
+                                    parseFloat(e.target.value) || 0
+                                  )
                                 }
                                 className="flex-1"
                               />
@@ -782,7 +900,8 @@ export function LTAAgreementForm({
             <CardContent>
               <div>
                 <Label htmlFor="capTotalAmount">
-                  Yıllık / Dönemsel Cap * <span className="text-red-500">*</span>
+                  Yıllık / Dönemsel Cap *{' '}
+                  <span className="text-red-500">*</span>
                 </Label>
                 <div className="relative mt-2">
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
@@ -805,7 +924,9 @@ export function LTAAgreementForm({
                   />
                 </div>
                 {errors.capTotalAmount && (
-                  <p className="text-xs text-red-600 mt-1">{errors.capTotalAmount}</p>
+                  <p className="text-xs text-red-600 mt-1">
+                    {errors.capTotalAmount}
+                  </p>
                 )}
               </div>
             </CardContent>
@@ -833,7 +954,9 @@ export function LTAAgreementForm({
                   required
                 />
                 {errors.justification && (
-                  <p className="text-xs text-red-600 mt-1">{errors.justification}</p>
+                  <p className="text-xs text-red-600 mt-1">
+                    {errors.justification}
+                  </p>
                 )}
               </div>
             </CardContent>
@@ -928,11 +1051,16 @@ export function LTAAgreementForm({
                 {formData.startDate && formData.endDate ? (
                   <div>
                     <p className="text-sm font-medium">
-                      {new Date(formData.startDate).toLocaleDateString('tr-TR')} -{' '}
-                      {new Date(formData.endDate).toLocaleDateString('tr-TR')}
+                      {new Date(formData.startDate).toLocaleDateString('tr-TR')}{' '}
+                      - {new Date(formData.endDate).toLocaleDateString('tr-TR')}
                     </p>
                     <p className="text-xs text-gray-500 mt-1">
-                      {periodDays} gün • {getReconciliationPeriodLabel(formData.reconciliationPeriod || ReconciliationPeriod.MONTHLY)} Mutabakat
+                      {periodDays} gün •{' '}
+                      {getReconciliationPeriodLabel(
+                        formData.reconciliationPeriod ||
+                          ReconciliationPeriod.MONTHLY
+                      )}{' '}
+                      Mutabakat
                     </p>
                   </div>
                 ) : (
@@ -941,13 +1069,18 @@ export function LTAAgreementForm({
               </div>
             </div>
             <div>
-              <Label className="text-xs text-gray-500">Taktikler ({selectedTactics.length})</Label>
+              <Label className="text-xs text-gray-500">
+                Taktikler ({selectedTactics.length})
+              </Label>
               {selectedTactics.length === 0 ? (
                 <p className="text-sm font-medium mt-1">-</p>
               ) : (
                 <div className="mt-2 space-y-1">
                   {selectedTactics.map((tactic) => (
-                    <div key={tactic.id} className="flex justify-between text-sm">
+                    <div
+                      key={tactic.id}
+                      className="flex justify-between text-sm"
+                    >
                       <span className="text-gray-700">{tactic.name}</span>
                       <span className="font-medium text-purple-600">
                         {tactic.value !== undefined && tactic.value !== null

@@ -48,10 +48,7 @@ const formatDateRange = (startDate: string, endDate: string): string => {
   })}`;
 };
 
-export function AgreementList({
-  agreements,
-  isLoading,
-}: AgreementListProps) {
+export function AgreementList({ agreements, isLoading }: AgreementListProps) {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [onlyMine, setOnlyMine] = useState(false);
@@ -59,7 +56,9 @@ export function AgreementList({
   const [channelFilter, setChannelFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
-  const [selectedAgreements, setSelectedAgreements] = useState<Set<string>>(new Set());
+  const [selectedAgreements, setSelectedAgreements] = useState<Set<string>>(
+    new Set()
+  );
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
@@ -68,19 +67,40 @@ export function AgreementList({
     return agreements.filter((agreement) => {
       const matchesSearch =
         searchTerm === '' ||
-        agreement.agreementNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        agreement.agreementName?.toLowerCase().includes(searchTerm.toLowerCase());
+        agreement.agreementNumber
+          ?.toLowerCase()
+          .includes(searchTerm.toLowerCase()) ||
+        agreement.agreementName
+          ?.toLowerCase()
+          .includes(searchTerm.toLowerCase());
 
-      const matchesType = typeFilter === 'all' || agreement.agreementType === typeFilter;
+      const matchesType =
+        typeFilter === 'all' || agreement.agreementType === typeFilter;
       const matchesChannel =
-        channelFilter === 'all' || agreement.channelId === channelFilter || agreement.channelName === channelFilter;
-      const matchesStatus = statusFilter === 'all' || agreement.status === statusFilter;
+        channelFilter === 'all' ||
+        agreement.channelId === channelFilter ||
+        agreement.channelName === channelFilter;
+      const matchesStatus =
+        statusFilter === 'all' || agreement.status === statusFilter;
       const matchesCategory =
         categoryFilter === 'all' || agreement.category === categoryFilter;
 
-      return matchesSearch && matchesType && matchesChannel && matchesStatus && matchesCategory;
+      return (
+        matchesSearch &&
+        matchesType &&
+        matchesChannel &&
+        matchesStatus &&
+        matchesCategory
+      );
     });
-  }, [agreements, searchTerm, typeFilter, channelFilter, statusFilter, categoryFilter]);
+  }, [
+    agreements,
+    searchTerm,
+    typeFilter,
+    channelFilter,
+    statusFilter,
+    categoryFilter,
+  ]);
 
   // Pagination
   const totalPages = Math.ceil(filteredAgreements.length / itemsPerPage);
@@ -90,12 +110,16 @@ export function AgreementList({
 
   // Benzersiz değerler
   const uniqueChannels = useMemo(() => {
-    const channels = new Set(agreements.map((a) => a.channelName || a.channelId).filter(Boolean));
+    const channels = new Set(
+      agreements.map((a) => a.channelName || a.channelId).filter(Boolean)
+    );
     return Array.from(channels).sort();
   }, [agreements]);
 
   const uniqueCategories = useMemo(() => {
-    const categories = new Set(agreements.map((a) => a.category).filter(Boolean));
+    const categories = new Set(
+      agreements.map((a) => a.category).filter(Boolean)
+    );
     return Array.from(categories).sort();
   }, [agreements]);
 
@@ -176,10 +200,13 @@ export function AgreementList({
                 Sadece Benim
               </label>
             </div>
-            <Select value={typeFilter} onValueChange={(value) => {
-              setTypeFilter(value);
-              setCurrentPage(1);
-            }}>
+            <Select
+              value={typeFilter}
+              onValueChange={(value) => {
+                setTypeFilter(value);
+                setCurrentPage(1);
+              }}
+            >
               <SelectTrigger className="w-[100px]">
                 <SelectValue placeholder="Tip" />
               </SelectTrigger>
@@ -189,10 +216,13 @@ export function AgreementList({
                 <SelectItem value={AgreementType.LTA}>LTA</SelectItem>
               </SelectContent>
             </Select>
-            <Select value={channelFilter} onValueChange={(value) => {
-              setChannelFilter(value);
-              setCurrentPage(1);
-            }}>
+            <Select
+              value={channelFilter}
+              onValueChange={(value) => {
+                setChannelFilter(value);
+                setCurrentPage(1);
+              }}
+            >
               <SelectTrigger className="w-[140px]">
                 <SelectValue placeholder="Kanal" />
               </SelectTrigger>
@@ -205,10 +235,13 @@ export function AgreementList({
                 ))}
               </SelectContent>
             </Select>
-            <Select value={statusFilter} onValueChange={(value) => {
-              setStatusFilter(value);
-              setCurrentPage(1);
-            }}>
+            <Select
+              value={statusFilter}
+              onValueChange={(value) => {
+                setStatusFilter(value);
+                setCurrentPage(1);
+              }}
+            >
               <SelectTrigger className="w-[140px]">
                 <SelectValue placeholder="Durum" />
               </SelectTrigger>
@@ -221,10 +254,13 @@ export function AgreementList({
                 ))}
               </SelectContent>
             </Select>
-            <Select value={categoryFilter} onValueChange={(value) => {
-              setCategoryFilter(value);
-              setCurrentPage(1);
-            }}>
+            <Select
+              value={categoryFilter}
+              onValueChange={(value) => {
+                setCategoryFilter(value);
+                setCurrentPage(1);
+              }}
+            >
               <SelectTrigger className="w-[140px]">
                 <SelectValue placeholder="Kategori" />
               </SelectTrigger>
@@ -237,7 +273,11 @@ export function AgreementList({
                 ))}
               </SelectContent>
             </Select>
-            <Button variant="ghost" onClick={handleResetFilters} className="text-sm text-blue-600 hover:text-blue-700">
+            <Button
+              variant="ghost"
+              onClick={handleResetFilters}
+              className="text-sm text-blue-600 hover:text-blue-700"
+            >
               Filtreleri Sıfırla
             </Button>
           </div>
@@ -259,7 +299,12 @@ export function AgreementList({
                     <tr>
                       <th className="text-left p-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
                         <Checkbox
-                          checked={paginatedAgreements.length > 0 && paginatedAgreements.every((a) => selectedAgreements.has(a.id))}
+                          checked={
+                            paginatedAgreements.length > 0 &&
+                            paginatedAgreements.every((a) =>
+                              selectedAgreements.has(a.id)
+                            )
+                          }
                           onCheckedChange={handleSelectAll}
                         />
                       </th>
@@ -293,15 +338,15 @@ export function AgreementList({
                     {paginatedAgreements.map((agreement) => {
                       const usagePercent = getUsagePercentage(agreement);
                       return (
-                        <tr
-                          key={agreement.id}
-                          className="hover:bg-gray-50"
-                        >
+                        <tr key={agreement.id} className="hover:bg-gray-50">
                           <td className="p-3">
                             <Checkbox
                               checked={selectedAgreements.has(agreement.id)}
                               onCheckedChange={(checked) =>
-                                handleSelectAgreement(agreement.id, checked as boolean)
+                                handleSelectAgreement(
+                                  agreement.id,
+                                  checked as boolean
+                                )
                               }
                             />
                           </td>
@@ -330,14 +375,23 @@ export function AgreementList({
                           <td className="p-3">
                             <div className="space-y-1">
                               <div className="text-sm text-gray-900">
-                                {formatCurrency(agreement.consumedAmount || 0, agreement.currency)} /{' '}
-                                {formatCurrency(toNumber(agreement.capTotalAmount), agreement.currency)}
+                                {formatCurrency(
+                                  agreement.consumedAmount || 0,
+                                  agreement.currency
+                                )}{' '}
+                                /{' '}
+                                {formatCurrency(
+                                  toNumber(agreement.capTotalAmount),
+                                  agreement.currency
+                                )}
                               </div>
                               {toNumber(agreement.capTotalAmount) > 0 && (
                                 <div className="relative h-2 w-full overflow-hidden rounded-full bg-gray-200">
                                   <div
                                     className={`h-full transition-all duration-300 ${getProgressColor(usagePercent)}`}
-                                    style={{ width: `${Math.min(usagePercent, 100)}%` }}
+                                    style={{
+                                      width: `${Math.min(usagePercent, 100)}%`,
+                                    }}
                                   />
                                 </div>
                               )}
@@ -346,14 +400,19 @@ export function AgreementList({
                           <td className="p-3 text-sm text-gray-500">
                             <div className="flex items-center gap-1">
                               <Calendar className="h-3 w-3" />
-                              {formatDateRange(agreement.startDate, agreement.endDate)}
+                              {formatDateRange(
+                                agreement.startDate,
+                                agreement.endDate
+                              )}
                             </div>
                           </td>
                           <td className="p-3 text-center">
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => navigate(`/agreements/${agreement.id}`)}
+                              onClick={() =>
+                                navigate(`/agreements/${agreement.id}`)
+                              }
                             >
                               <Eye className="h-4 w-4" />
                             </Button>
@@ -368,13 +427,17 @@ export function AgreementList({
               {totalPages > 1 && (
                 <div className="flex items-center justify-between px-6 py-4 border-t">
                   <div className="text-sm text-gray-500">
-                    Toplam {filteredAgreements.length} kayıttan {startIndex + 1}-{Math.min(endIndex, filteredAgreements.length)} arası gösteriliyor
+                    Toplam {filteredAgreements.length} kayıttan {startIndex + 1}
+                    -{Math.min(endIndex, filteredAgreements.length)} arası
+                    gösteriliyor
                   </div>
                   <div className="flex gap-2">
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                      onClick={() =>
+                        setCurrentPage((prev) => Math.max(prev - 1, 1))
+                      }
                       disabled={currentPage === 1}
                     >
                       <ChevronLeft className="h-4 w-4 mr-1" />
@@ -383,7 +446,9 @@ export function AgreementList({
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                      onClick={() =>
+                        setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                      }
                       disabled={currentPage === totalPages}
                     >
                       Sonraki

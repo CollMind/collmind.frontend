@@ -32,7 +32,11 @@ export function UsersPage() {
   };
 
   const handleSuccess = () => {
-    toast.success(editingUser ? 'Kullanıcı başarıyla güncellendi' : 'Kullanıcı başarıyla oluşturuldu');
+    toast.success(
+      editingUser
+        ? 'Kullanıcı başarıyla güncellendi'
+        : 'Kullanıcı başarıyla oluşturuldu'
+    );
     handleDialogClose();
   };
 

@@ -44,17 +44,44 @@ export interface ColumnDefinition {
   prefix?: string;
 }
 
-export const COLUMN_GROUPS: Record<ColumnGroup, { name: string; backgroundColor?: string }> = {
+export const COLUMN_GROUPS: Record<
+  ColumnGroup,
+  { name: string; backgroundColor?: string }
+> = {
   [ColumnGroup.ITEM_INFO]: { name: 'Item Info', backgroundColor: '#FFFFFF' },
-  [ColumnGroup.MASTER_DATA]: { name: 'Master Data', backgroundColor: '#FFFFFF' },
-  [ColumnGroup.VOLUME_METRICS]: { name: 'Volume Metrics', backgroundColor: '#FFFFFF' },
-  [ColumnGroup.GSV]: { name: 'GSV (Gross Sales Value)', backgroundColor: '#FFFFFF' },
-  [ColumnGroup.LTA]: { name: 'LTA (Long-Term Agreement)', backgroundColor: '#F3E8FF' },
-  [ColumnGroup.ON_INVOICE_PROMO]: { name: 'ON-INVOICE DISCOUNTS', backgroundColor: '#DBEAFE' },
-  [ColumnGroup.OFF_INVOICE_PROMO]: { name: 'OFF-INVOICE DISCOUNTS', backgroundColor: '#FFEDD5' },
+  [ColumnGroup.MASTER_DATA]: {
+    name: 'Master Data',
+    backgroundColor: '#FFFFFF',
+  },
+  [ColumnGroup.VOLUME_METRICS]: {
+    name: 'Volume Metrics',
+    backgroundColor: '#FFFFFF',
+  },
+  [ColumnGroup.GSV]: {
+    name: 'GSV (Gross Sales Value)',
+    backgroundColor: '#FFFFFF',
+  },
+  [ColumnGroup.LTA]: {
+    name: 'LTA (Long-Term Agreement)',
+    backgroundColor: '#F3E8FF',
+  },
+  [ColumnGroup.ON_INVOICE_PROMO]: {
+    name: 'ON-INVOICE DISCOUNTS',
+    backgroundColor: '#DBEAFE',
+  },
+  [ColumnGroup.OFF_INVOICE_PROMO]: {
+    name: 'OFF-INVOICE DISCOUNTS',
+    backgroundColor: '#FFEDD5',
+  },
   [ColumnGroup.LUMPSUM]: { name: 'Lumpsum Spends', backgroundColor: '#FCE7F3' },
-  [ColumnGroup.TOTAL_SPEND]: { name: 'Total Spend Breakdown', backgroundColor: '#F3F4F6' },
-  [ColumnGroup.NIV_TURNOVER]: { name: 'NIV & Turnover', backgroundColor: '#FFFFFF' },
+  [ColumnGroup.TOTAL_SPEND]: {
+    name: 'Total Spend Breakdown',
+    backgroundColor: '#F3F4F6',
+  },
+  [ColumnGroup.NIV_TURNOVER]: {
+    name: 'NIV & Turnover',
+    backgroundColor: '#FFFFFF',
+  },
   [ColumnGroup.PROFIT]: { name: 'Profit Metrics', backgroundColor: '#FFFFFF' },
   [ColumnGroup.MARGIN]: { name: 'Margin Metrics', backgroundColor: '#FFFFFF' },
   [ColumnGroup.ROI_RAG]: { name: 'ROI & RAG', backgroundColor: '#FFFFFF' },
@@ -694,18 +721,24 @@ export function filterColumns(
   columns: ColumnDefinition[],
   channelCode?: string,
   categoryCode?: string,
-  userPreferences?: Record<string, boolean>,
+  userPreferences?: Record<string, boolean>
 ): ColumnDefinition[] {
   return columns.filter((col) => {
     // Check conditional visibility
     if (col.conditional) {
       if (col.conditional.channel && channelCode) {
-        if (!col.conditional.channel.includes(channelCode) && !col.conditional.channel.includes('ALL')) {
+        if (
+          !col.conditional.channel.includes(channelCode) &&
+          !col.conditional.channel.includes('ALL')
+        ) {
           return false;
         }
       }
       if (col.conditional.category && categoryCode) {
-        if (!col.conditional.category.includes(categoryCode) && !col.conditional.category.includes('ALL')) {
+        if (
+          !col.conditional.category.includes(categoryCode) &&
+          !col.conditional.category.includes('ALL')
+        ) {
           return false;
         }
       }
@@ -723,7 +756,9 @@ export function filterColumns(
 /**
  * Group columns by their group
  */
-export function groupColumns(columns: ColumnDefinition[]): Map<ColumnGroup, ColumnDefinition[]> {
+export function groupColumns(
+  columns: ColumnDefinition[]
+): Map<ColumnGroup, ColumnDefinition[]> {
   const grouped = new Map<ColumnGroup, ColumnDefinition[]>();
   columns.forEach((col) => {
     if (!grouped.has(col.group)) {

@@ -34,17 +34,23 @@ export const useCategories = (activeOnly = false) => {
 export const useCpls = (activeOnly = false, channelId?: string) => {
   return useQuery({
     queryKey: ['cpls', activeOnly, channelId],
-    queryFn: () => cplEndpoints.getAll(activeOnly, channelId).then((res) => res.data),
+    queryFn: () =>
+      cplEndpoints.getAll(activeOnly, channelId).then((res) => res.data),
     // Always enabled - channelId is optional filter parameter, not a requirement
     enabled: true,
   });
 };
 
 // Forecasting Unit hooks
-export const useForecastingUnits = (activeOnly = false, guId?: string, categoryId?: string) => {
+export const useForecastingUnits = (
+  activeOnly = false,
+  guId?: string,
+  categoryId?: string
+) => {
   return useQuery({
     queryKey: ['forecasting-units', activeOnly, guId, categoryId],
-    queryFn: () => fuEndpoints.getAll(activeOnly, guId, categoryId).then((res) => res.data),
+    queryFn: () =>
+      fuEndpoints.getAll(activeOnly, guId, categoryId).then((res) => res.data),
   });
 };
 
@@ -57,10 +63,18 @@ export const useGenericUnits = (activeOnly = false) => {
 };
 
 // SKU hooks
-export const useSkus = (activeOnly = false, fuId?: string, brandId?: string, categoryId?: string) => {
+export const useSkus = (
+  activeOnly = false,
+  fuId?: string,
+  brandId?: string,
+  categoryId?: string
+) => {
   return useQuery({
     queryKey: ['skus', activeOnly, fuId, brandId, categoryId],
-    queryFn: () => skuEndpoints.getAll(activeOnly, fuId, brandId, categoryId).then((res) => res.data),
+    queryFn: () =>
+      skuEndpoints
+        .getAll(activeOnly, fuId, brandId, categoryId)
+        .then((res) => res.data),
   });
 };
 
@@ -76,7 +90,8 @@ export const useTactics = (activeOnly = false) => {
 export const useMechanics = (activeOnly = false, tacticId?: string) => {
   return useQuery({
     queryKey: ['mechanics', activeOnly, tacticId],
-    queryFn: () => mechanicEndpoints.getAll(activeOnly, tacticId).then((res) => res.data),
+    queryFn: () =>
+      mechanicEndpoints.getAll(activeOnly, tacticId).then((res) => res.data),
   });
 };
 

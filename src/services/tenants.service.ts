@@ -1,6 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { tenantEndpoints } from '@/api/endpoints/tenants.endpoints';
-import { CreateTenantDto, UpdateTenantDto, TenantStats } from '@/types/tenant.types';
+import {
+  CreateTenantDto,
+  UpdateTenantDto,
+  TenantStats,
+} from '@/types/tenant.types';
 
 export const tenantKeys = {
   all: ['tenants'] as const,

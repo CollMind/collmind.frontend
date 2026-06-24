@@ -1,6 +1,6 @@
 /**
  * Error Handler Utilities
- * 
+ *
  * API hatalarını kullanıcı dostu mesajlara dönüştürmek için utility fonksiyonları
  */
 
@@ -13,7 +13,7 @@ export interface ApiError {
 
 /**
  * API hatasını kullanıcı dostu mesaja dönüştürür
- * 
+ *
  * @param error - Axios error veya genel error
  * @returns Kullanıcı dostu hata mesajı
  */
@@ -26,7 +26,10 @@ export function getErrorMessage(error: any): string {
   // Response yoksa ve message varsa, message'ı döndür
   if (!error.response) {
     // Eğer error.message varsa onu döndür, yoksa network error mesajı
-    return error.message || 'Ağ bağlantı hatası. Lütfen internet bağlantınızı kontrol edin.';
+    return (
+      error.message ||
+      'Ağ bağlantı hatası. Lütfen internet bağlantınızı kontrol edin.'
+    );
   }
 
   // Server'dan gelen mesaj
@@ -56,7 +59,7 @@ export function getErrorMessage(error: any): string {
 
 /**
  * Error'u loglar (development ortamında)
- * 
+ *
  * @param error - Loglanacak error
  * @param context - Hatanın oluştuğu context (opsiyonel)
  */
@@ -70,7 +73,7 @@ export function logError(error: any, context?: string): void {
       timestamp: new Date().toISOString(),
     });
   }
-  
+
   // Production'da error tracking servisine gönderilebilir (Sentry, LogRocket, vb.)
   // if (import.meta.env.PROD) {
   //   errorTrackingService.log(error, context);
@@ -101,5 +104,3 @@ export const handleAdminRestrictionError = (error: any): string => {
 
   return message || 'Bir hata oluştu';
 };
-
-

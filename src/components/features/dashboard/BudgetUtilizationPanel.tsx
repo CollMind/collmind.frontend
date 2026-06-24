@@ -1,6 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
-import type { DashboardBudgetBucket, DashboardBudgetUtilization } from '@/api/endpoints/dashboard.endpoints';
+import type {
+  DashboardBudgetBucket,
+  DashboardBudgetUtilization,
+} from '@/api/endpoints/dashboard.endpoints';
 import { ragTextClass } from './ragColorUtils';
 
 function formatCurrency(amount: number): string {
@@ -35,7 +38,10 @@ function BudgetRow({
       {/* Progress bileşeninin rengi backend status ile belirleniyor */}
       <div className="relative h-2 w-full overflow-hidden rounded-full bg-gray-200">
         <div
-          className={cn('h-full transition-all duration-300', progressColorClass)}
+          className={cn(
+            'h-full transition-all duration-300',
+            progressColorClass
+          )}
           style={{ width: `${Math.min(bucket.utilizationPercent, 100)}%` }}
           role="progressbar"
           aria-valuenow={bucket.utilizationPercent}
@@ -65,7 +71,9 @@ export function BudgetUtilizationPanel({
       <CardHeader className="pb-3">
         <CardTitle className="text-sm font-medium text-gray-900">
           Bütçe Kullanımı
-          <span className="ml-2 text-xs font-normal text-gray-400">{period}</span>
+          <span className="ml-2 text-xs font-normal text-gray-400">
+            {period}
+          </span>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">

@@ -16,10 +16,13 @@ export function BudgetSummaryCard({
   isLoadingReserved = false,
 }: BudgetSummaryCardProps) {
   // Rezerve edilmiş tutar yüklenirken hesaplamaları yapma
-  const effectiveReservedAmount = isLoadingReserved ? undefined : (reservedAmount ?? 0);
-  const totalUsed = effectiveReservedAmount !== undefined
-    ? envelope.consumedAmount + effectiveReservedAmount
-    : undefined;
+  const effectiveReservedAmount = isLoadingReserved
+    ? undefined
+    : (reservedAmount ?? 0);
+  const totalUsed =
+    effectiveReservedAmount !== undefined
+      ? envelope.consumedAmount + effectiveReservedAmount
+      : undefined;
   const usagePercent =
     totalUsed !== undefined && envelope.allocatedAmount > 0
       ? (totalUsed / envelope.allocatedAmount) * 100
@@ -43,7 +46,11 @@ export function BudgetSummaryCard({
             ) : usagePercent !== undefined ? (
               <span
                 className={`font-medium ${
-                  isOverLimit ? 'text-red-600' : isNearLimit ? 'text-yellow-600' : ''
+                  isOverLimit
+                    ? 'text-red-600'
+                    : isNearLimit
+                      ? 'text-yellow-600'
+                      : ''
                 }`}
               >
                 {usagePercent.toFixed(1)}%
@@ -55,7 +62,9 @@ export function BudgetSummaryCard({
           {usagePercent !== undefined ? (
             <Progress
               value={usagePercent}
-              className={isOverLimit ? 'bg-red-200' : isNearLimit ? 'bg-yellow-200' : ''}
+              className={
+                isOverLimit ? 'bg-red-200' : isNearLimit ? 'bg-yellow-200' : ''
+              }
             />
           ) : (
             <div className="h-2 bg-gray-200 rounded-full animate-pulse" />
@@ -67,7 +76,8 @@ export function BudgetSummaryCard({
           <div className="p-4 bg-blue-50 rounded-lg">
             <p className="text-sm text-gray-600 mb-1">Tahsis Edilen</p>
             <p className="text-2xl font-bold text-blue-700">
-              {envelope.allocatedAmount.toLocaleString('tr-TR')} {envelope.currency}
+              {envelope.allocatedAmount.toLocaleString('tr-TR')}{' '}
+              {envelope.currency}
             </p>
           </div>
 
@@ -78,7 +88,8 @@ export function BudgetSummaryCard({
                 envelope.availableAmount < 0 ? 'text-red-600' : 'text-green-700'
               }`}
             >
-              {envelope.availableAmount.toLocaleString('tr-TR')} {envelope.currency}
+              {envelope.availableAmount.toLocaleString('tr-TR')}{' '}
+              {envelope.currency}
             </p>
           </div>
 
@@ -91,7 +102,8 @@ export function BudgetSummaryCard({
               </div>
             ) : (
               <p className="text-2xl font-bold text-yellow-700">
-                {(effectiveReservedAmount || 0).toLocaleString('tr-TR')} {envelope.currency}
+                {(effectiveReservedAmount || 0).toLocaleString('tr-TR')}{' '}
+                {envelope.currency}
               </p>
             )}
           </div>
@@ -99,7 +111,8 @@ export function BudgetSummaryCard({
           <div className="p-4 bg-orange-50 rounded-lg">
             <p className="text-sm text-gray-600 mb-1">Tüketilen</p>
             <p className="text-2xl font-bold text-orange-700">
-              {envelope.consumedAmount.toLocaleString('tr-TR')} {envelope.currency}
+              {envelope.consumedAmount.toLocaleString('tr-TR')}{' '}
+              {envelope.currency}
             </p>
           </div>
         </div>

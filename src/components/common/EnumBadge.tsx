@@ -142,18 +142,32 @@ export function EnumBadge({ value, type = 'auto', className }: EnumBadgeProps) {
   if (type === 'auto') {
     // Auto-detect type based on known enum values
     const valueUpper = valueStr.toUpperCase();
-    
+
     // Check if it's a status
     if (
-      ['ACTIVE', 'INACTIVE', 'PENDING', 'SUSPENDED', 'LOCKED', 'TRIAL'].includes(
-        valueUpper
-      )
+      [
+        'ACTIVE',
+        'INACTIVE',
+        'PENDING',
+        'SUSPENDED',
+        'LOCKED',
+        'TRIAL',
+      ].includes(valueUpper)
     ) {
       colorClass = getStatusColor(valueStr);
     }
     // Check if it's a role
     else if (
-      ['ADMIN', 'PLANNER', 'MANAGER', 'APPROVER', 'FINANCE', 'FINANCE_MANAGER', 'CATEGORY_MANAGER', 'READONLY'].includes(valueUpper)
+      [
+        'ADMIN',
+        'PLANNER',
+        'MANAGER',
+        'APPROVER',
+        'FINANCE',
+        'FINANCE_MANAGER',
+        'CATEGORY_MANAGER',
+        'READONLY',
+      ].includes(valueUpper)
     ) {
       colorClass = getRoleColor(valueStr);
     }
@@ -228,7 +242,3 @@ export function EnumBadge({ value, type = 'auto', className }: EnumBadgeProps) {
     </Badge>
   );
 }
-
-
-
-

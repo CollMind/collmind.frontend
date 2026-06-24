@@ -1,5 +1,8 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { useAgreement, useUpdateAgreement } from '@/services/agreements.service';
+import {
+  useAgreement,
+  useUpdateAgreement,
+} from '@/services/agreements.service';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { AgreementForm } from '@/components/agreements';
 import { UpdateAgreementDto } from '@/types/agreement.types';
@@ -11,11 +14,7 @@ export function AgreementEditPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
-  const {
-    data: agreement,
-    isLoading,
-    error,
-  } = useAgreement(id || '');
+  const { data: agreement, isLoading, error } = useAgreement(id || '');
 
   const updateMutation = useUpdateAgreement();
 

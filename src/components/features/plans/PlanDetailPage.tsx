@@ -56,7 +56,11 @@ export function PlanDetailPage() {
   const [isSubmitDialogOpen, setIsSubmitDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
-  const { data: plan, isLoading, error } = useQuery({
+  const {
+    data: plan,
+    isLoading,
+    error,
+  } = useQuery({
     queryKey: ['plan', id],
     queryFn: () => planEndpoints.getById(id!).then((res) => res.data),
     enabled: !!id,
@@ -67,7 +71,8 @@ export function PlanDetailPage() {
   // Get creator user info
   const { data: creatorUser } = useQuery({
     queryKey: ['user', plan?.createdBy],
-    queryFn: () => userEndpoints.getById(plan!.createdBy!).then((res) => res.data),
+    queryFn: () =>
+      userEndpoints.getById(plan!.createdBy!).then((res) => res.data),
     enabled: !!plan?.createdBy,
   });
 
@@ -82,7 +87,7 @@ export function PlanDetailPage() {
     },
     onError: (error: any) => {
       toast.error(
-        error?.response?.data?.message || 'Plan güncellenirken hata oluştu',
+        error?.response?.data?.message || 'Plan güncellenirken hata oluştu'
       );
     },
   });
@@ -97,7 +102,7 @@ export function PlanDetailPage() {
     },
     onError: (error: any) => {
       toast.error(
-        error?.response?.data?.message || 'Plan onaya gönderilirken hata oluştu',
+        error?.response?.data?.message || 'Plan onaya gönderilirken hata oluştu'
       );
     },
   });
@@ -112,7 +117,7 @@ export function PlanDetailPage() {
     },
     onError: (error: any) => {
       toast.error(
-        error?.response?.data?.message || 'Plan silinirken hata oluştu',
+        error?.response?.data?.message || 'Plan silinirken hata oluştu'
       );
     },
   });

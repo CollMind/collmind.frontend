@@ -30,11 +30,15 @@ const getStatusLabel = (status: BudgetEnvelopeStatus): string => {
   return labels[status] || status;
 };
 
-export function BudgetEnvelopeCard({ envelope, onClick }: BudgetEnvelopeCardProps) {
+export function BudgetEnvelopeCard({
+  envelope,
+  onClick,
+}: BudgetEnvelopeCardProps) {
   const navigate = useNavigate();
-  const consumptionPercent = envelope.allocatedAmount > 0
-    ? (envelope.consumedAmount / envelope.allocatedAmount) * 100
-    : 0;
+  const consumptionPercent =
+    envelope.allocatedAmount > 0
+      ? (envelope.consumedAmount / envelope.allocatedAmount) * 100
+      : 0;
 
   const isNearLimit = consumptionPercent >= 80;
   const isOverLimit = consumptionPercent >= 100;
@@ -74,7 +78,9 @@ export function BudgetEnvelopeCard({ envelope, onClick }: BudgetEnvelopeCardProp
             </div>
             <Progress
               value={consumptionPercent}
-              className={isOverLimit ? 'bg-red-200' : isNearLimit ? 'bg-yellow-200' : ''}
+              className={
+                isOverLimit ? 'bg-red-200' : isNearLimit ? 'bg-yellow-200' : ''
+              }
             />
           </div>
 
@@ -82,26 +88,32 @@ export function BudgetEnvelopeCard({ envelope, onClick }: BudgetEnvelopeCardProp
             <div>
               <p className="text-gray-500">Ayrılan</p>
               <p className="font-semibold">
-                {envelope.allocatedAmount.toLocaleString('tr-TR')} {envelope.currency}
+                {envelope.allocatedAmount.toLocaleString('tr-TR')}{' '}
+                {envelope.currency}
               </p>
             </div>
             <div>
               <p className="text-gray-500">Kullanılan</p>
               <p className="font-semibold">
-                {envelope.consumedAmount.toLocaleString('tr-TR')} {envelope.currency}
+                {envelope.consumedAmount.toLocaleString('tr-TR')}{' '}
+                {envelope.currency}
               </p>
             </div>
             <div>
               <p className="text-gray-500">Kalan</p>
-              <p className={`font-semibold ${envelope.availableAmount < 0 ? 'text-red-600' : ''}`}>
-                {envelope.availableAmount.toLocaleString('tr-TR')} {envelope.currency}
+              <p
+                className={`font-semibold ${envelope.availableAmount < 0 ? 'text-red-600' : ''}`}
+              >
+                {envelope.availableAmount.toLocaleString('tr-TR')}{' '}
+                {envelope.currency}
               </p>
             </div>
           </div>
 
           {envelope.budgetOwnerName && (
             <div className="text-sm text-gray-500">
-              <span className="font-medium">Sorumlu:</span> {envelope.budgetOwnerName}
+              <span className="font-medium">Sorumlu:</span>{' '}
+              {envelope.budgetOwnerName}
             </div>
           )}
         </div>
@@ -109,5 +121,3 @@ export function BudgetEnvelopeCard({ envelope, onClick }: BudgetEnvelopeCardProp
     </Card>
   );
 }
-
-

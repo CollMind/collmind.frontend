@@ -22,7 +22,10 @@ import {
   createCustomerSchema,
   CreateCustomerFormData,
 } from '@/schemas/customer.schema';
-import { useCreateCustomer, useUpdateCustomer } from '@/services/customers.service';
+import {
+  useCreateCustomer,
+  useUpdateCustomer,
+} from '@/services/customers.service';
 import {
   CustomerChannel,
   CustomerType,
@@ -237,7 +240,11 @@ export function CustomerForm({
             <FormItem>
               <FormLabel>Contact Email</FormLabel>
               <FormControl>
-                <Input {...field} type="email" placeholder="email@example.com" />
+                <Input
+                  {...field}
+                  type="email"
+                  placeholder="email@example.com"
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -259,7 +266,9 @@ export function CustomerForm({
                   {...field}
                   onChange={(e) => {
                     const value = e.target.value;
-                    field.onChange(value === '' ? undefined : parseInt(value, 10));
+                    field.onChange(
+                      value === '' ? undefined : parseInt(value, 10)
+                    );
                   }}
                   value={field.value ?? ''}
                 />
@@ -284,8 +293,10 @@ export function CustomerForm({
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 {customer ? 'Updating...' : 'Creating...'}
               </>
+            ) : customer ? (
+              'Update'
             ) : (
-              customer ? 'Update' : 'Create'
+              'Create'
             )}
           </Button>
         </div>
@@ -293,4 +304,3 @@ export function CustomerForm({
     </Form>
   );
 }
-

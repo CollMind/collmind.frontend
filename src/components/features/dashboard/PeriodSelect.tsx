@@ -12,7 +12,11 @@ interface PeriodSelectProps {
   options: string[];
 }
 
-export function PeriodSelect({ value, onValueChange, options }: PeriodSelectProps) {
+export function PeriodSelect({
+  value,
+  onValueChange,
+  options,
+}: PeriodSelectProps) {
   if (options.length === 0) {
     return (
       <span className="rounded-lg border border-black/10 bg-white px-3 py-2 text-xs font-medium text-gray-800">

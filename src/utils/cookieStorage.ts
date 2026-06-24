@@ -53,7 +53,8 @@ export function isCookieConsentValid(): boolean {
   // Duration check (365 days)
   const consentDate = new Date(consent.timestamp);
   const now = new Date();
-  const daysDiff = (now.getTime() - consentDate.getTime()) / (1000 * 60 * 60 * 24);
+  const daysDiff =
+    (now.getTime() - consentDate.getTime()) / (1000 * 60 * 60 * 24);
 
   return daysDiff < CONSENT_DURATION_DAYS;
 }
@@ -80,4 +81,3 @@ export function getDefaultPreferences(): CookiePreferences {
     marketing: false,
   };
 }
-

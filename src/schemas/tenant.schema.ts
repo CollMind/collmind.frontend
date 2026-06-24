@@ -35,7 +35,3 @@ export const updateTenantSchema = createTenantSchema.partial();
 
 export type CreateTenantFormData = z.infer<typeof createTenantSchema>;
 export type UpdateTenantFormData = z.infer<typeof updateTenantSchema>;
-
-
-
-

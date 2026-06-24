@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { useBudgetEnvelopes, useCreateBudgetEnvelope } from '@/services/budget.service';
+import {
+  useBudgetEnvelopes,
+  useCreateBudgetEnvelope,
+} from '@/services/budget.service';
 import { useMe } from '@/services/users.service';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import {
@@ -47,7 +50,8 @@ export function BudgetPage() {
   };
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [reserveDialogOpen, setReserveDialogOpen] = useState(false);
-  const [selectedEnvelope, setSelectedEnvelope] = useState<BudgetEnvelope | null>(null);
+  const [selectedEnvelope, setSelectedEnvelope] =
+    useState<BudgetEnvelope | null>(null);
   const { data: envelopes, isLoading, error } = useBudgetEnvelopes();
   const createMutation = useCreateBudgetEnvelope();
   const { data: user } = useMe();
@@ -58,7 +62,8 @@ export function BudgetPage() {
     console.error('Error loading budget envelopes:', error);
     return (
       <div className="text-red-600 p-4">
-        Error loading budget envelopes: {error instanceof Error ? error.message : 'Unknown error'}
+        Error loading budget envelopes:{' '}
+        {error instanceof Error ? error.message : 'Unknown error'}
       </div>
     );
   }

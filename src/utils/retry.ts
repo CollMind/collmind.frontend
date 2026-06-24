@@ -1,6 +1,6 @@
 /**
  * Retry Utility
- * 
+ *
  * API istekleri için retry mekanizması
  */
 
@@ -25,11 +25,11 @@ const DEFAULT_OPTIONS: Required<RetryOptions> = {
 
 /**
  * Promise'i retry mekanizması ile çalıştırır
- * 
+ *
  * @param fn - Çalıştırılacak async fonksiyon
  * @param options - Retry seçenekleri
  * @returns Promise
- * 
+ *
  * @example
  * ```ts
  * const result = await retry(
@@ -80,7 +80,7 @@ export async function retry<T>(
 
 /**
  * Axios request için retry wrapper
- * 
+ *
  * @param requestFn - Axios request fonksiyonu
  * @param options - Retry seçenekleri
  * @returns Promise

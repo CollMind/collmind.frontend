@@ -22,7 +22,10 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { mechanicEndpoints, tacticEndpoints } from '@/api/endpoints/master-data.endpoints';
+import {
+  mechanicEndpoints,
+  tacticEndpoints,
+} from '@/api/endpoints/master-data.endpoints';
 import { TacticSelect } from '@/components/common/TacticSelect';
 
 interface Mechanic {
@@ -65,8 +68,11 @@ export function MechanicManagementPage() {
       handleDialogClose();
     },
     onError: (error: any) => {
-      const errorMessage = error?.response?.data?.message || 'Mekanik oluşturulurken hata oluştu';
-      toast.error(Array.isArray(errorMessage) ? errorMessage.join(', ') : errorMessage);
+      const errorMessage =
+        error?.response?.data?.message || 'Mekanik oluşturulurken hata oluştu';
+      toast.error(
+        Array.isArray(errorMessage) ? errorMessage.join(', ') : errorMessage
+      );
     },
   });
 
@@ -79,8 +85,11 @@ export function MechanicManagementPage() {
       handleDialogClose();
     },
     onError: (error: any) => {
-      const errorMessage = error?.response?.data?.message || 'Mekanik güncellenirken hata oluştu';
-      toast.error(Array.isArray(errorMessage) ? errorMessage.join(', ') : errorMessage);
+      const errorMessage =
+        error?.response?.data?.message || 'Mekanik güncellenirken hata oluştu';
+      toast.error(
+        Array.isArray(errorMessage) ? errorMessage.join(', ') : errorMessage
+      );
     },
   });
 
@@ -91,7 +100,9 @@ export function MechanicManagementPage() {
       queryClient.invalidateQueries({ queryKey: ['mechanics', false] });
     },
     onError: (error: any) => {
-      toast.error(error?.response?.data?.message || 'Mekanik silinirken hata oluştu');
+      toast.error(
+        error?.response?.data?.message || 'Mekanik silinirken hata oluştu'
+      );
     },
   });
 
@@ -129,9 +140,7 @@ export function MechanicManagementPage() {
 
   const handleCodeChange = (value: string) => {
     // Convert to uppercase and remove invalid characters (keep only A-Z, 0-9, _)
-    const sanitized = value
-      .toUpperCase()
-      .replace(/[^A-Z0-9_]/g, '');
+    const sanitized = value.toUpperCase().replace(/[^A-Z0-9_]/g, '');
     setFormData({ ...formData, code: sanitized });
   };
 
@@ -151,9 +160,13 @@ export function MechanicManagementPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Validate required fields
-    if (!formData.code?.trim() || !formData.name?.trim() || !formData.tacticId) {
+    if (
+      !formData.code?.trim() ||
+      !formData.name?.trim() ||
+      !formData.tacticId
+    ) {
       toast.error('Lütfen tüm zorunlu alanları doldurun (Kod, İsim, Taktik)');
       return;
     }
@@ -173,7 +186,7 @@ export function MechanicManagementPage() {
       mechanicType: formData.mechanicType,
       isActive: formData.isActive !== undefined ? formData.isActive : true,
     };
-    
+
     if (editingItem) {
       updateMutation.mutate({ id: editingItem.id, data: submitData });
     } else {
@@ -193,7 +206,7 @@ export function MechanicManagementPage() {
       return `${mechanic.tactic.code} - ${mechanic.tactic.name}`;
     }
     // Fallback: tactics listesinden bul
-    const tactic = tactics.find(t => t.id === mechanic.tacticId);
+    const tactic = tactics.find((t) => t.id === mechanic.tacticId);
     return tactic ? `${tactic.code} - ${tactic.name}` : mechanic.tacticId;
   };
 
@@ -245,17 +258,25 @@ export function MechanicManagementPage() {
                   <TableCell>{mechanic.name}</TableCell>
                   <TableCell>
                     <div className="flex flex-col">
-                      <span className="font-medium">{getTacticName(mechanic)}</span>
+                      <span className="font-medium">
+                        {getTacticName(mechanic)}
+                      </span>
                       {mechanic.tactic && (
-                        <span className="text-xs text-gray-500">Taktik ID: {mechanic.tactic.id}</span>
+                        <span className="text-xs text-gray-500">
+                          Taktik ID: {mechanic.tactic.id}
+                        </span>
                       )}
                     </div>
                   </TableCell>
                   <TableCell>{mechanic.mechanicType}</TableCell>
                   <TableCell>
-                    <span className={`px-2 py-1 rounded text-xs ${
-                      mechanic.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                    }`}>
+                    <span
+                      className={`px-2 py-1 rounded text-xs ${
+                        mechanic.isActive
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-gray-100 text-gray-800'
+                      }`}
+                    >
                       {mechanic.isActive ? 'Aktif' : 'Pasif'}
                     </span>
                   </TableCell>
@@ -291,9 +312,7 @@ export function MechanicManagementPage() {
             <DialogTitle>
               {editingItem ? 'Mekanik Düzenle' : 'Yeni Mekanik Oluştur'}
             </DialogTitle>
-            <DialogDescription>
-              Mekanik bilgilerini girin
-            </DialogDescription>
+            <DialogDescription>Mekanik bilgilerini girin</DialogDescription>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
@@ -324,7 +343,9 @@ export function MechanicManagementPage() {
               <Input
                 id="name"
                 value={formData.name || ''}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
                 required
               />
             </div>
@@ -333,7 +354,9 @@ export function MechanicManagementPage() {
               <Textarea
                 id="description"
                 value={formData.description || ''}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, description: e.target.value })
+                }
                 rows={3}
               />
             </div>
@@ -343,7 +366,9 @@ export function MechanicManagementPage() {
               </Label>
               <TacticSelect
                 value={formData.tacticId}
-                onChange={(value) => setFormData({ ...formData, tacticId: value })}
+                onChange={(value) =>
+                  setFormData({ ...formData, tacticId: value })
+                }
                 required
                 placeholder="Taktik seçiniz"
               />
@@ -355,7 +380,9 @@ export function MechanicManagementPage() {
               <select
                 id="mechanicType"
                 value={formData.mechanicType || 'PERCENT'}
-                onChange={(e) => setFormData({ ...formData, mechanicType: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, mechanicType: e.target.value })
+                }
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg"
                 required
               >
@@ -367,7 +394,9 @@ export function MechanicManagementPage() {
             <div className="flex items-center space-x-2">
               <Checkbox
                 id="isActive"
-                checked={formData.isActive !== undefined ? formData.isActive : true}
+                checked={
+                  formData.isActive !== undefined ? formData.isActive : true
+                }
                 onCheckedChange={(checked) =>
                   setFormData({ ...formData, isActive: checked })
                 }
@@ -375,10 +404,17 @@ export function MechanicManagementPage() {
               <Label htmlFor="isActive">Aktif</Label>
             </div>
             <div className="flex justify-end gap-2">
-              <Button type="button" variant="outline" onClick={handleDialogClose}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleDialogClose}
+              >
                 İptal
               </Button>
-              <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
+              <Button
+                type="submit"
+                disabled={createMutation.isPending || updateMutation.isPending}
+              >
                 {editingItem ? 'Güncelle' : 'Oluştur'}
               </Button>
             </div>

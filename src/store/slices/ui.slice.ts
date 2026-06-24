@@ -13,7 +13,8 @@ interface UiState {
 
 const initialState: UiState = {
   sidebarOpen: true,
-  theme: (localStorage.getItem('theme') as 'light' | 'dark' | 'auto') || 'light',
+  theme:
+    (localStorage.getItem('theme') as 'light' | 'dark' | 'auto') || 'light',
   notifications: [],
 };
 
@@ -60,4 +61,3 @@ export const {
   removeNotification,
 } = uiSlice.actions;
 export default uiSlice.reducer;
-

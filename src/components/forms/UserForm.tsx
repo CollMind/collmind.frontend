@@ -24,10 +24,7 @@ import {
   CreateUserFormData,
   UpdateUserFormData,
 } from '@/schemas/user.schema';
-import {
-  useCreateUser,
-  useUpdateUser,
-} from '@/services/users.service';
+import { useCreateUser, useUpdateUser } from '@/services/users.service';
 import { UserRole, UserStatus, User } from '@/types/user.types';
 import { Loader2 } from 'lucide-react';
 import { EnumBadge } from '@/components/common/EnumBadge';
@@ -63,7 +60,10 @@ export function UserForm({ user, onSuccess, onCancel }: UserFormProps) {
   const onSubmit = async (data: CreateUserFormData | UpdateUserFormData) => {
     try {
       if (user) {
-        await updateMutation.mutateAsync({ id: user.id, data: data as UpdateUserFormData });
+        await updateMutation.mutateAsync({
+          id: user.id,
+          data: data as UpdateUserFormData,
+        });
       } else {
         await createMutation.mutateAsync(data as CreateUserFormData);
       }
@@ -87,7 +87,11 @@ export function UserForm({ user, onSuccess, onCancel }: UserFormProps) {
                 <FormItem>
                   <FormLabel>Email *</FormLabel>
                   <FormControl>
-                    <Input {...field} type="email" placeholder="user@example.com" />
+                    <Input
+                      {...field}
+                      type="email"
+                      placeholder="user@example.com"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -101,7 +105,11 @@ export function UserForm({ user, onSuccess, onCancel }: UserFormProps) {
                 <FormItem>
                   <FormLabel>Password *</FormLabel>
                   <FormControl>
-                    <Input {...field} type="password" placeholder="Min 8 characters" />
+                    <Input
+                      {...field}
+                      type="password"
+                      placeholder="Min 8 characters"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -296,8 +304,10 @@ export function UserForm({ user, onSuccess, onCancel }: UserFormProps) {
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 {user ? 'Updating...' : 'Creating...'}
               </>
+            ) : user ? (
+              'Update'
             ) : (
-              user ? 'Update' : 'Create'
+              'Create'
             )}
           </Button>
         </div>
@@ -305,7 +315,3 @@ export function UserForm({ user, onSuccess, onCancel }: UserFormProps) {
     </Form>
   );
 }
-
-
-
-

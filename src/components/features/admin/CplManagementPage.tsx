@@ -12,10 +12,25 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/useToast';
-import { Plus, Edit, Search, Store, ArrowRight, ArrowLeft, Check, Trash2 } from 'lucide-react';
+import {
+  Plus,
+  Edit,
+  Search,
+  Store,
+  ArrowRight,
+  ArrowLeft,
+  Check,
+  Trash2,
+} from 'lucide-react';
 import { cplEndpoints } from '@/api/endpoints/master-data.endpoints';
 import { customerEndpoints } from '@/api/endpoints/customers.endpoints';
 import { ChannelSelect } from '@/components/common/ChannelSelect';
@@ -49,25 +64,33 @@ export function CplManagementPage() {
   });
 
   // Helper to get channel code from ID
-  const selectedChannelCode = cpls.find(c => c.channelId === formData.channelId)?.channel?.code
-    // Fallback: we need to fetch channels to get the code if not found in CPL list
-    // But better yet, let's use useChannels hook here to get all channels and find the code.
-    // However, refactoring to useChannels is cleaner.
-    // Let's modify the component to use useChannels.
-    ;
-
+  const selectedChannelCode = cpls.find(
+    (c) => c.channelId === formData.channelId
+  )?.channel?.code;
+  // Fallback: we need to fetch channels to get the code if not found in CPL list
+  // But better yet, let's use useChannels hook here to get all channels and find the code.
+  // However, refactoring to useChannels is cleaner.
+  // Let's modify the component to use useChannels.
   // We need to fetch channels to map ID to Code
   const { data: channels = [] } = useQuery({
     queryKey: ['channels'],
-    queryFn: () => import('@/api/endpoints/master-data.endpoints').then(m => m.channelEndpoints.getAll(false)).then(res => res.data),
+    queryFn: () =>
+      import('@/api/endpoints/master-data.endpoints')
+        .then((m) => m.channelEndpoints.getAll(false))
+        .then((res) => res.data),
   });
 
-  const selectedChannel = channels.find((c: any) => c.id === formData.channelId);
+  const selectedChannel = channels.find(
+    (c: any) => c.id === formData.channelId
+  );
 
   // Fetch Customers for the selected channel (Step 2)
   const { data: customers = [], isLoading: customersLoading } = useQuery({
     queryKey: ['customers', 'channelId', formData.channelId],
-    queryFn: () => customerEndpoints.getByChannelId(formData.channelId).then((res) => res.data),
+    queryFn: () =>
+      customerEndpoints
+        .getByChannelId(formData.channelId)
+        .then((res) => res.data),
     enabled: !!formData.channelId && currentStep === 2,
   });
 
@@ -79,7 +102,8 @@ export function CplManagementPage() {
       const { isActive, ...cplData } = data;
       const cplResponse = await cplEndpoints.create({
         ...cplData,
-        customerIds: selectedCustomerIds.length > 0 ? selectedCustomerIds : undefined,
+        customerIds:
+          selectedCustomerIds.length > 0 ? selectedCustomerIds : undefined,
       });
       return cplResponse.data;
     },
@@ -90,7 +114,9 @@ export function CplManagementPage() {
     },
     onError: (error: any) => {
       console.error(error);
-      toast.error(error?.response?.data?.message || 'CPL oluşturulurken hata oluştu');
+      toast.error(
+        error?.response?.data?.message || 'CPL oluşturulurken hata oluştu'
+      );
     },
   });
 
@@ -104,7 +130,7 @@ export function CplManagementPage() {
     },
     onError: () => {
       toast.error('CPL silinirken hata oluştu');
-    }
+    },
   });
 
   const updateMutation = useMutation({
@@ -114,10 +140,16 @@ export function CplManagementPage() {
       await cplEndpoints.update(editingCpl.id, cplData);
 
       if (customers.length > 0) {
-        const previousCplCustomerIds = customers.filter(c => c.cpl?.id === editingCpl.id).map(c => c.id);
+        const previousCplCustomerIds = customers
+          .filter((c) => c.cpl?.id === editingCpl.id)
+          .map((c) => c.id);
 
-        const toRemove = previousCplCustomerIds.filter(id => !selectedCustomerIds.includes(id));
-        const toAdd = selectedCustomerIds.filter(id => !previousCplCustomerIds.includes(id));
+        const toRemove = previousCplCustomerIds.filter(
+          (id) => !selectedCustomerIds.includes(id)
+        );
+        const toAdd = selectedCustomerIds.filter(
+          (id) => !previousCplCustomerIds.includes(id)
+        );
 
         const promises: Promise<any>[] = [];
         for (const id of toRemove) {
@@ -156,7 +188,9 @@ export function CplManagementPage() {
 
   useEffect(() => {
     if (editingCpl && customers.length > 0) {
-      const cplCustomers = customers.filter((c: any) => c.cpl?.id === editingCpl.id).map((c: any) => c.id);
+      const cplCustomers = customers
+        .filter((c: any) => c.cpl?.id === editingCpl.id)
+        .map((c: any) => c.id);
       setSelectedCustomerIds(cplCustomers);
     }
   }, [customers, editingCpl]);
@@ -208,9 +242,10 @@ export function CplManagementPage() {
     );
   };
 
-  const filteredCustomers = customers.filter(c =>
-    c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    c.code.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredCustomers = customers.filter(
+    (c) =>
+      c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      c.code.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
@@ -218,7 +253,9 @@ export function CplManagementPage() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">CPL Yönetimi</h1>
-          <p className="text-gray-600 mt-2">Müşteri Planlama Gruplarını (CPL) yönetin</p>
+          <p className="text-gray-600 mt-2">
+            Müşteri Planlama Gruplarını (CPL) yönetin
+          </p>
         </div>
         <Button onClick={() => setIsDialogOpen(true)}>
           <Plus className="h-4 w-4 mr-2" />
@@ -230,44 +267,61 @@ export function CplManagementPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {cplsLoading ? (
           <p>Yükleniyor...</p>
-        ) : cpls.map((cpl: any) => (
-          <Card key={cpl.id} className="hover:shadow-md transition-shadow">
-            <CardHeader className="pb-2">
-              <div className="flex justify-between items-start">
-                <Badge variant="outline" className="mb-2">{cpl.code}</Badge>
-                <div className="flex gap-1">
-                  <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleEdit(cpl)}>
-                    <Edit className="h-3 w-3" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6 text-red-500 hover:text-red-700 hover:bg-red-50"
-                    onClick={() => handleDeleteClick(cpl)}
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </Button>
+        ) : (
+          cpls.map((cpl: any) => (
+            <Card key={cpl.id} className="hover:shadow-md transition-shadow">
+              <CardHeader className="pb-2">
+                <div className="flex justify-between items-start">
+                  <Badge variant="outline" className="mb-2">
+                    {cpl.code}
+                  </Badge>
+                  <div className="flex gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6"
+                      onClick={() => handleEdit(cpl)}
+                    >
+                      <Edit className="h-3 w-3" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6 text-red-500 hover:text-red-700 hover:bg-red-50"
+                      onClick={() => handleDeleteClick(cpl)}
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  </div>
                 </div>
-              </div>
-              <CardTitle className="text-lg">{cpl.name}</CardTitle>
-              <CardDescription className="line-clamp-1">{cpl.description || '-'}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
-                <Store className="h-4 w-4" />
-                <span>{cpl.channel?.name || 'Kanal Yok'}</span>
-              </div>
-              <div className="flex items-center justify-between text-xs mt-4 pt-2 border-t">
-                <span className={cpl.status === 'ACTIVE' ? 'text-green-600' : 'text-gray-500'}>
-                  {cpl.status === 'ACTIVE' ? 'Aktif' : 'Pasif'}
-                </span>
-                <span className="text-gray-400">
-                  {cpl.customers?.length || 0} Müşteri
-                </span>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+                <CardTitle className="text-lg">{cpl.name}</CardTitle>
+                <CardDescription className="line-clamp-1">
+                  {cpl.description || '-'}
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
+                  <Store className="h-4 w-4" />
+                  <span>{cpl.channel?.name || 'Kanal Yok'}</span>
+                </div>
+                <div className="flex items-center justify-between text-xs mt-4 pt-2 border-t">
+                  <span
+                    className={
+                      cpl.status === 'ACTIVE'
+                        ? 'text-green-600'
+                        : 'text-gray-500'
+                    }
+                  >
+                    {cpl.status === 'ACTIVE' ? 'Aktif' : 'Pasif'}
+                  </span>
+                  <span className="text-gray-400">
+                    {cpl.customers?.length || 0} Müşteri
+                  </span>
+                </div>
+              </CardContent>
+            </Card>
+          ))
+        )}
       </div>
 
       <Dialog open={isDialogOpen} onOpenChange={handleDialogClose}>
@@ -278,12 +332,13 @@ export function CplManagementPage() {
                 <Store className="h-6 w-6 text-blue-600" />
               </div>
               <div>
-                <DialogTitle>{editingCpl ? 'CPL Düzenle' : 'Yeni CPL Oluştur'}</DialogTitle>
+                <DialogTitle>
+                  {editingCpl ? 'CPL Düzenle' : 'Yeni CPL Oluştur'}
+                </DialogTitle>
                 <DialogDescription>
                   {editingCpl
                     ? 'Mevcut CPL bilgilerini ve müşterilerini düzenleyin.'
-                    : `Adım ${currentStep} / 2`
-                  }
+                    : `Adım ${currentStep} / 2`}
                 </DialogDescription>
               </div>
             </div>
@@ -298,7 +353,9 @@ export function CplManagementPage() {
                     id="code"
                     placeholder="ÖRN: CPL-001"
                     value={formData.code}
-                    onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, code: e.target.value })
+                    }
                     className="mt-1.5"
                   />
                 </div>
@@ -308,7 +365,9 @@ export function CplManagementPage() {
                     id="name"
                     placeholder="Örn: Carrefour Modern Grup"
                     value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, name: e.target.value })
+                    }
                     className="mt-1.5"
                   />
                 </div>
@@ -317,7 +376,9 @@ export function CplManagementPage() {
                   <div className="mt-1.5">
                     <ChannelSelect
                       value={formData.channelId}
-                      onChange={(val) => setFormData({ ...formData, channelId: val })}
+                      onChange={(val) =>
+                        setFormData({ ...formData, channelId: val })
+                      }
                       placeholder="Kanal seçiniz"
                     />
                   </div>
@@ -329,7 +390,9 @@ export function CplManagementPage() {
                     placeholder="Bu grup hakkında detaylı bilgi..."
                     rows={3}
                     value={formData.description}
-                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, description: e.target.value })
+                    }
                     className="mt-1.5"
                   />
                 </div>
@@ -340,12 +403,18 @@ export function CplManagementPage() {
               <div className="space-y-4">
                 <div className="bg-blue-50 text-blue-700 p-4 rounded-lg flex gap-3 text-sm">
                   <InfoIcon className="h-5 w-5 flex-shrink-0" />
-                  <p>Aşağıda seçilen kanala ait müşteriler listelenmektedir. Bu müşterileri yeni oluşturacağınız CPL grubuna atayabilirsiniz.</p>
+                  <p>
+                    Aşağıda seçilen kanala ait müşteriler listelenmektedir. Bu
+                    müşterileri yeni oluşturacağınız CPL grubuna
+                    atayabilirsiniz.
+                  </p>
                 </div>
 
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
-                    <Label>Müşteri Seçimi ({selectedCustomerIds.length} seçildi)</Label>
+                    <Label>
+                      Müşteri Seçimi ({selectedCustomerIds.length} seçildi)
+                    </Label>
                     <div className="relative w-64">
                       <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
                       <Input
@@ -360,7 +429,9 @@ export function CplManagementPage() {
                   <Card className="border-2 border-dashed shadow-none">
                     <ScrollArea className="h-[300px] w-full p-4">
                       {customersLoading ? (
-                        <div className="text-center py-8 text-gray-500">Müşteriler yükleniyor...</div>
+                        <div className="text-center py-8 text-gray-500">
+                          Müşteriler yükleniyor...
+                        </div>
                       ) : filteredCustomers.length === 0 ? (
                         <div className="flex flex-col items-center justify-center py-12 text-gray-400">
                           <Store className="h-12 w-12 mb-3 opacity-20" />
@@ -368,23 +439,32 @@ export function CplManagementPage() {
                         </div>
                       ) : (
                         <div className="grid grid-cols-1 gap-2">
-                          {filteredCustomers.map(customer => (
+                          {filteredCustomers.map((customer) => (
                             <div
                               key={customer.id}
-                              className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-colors ${selectedCustomerIds.includes(customer.id)
-                                ? 'bg-blue-50 border-blue-200'
-                                : 'hover:bg-gray-50 border-gray-100'
-                                }`}
+                              className={`flex items-center justify-between p-3 rounded-lg border cursor-pointer transition-colors ${
+                                selectedCustomerIds.includes(customer.id)
+                                  ? 'bg-blue-50 border-blue-200'
+                                  : 'hover:bg-gray-50 border-gray-100'
+                              }`}
                               onClick={() => toggleCustomer(customer.id)}
                             >
                               <div className="flex items-center gap-3">
                                 <Checkbox
-                                  checked={selectedCustomerIds.includes(customer.id)}
-                                  onCheckedChange={() => toggleCustomer(customer.id)}
+                                  checked={selectedCustomerIds.includes(
+                                    customer.id
+                                  )}
+                                  onCheckedChange={() =>
+                                    toggleCustomer(customer.id)
+                                  }
                                 />
                                 <div>
-                                  <p className="font-medium text-sm">{customer.name}</p>
-                                  <p className="text-xs text-gray-500">{customer.code} • {customer.city || '-'}</p>
+                                  <p className="font-medium text-sm">
+                                    {customer.name}
+                                  </p>
+                                  <p className="text-xs text-gray-500">
+                                    {customer.code} • {customer.city || '-'}
+                                  </p>
                                 </div>
                               </div>
                             </div>
@@ -399,7 +479,9 @@ export function CplManagementPage() {
           </div>
 
           <DialogFooter className="mt-4 pt-4 border-t">
-            <Button variant="outline" onClick={handleDialogClose}>İptal</Button>
+            <Button variant="outline" onClick={handleDialogClose}>
+              İptal
+            </Button>
             <div className="flex gap-2">
               {currentStep === 2 && (
                 <Button variant="ghost" onClick={() => setCurrentStep(1)}>
@@ -415,7 +497,9 @@ export function CplManagementPage() {
               ) : (
                 <Button
                   onClick={() => handleSubmit()}
-                  disabled={createMutation.isPending || updateMutation.isPending}
+                  disabled={
+                    createMutation.isPending || updateMutation.isPending
+                  }
                   className="bg-green-600 hover:bg-green-700"
                 >
                   <Check className="h-4 w-4 mr-2" />
@@ -433,14 +517,22 @@ export function CplManagementPage() {
           <DialogHeader>
             <DialogTitle>CPL Sil</DialogTitle>
             <DialogDescription>
-              "{cplToDelete?.name}" isimli CPL'i silmek istediğinize emin misiniz? Bu işlem geri alınamaz.
+              "{cplToDelete?.name}" isimli CPL'i silmek istediğinize emin
+              misiniz? Bu işlem geri alınamaz.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>İptal</Button>
+            <Button
+              variant="outline"
+              onClick={() => setDeleteDialogOpen(false)}
+            >
+              İptal
+            </Button>
             <Button
               variant="destructive"
-              onClick={() => cplToDelete && deleteMutation.mutate(cplToDelete.id)}
+              onClick={() =>
+                cplToDelete && deleteMutation.mutate(cplToDelete.id)
+              }
               disabled={deleteMutation.isPending}
             >
               {deleteMutation.isPending ? 'Siliniyor...' : 'Sil'}
@@ -456,9 +548,14 @@ function InfoIcon({ className }: { className?: string }) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      width="24" height="24" viewBox="0 0 24 24"
-      fill="none" stroke="currentColor" strokeWidth="2"
-      strokeLinecap="round" strokeLinejoin="round"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
       className={className}
     >
       <circle cx="12" cy="12" r="10" />

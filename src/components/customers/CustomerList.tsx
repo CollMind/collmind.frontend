@@ -32,7 +32,12 @@ import { EnumBadge } from '@/components/common/EnumBadge';
 import { CustomerFilters } from './CustomerFilters';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { EmptyState } from '@/components/common/EmptyState';
-import { useCustomers, useDeleteCustomer, useActivateCustomer, useDeactivateCustomer } from '@/services/customers.service';
+import {
+  useCustomers,
+  useDeleteCustomer,
+  useActivateCustomer,
+  useDeactivateCustomer,
+} from '@/services/customers.service';
 import { useToast } from '@/hooks/useToast';
 import { useDebounce } from '@/hooks/useDebounce';
 
@@ -52,7 +57,9 @@ export function CustomerList({ onEdit, onCreate }: CustomerListProps) {
     sortOrder: 'ASC',
   });
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [customerToDelete, setCustomerToDelete] = useState<Customer | null>(null);
+  const [customerToDelete, setCustomerToDelete] = useState<Customer | null>(
+    null
+  );
 
   const debouncedSearch = useDebounce(searchTerm, 300);
 
@@ -154,9 +161,7 @@ export function CustomerList({ onEdit, onCreate }: CustomerListProps) {
               className="pl-10"
             />
           </div>
-          {onCreate && (
-            <Button onClick={onCreate}>Yeni Müşteri</Button>
-          )}
+          {onCreate && <Button onClick={onCreate}>Yeni Müşteri</Button>}
         </div>
 
         <CustomerFilters

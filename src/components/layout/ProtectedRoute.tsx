@@ -14,12 +14,12 @@ interface ProtectedRouteProps {
 
 /**
  * ProtectedRoute - Korumalı route component'i
- * 
+ *
  * Özellikler:
  * - Authentication kontrolü
  * - Role-based access control
  * - Sayfa yenileme sonrası oturum kontrolü (GET /users/me)
- * 
+ *
  * @example
  * ```tsx
  * <ProtectedRoute requiredRole={['ADMIN']}>
@@ -39,7 +39,11 @@ export function ProtectedRoute({
 
   // Token varsa ama kullanıcı bilgisi yoksa, GET /users/me ile kontrol et
   const shouldFetchUser = !!accessToken && !user;
-  const { data: meData, isLoading: isMeLoading, error: meError } = useMe({
+  const {
+    data: meData,
+    isLoading: isMeLoading,
+    error: meError,
+  } = useMe({
     enabled: shouldFetchUser,
   });
 
@@ -76,7 +80,11 @@ export function ProtectedRoute({
 
   // Role-based access control
   // Admin has access to everything
-  if (requiredRole && user && !hasRole(user.role as UserRole, requiredRole as UserRole[])) {
+  if (
+    requiredRole &&
+    user &&
+    !hasRole(user.role as UserRole, requiredRole as UserRole[])
+  ) {
     return <Navigate to="/dashboard" replace />;
   }
 

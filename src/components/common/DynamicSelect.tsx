@@ -12,7 +12,12 @@ interface DynamicSelectProps {
   label?: string;
   value?: string;
   onChange: (value: string) => void;
-  options: Array<{ id: string; code?: string; name: string; [key: string]: any }>;
+  options: Array<{
+    id: string;
+    code?: string;
+    name: string;
+    [key: string]: any;
+  }>;
   placeholder?: string;
   disabled?: boolean;
   required?: boolean;

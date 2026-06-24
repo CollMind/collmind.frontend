@@ -1,5 +1,10 @@
 import { useState, useMemo } from 'react';
-import { useUsers, useDeleteUser, useActivateUser, useDeactivateUser } from '@/services/users.service';
+import {
+  useUsers,
+  useDeleteUser,
+  useActivateUser,
+  useDeactivateUser,
+} from '@/services/users.service';
 import { User, UserRole, UserStatus } from '@/types/user.types';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { EmptyState } from '@/components/common/EmptyState';
@@ -28,7 +33,15 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, Edit, Trash2, CheckCircle, XCircle, Search, Filter } from 'lucide-react';
+import {
+  MoreHorizontal,
+  Edit,
+  Trash2,
+  CheckCircle,
+  XCircle,
+  Search,
+  Filter,
+} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/useToast';
 
@@ -45,7 +58,9 @@ export function UserList({ onEdit, onCreate }: UserListProps) {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
-  const [sortField, setSortField] = useState<'fullName' | 'email' | 'role' | 'status'>('fullName');
+  const [sortField, setSortField] = useState<
+    'fullName' | 'email' | 'role' | 'status'
+  >('fullName');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
   const { data: users, isLoading, error } = useUsers();
@@ -127,7 +142,10 @@ export function UserList({ onEdit, onCreate }: UserListProps) {
         setDeleteDialogOpen(false);
         setUserToDelete(null);
       } catch (error: any) {
-        toast.error(error?.response?.data?.message || 'Kullanıcı silinirken bir hata oluştu');
+        toast.error(
+          error?.response?.data?.message ||
+            'Kullanıcı silinirken bir hata oluştu'
+        );
       }
     }
   };
@@ -137,7 +155,10 @@ export function UserList({ onEdit, onCreate }: UserListProps) {
       await activateMutation.mutateAsync(user.id);
       toast.success('Kullanıcı başarıyla aktif edildi');
     } catch (error: any) {
-      toast.error(error?.response?.data?.message || 'Kullanıcı aktif edilirken bir hata oluştu');
+      toast.error(
+        error?.response?.data?.message ||
+          'Kullanıcı aktif edilirken bir hata oluştu'
+      );
     }
   };
 
@@ -146,7 +167,10 @@ export function UserList({ onEdit, onCreate }: UserListProps) {
       await deactivateMutation.mutateAsync(user.id);
       toast.success('Kullanıcı başarıyla pasif edildi');
     } catch (error: any) {
-      toast.error(error?.response?.data?.message || 'Kullanıcı pasif edilirken bir hata oluştu');
+      toast.error(
+        error?.response?.data?.message ||
+          'Kullanıcı pasif edilirken bir hata oluştu'
+      );
     }
   };
 
@@ -219,9 +243,7 @@ export function UserList({ onEdit, onCreate }: UserListProps) {
           </Select>
 
           {/* Create Button */}
-          {onCreate && (
-            <Button onClick={onCreate}>Yeni Kullanıcı</Button>
-          )}
+          {onCreate && <Button onClick={onCreate}>Yeni Kullanıcı</Button>}
         </div>
 
         {/* Results count */}
@@ -236,8 +258,8 @@ export function UserList({ onEdit, onCreate }: UserListProps) {
           <DialogHeader>
             <DialogTitle>Kullanıcıyı Sil</DialogTitle>
             <DialogDescription>
-              {userToDelete?.fullName} kullanıcısını silmek istediğinizden emin misiniz?
-              Bu işlem geri alınamaz.
+              {userToDelete?.fullName} kullanıcısını silmek istediğinizden emin
+              misiniz? Bu işlem geri alınamaz.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -366,12 +388,16 @@ export function UserList({ onEdit, onCreate }: UserListProps) {
                           )}
                           <DropdownMenuSeparator />
                           {user.status === UserStatus.ACTIVE ? (
-                            <DropdownMenuItem onClick={() => handleDeactivate(user)}>
+                            <DropdownMenuItem
+                              onClick={() => handleDeactivate(user)}
+                            >
                               <XCircle className="mr-2 h-4 w-4" />
                               Pasif Et
                             </DropdownMenuItem>
                           ) : (
-                            <DropdownMenuItem onClick={() => handleActivate(user)}>
+                            <DropdownMenuItem
+                              onClick={() => handleActivate(user)}
+                            >
                               <CheckCircle className="mr-2 h-4 w-4" />
                               Aktif Et
                             </DropdownMenuItem>

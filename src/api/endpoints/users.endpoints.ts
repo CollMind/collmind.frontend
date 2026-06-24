@@ -31,6 +31,4 @@ export const userEndpoints = {
   deactivate: (id: string) => apiClient.post<User>(`/users/${id}/deactivate`),
 
   delete: (id: string) => apiClient.delete(`/users/${id}`),
-
 };
-

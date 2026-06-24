@@ -16,7 +16,11 @@ export function AuthLayout() {
           {/* Logo/Brand */}
           <div className="mb-8">
             <div className="mb-6">
-              <CollMindLogo showText={true} size="lg" className="text-gray-900 dark:text-white" />
+              <CollMindLogo
+                showText={true}
+                size="lg"
+                className="text-gray-900 dark:text-white"
+              />
             </div>
             <h1 className="text-3xl font-sans font-bold text-gray-900 dark:text-white tracking-tight">
               {currentView === 'login' && 'Welcome Back'}
@@ -24,8 +28,7 @@ export function AuthLayout() {
               {currentView === 'forgot-password' && 'Reset Password'}
             </h1>
             <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-              {currentView === 'login' &&
-                'Sign in to your account to continue'}
+              {currentView === 'login' && 'Sign in to your account to continue'}
               {currentView === 'register' &&
                 'Create your account to get started'}
               {currentView === 'forgot-password' &&
@@ -95,7 +98,9 @@ export function AuthLayout() {
               className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 mb-8"
             >
               <div className="w-2 h-2 rounded-full bg-blue-400"></div>
-              <span className="text-sm font-medium">Next Generation FMCG Solutions</span>
+              <span className="text-sm font-medium">
+                Next Generation FMCG Solutions
+              </span>
             </motion.div>
 
             {/* Main Heading */}
@@ -119,7 +124,9 @@ export function AuthLayout() {
               transition={{ delay: 0.4 }}
               className="text-lg xl:text-xl mb-8 text-white/90 leading-relaxed"
             >
-              Delivering world-class Connected solutions for FMCG companies—powered by advanced analytics, intuitive interfaces, and seamless system integration.
+              Delivering world-class Connected solutions for FMCG
+              companies—powered by advanced analytics, intuitive interfaces, and
+              seamless system integration.
             </motion.p>
 
             {/* Data Display Card */}
@@ -129,42 +136,44 @@ export function AuthLayout() {
               transition={{ delay: 0.5 }}
               className="w-80 bg-white/10 backdrop-blur-md rounded-2xl p-6 border border-white/20 shadow-2xl"
             >
-            {/* System Status */}
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-2 h-2 rounded-full bg-green-400"></div>
-              <span className="text-sm font-medium text-white">System Status: Optimized</span>
-            </div>
-
-            {/* Progress Bars */}
-            <div className="space-y-3 mb-4">
-              <div className="relative h-2 bg-white/20 rounded-full overflow-hidden">
-                <motion.div
-                  initial={{ width: 0 }}
-                  animate={{ width: '85%' }}
-                  transition={{ duration: 1, delay: 1 }}
-                  className="absolute inset-y-0 left-0 bg-blue-400 rounded-full"
-                />
+              {/* System Status */}
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-2 h-2 rounded-full bg-green-400"></div>
+                <span className="text-sm font-medium text-white">
+                  System Status: Optimized
+                </span>
               </div>
-              <div className="relative h-2 bg-white/20 rounded-full overflow-hidden">
-                <motion.div
-                  initial={{ width: 0 }}
-                  animate={{ width: '78%' }}
-                  transition={{ duration: 1, delay: 1.2 }}
-                  className="absolute inset-y-0 left-0 bg-purple-400 rounded-full"
-                />
-              </div>
-            </div>
 
-            {/* Efficiency Metric */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 1.4 }}
-              className="text-3xl font-bold text-white"
-            >
-              +24% Efficiency
+              {/* Progress Bars */}
+              <div className="space-y-3 mb-4">
+                <div className="relative h-2 bg-white/20 rounded-full overflow-hidden">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: '85%' }}
+                    transition={{ duration: 1, delay: 1 }}
+                    className="absolute inset-y-0 left-0 bg-blue-400 rounded-full"
+                  />
+                </div>
+                <div className="relative h-2 bg-white/20 rounded-full overflow-hidden">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: '78%' }}
+                    transition={{ duration: 1, delay: 1.2 }}
+                    className="absolute inset-y-0 left-0 bg-purple-400 rounded-full"
+                  />
+                </div>
+              </div>
+
+              {/* Efficiency Metric */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1.4 }}
+                className="text-3xl font-bold text-white"
+              >
+                +24% Efficiency
+              </motion.div>
             </motion.div>
-          </motion.div>
           </motion.div>
 
           {/* Abstract Circular Graphics */}
@@ -176,7 +185,7 @@ export function AuthLayout() {
               transition={{ duration: 1, delay: 0.6 }}
               className="absolute top-20 right-20 w-64 h-64 bg-blue-400 rounded-full blur-3xl"
             />
-            
+
             {/* Medium purple circle - lower right */}
             <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
@@ -184,7 +193,7 @@ export function AuthLayout() {
               transition={{ duration: 1, delay: 0.8 }}
               className="absolute bottom-32 right-32 w-48 h-48 bg-purple-400 rounded-full blur-3xl"
             />
-            
+
             {/* Smaller circles for depth */}
             <motion.div
               initial={{ opacity: 0 }}
@@ -204,4 +213,3 @@ export function AuthLayout() {
     </div>
   );
 }
-

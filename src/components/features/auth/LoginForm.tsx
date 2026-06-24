@@ -58,9 +58,11 @@ export function LoginForm({
 
   // IP adresini component mount olduğunda al
   useEffect(() => {
-    getClientIPAddress().then(setIpAddress).catch(() => {
-      // Hata durumunda sessizce devam et (opsiyonel alan)
-    });
+    getClientIPAddress()
+      .then(setIpAddress)
+      .catch(() => {
+        // Hata durumunda sessizce devam et (opsiyonel alan)
+      });
   }, []);
 
   const onSubmit = async (data: LoginFormData) => {
@@ -202,4 +204,3 @@ export function LoginForm({
     </Form>
   );
 }
-

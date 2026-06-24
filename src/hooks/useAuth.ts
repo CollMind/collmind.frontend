@@ -6,11 +6,11 @@ import { LoginDto } from '@/types/auth.types';
 
 /**
  * Authentication hook - Merkezi auth yönetimi için
- * 
+ *
  * @example
  * ```tsx
  * const { login, logout, isAuthenticated, user, error, clearError } = useAuth();
- * 
+ *
  * await login({ email: 'user@example.com', password: 'password123' });
  * ```
  */
@@ -49,13 +49,13 @@ export function useAuth() {
     isAuthenticated,
     error,
     isLoading: isLoading || loginMutation.isPending || logoutMutation.isPending,
-    
+
     // Actions
     login,
     logout,
     refreshToken,
     clearError: handleClearError,
-    
+
     // Mutation states
     isLoggingIn: loginMutation.isPending,
     isLoggingOut: logoutMutation.isPending,

@@ -1,5 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
-import { financeReportingEndpoints, ReportFilters } from '@/api/endpoints/finance-reporting.endpoints';
+import {
+  financeReportingEndpoints,
+  ReportFilters,
+} from '@/api/endpoints/finance-reporting.endpoints';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import {
   Table,
@@ -14,11 +17,14 @@ interface MechanicEffectivenessWidgetProps {
   filters: ReportFilters;
 }
 
-export function MechanicEffectivenessWidget({ filters }: MechanicEffectivenessWidgetProps) {
+export function MechanicEffectivenessWidget({
+  filters,
+}: MechanicEffectivenessWidgetProps) {
   const { data, isLoading, error } = useQuery({
     queryKey: ['mechanic-effectiveness', filters],
     queryFn: async () => {
-      const res = await financeReportingEndpoints.getMechanicEffectiveness(filters);
+      const res =
+        await financeReportingEndpoints.getMechanicEffectiveness(filters);
       return res.data;
     },
     staleTime: 30000,
@@ -29,7 +35,9 @@ export function MechanicEffectivenessWidget({ filters }: MechanicEffectivenessWi
   }
 
   if (error || !data) {
-    return <div className="text-red-500 text-sm">Veri yüklenirken hata oluştu</div>;
+    return (
+      <div className="text-red-500 text-sm">Veri yüklenirken hata oluştu</div>
+    );
   }
 
   const formatCurrency = (amount: number) => {
@@ -44,9 +52,15 @@ export function MechanicEffectivenessWidget({ filters }: MechanicEffectivenessWi
   return (
     <div className="space-y-4">
       <div className="text-sm text-gray-500">
-        Most Efficient: <span className="font-semibold text-gray-900">{data.mostEfficient}</span>
+        Most Efficient:{' '}
+        <span className="font-semibold text-gray-900">
+          {data.mostEfficient}
+        </span>
         {' | '}
-        Least Efficient: <span className="font-semibold text-gray-900">{data.leastEfficient}</span>
+        Least Efficient:{' '}
+        <span className="font-semibold text-gray-900">
+          {data.leastEfficient}
+        </span>
       </div>
 
       <div className="overflow-x-auto">
@@ -63,12 +77,22 @@ export function MechanicEffectivenessWidget({ filters }: MechanicEffectivenessWi
           <TableBody>
             {data.mechanics.map((mechanic) => (
               <TableRow key={mechanic.mechanicCode}>
-                <TableCell className="font-medium">{mechanic.mechanicName}</TableCell>
-                <TableCell className="text-right">{formatCurrency(mechanic.totalSpend)}</TableCell>
-                <TableCell className="text-right">{mechanic.planCount}</TableCell>
-                <TableCell className="text-right">{mechanic.avgGpRoi.toFixed(1)}%</TableCell>
+                <TableCell className="font-medium">
+                  {mechanic.mechanicName}
+                </TableCell>
                 <TableCell className="text-right">
-                  <span className="font-semibold">{mechanic.efficiencyScore.toFixed(2)}</span>
+                  {formatCurrency(mechanic.totalSpend)}
+                </TableCell>
+                <TableCell className="text-right">
+                  {mechanic.planCount}
+                </TableCell>
+                <TableCell className="text-right">
+                  {mechanic.avgGpRoi.toFixed(1)}%
+                </TableCell>
+                <TableCell className="text-right">
+                  <span className="font-semibold">
+                    {mechanic.efficiencyScore.toFixed(2)}
+                  </span>
                 </TableCell>
               </TableRow>
             ))}

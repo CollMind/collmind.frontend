@@ -1,5 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
-import { financeReportingEndpoints, ReportFilters } from '@/api/endpoints/finance-reporting.endpoints';
+import {
+  financeReportingEndpoints,
+  ReportFilters,
+} from '@/api/endpoints/finance-reporting.endpoints';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { AlertTriangle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
@@ -23,7 +26,9 @@ export function BudgetAtRiskWidget({ filters }: BudgetAtRiskWidgetProps) {
   }
 
   if (error || !data) {
-    return <div className="text-red-500 text-sm">Veri yüklenirken hata oluştu</div>;
+    return (
+      <div className="text-red-500 text-sm">Veri yüklenirken hata oluştu</div>
+    );
   }
 
   const formatCurrency = (amount: number) => {
@@ -43,8 +48,12 @@ export function BudgetAtRiskWidget({ filters }: BudgetAtRiskWidgetProps) {
             <AlertTriangle className="h-5 w-5 text-red-600" />
             <span className="font-semibold text-red-900">RED Plans</span>
           </div>
-          <div className="text-2xl font-bold text-red-600">{formatCurrency(data.redPlansSpend)}</div>
-          <div className="text-sm text-red-700">{data.redPlans.length} plan</div>
+          <div className="text-2xl font-bold text-red-600">
+            {formatCurrency(data.redPlansSpend)}
+          </div>
+          <div className="text-sm text-red-700">
+            {data.redPlans.length} plan
+          </div>
         </div>
 
         <div className="p-4 bg-amber-50 rounded-lg border border-amber-200">
@@ -52,14 +61,20 @@ export function BudgetAtRiskWidget({ filters }: BudgetAtRiskWidgetProps) {
             <AlertTriangle className="h-5 w-5 text-amber-600" />
             <span className="font-semibold text-amber-900">AMBER Plans</span>
           </div>
-          <div className="text-2xl font-bold text-amber-600">{formatCurrency(data.amberPlansSpend)}</div>
-          <div className="text-sm text-amber-700">{data.amberPlans.length} plan</div>
+          <div className="text-2xl font-bold text-amber-600">
+            {formatCurrency(data.amberPlansSpend)}
+          </div>
+          <div className="text-sm text-amber-700">
+            {data.amberPlans.length} plan
+          </div>
         </div>
       </div>
 
       <div className="p-4 bg-gray-50 rounded-lg">
         <div className="text-sm text-gray-600 mb-2">Total at Risk</div>
-        <div className="text-2xl font-bold">{formatCurrency(data.totalAtRisk)}</div>
+        <div className="text-2xl font-bold">
+          {formatCurrency(data.totalAtRisk)}
+        </div>
         <div className="text-sm text-gray-500 mt-1">
           {data.riskPercentage.toFixed(1)}% of total budget
         </div>
@@ -79,14 +94,21 @@ export function BudgetAtRiskWidget({ filters }: BudgetAtRiskWidgetProps) {
       {/* Top Risk Plans */}
       {data.redPlans.length > 0 && (
         <div>
-          <div className="font-semibold text-sm mb-2">Top Risk Plans (RED):</div>
+          <div className="font-semibold text-sm mb-2">
+            Top Risk Plans (RED):
+          </div>
           <div className="space-y-2">
             {data.redPlans.slice(0, 5).map((plan) => (
-              <div key={plan.planId} className="flex items-center justify-between p-2 bg-red-50 rounded text-sm">
+              <div
+                key={plan.planId}
+                className="flex items-center justify-between p-2 bg-red-50 rounded text-sm"
+              >
                 <span className="font-medium">{plan.planName}</span>
                 <div className="flex items-center gap-2">
                   <span>{formatCurrency(plan.totalSpend)}</span>
-                  <Badge className="bg-red-600 text-white">ROI: {plan.gpRoi.toFixed(1)}%</Badge>
+                  <Badge className="bg-red-600 text-white">
+                    ROI: {plan.gpRoi.toFixed(1)}%
+                  </Badge>
                 </div>
               </div>
             ))}

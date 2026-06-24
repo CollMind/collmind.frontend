@@ -2,13 +2,33 @@ import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
 import { Badge } from '@/components/ui/badge';
-import { RefreshCw, Download, Calendar as CalendarIcon, Filter, Maximize2, Minimize2 } from 'lucide-react';
+import {
+  RefreshCw,
+  Download,
+  Calendar as CalendarIcon,
+  Filter,
+  Maximize2,
+  Minimize2,
+} from 'lucide-react';
 import { format } from 'date-fns';
-import { financeReportingEndpoints, ReportFilters } from '@/api/endpoints/finance-reporting.endpoints';
+import {
+  financeReportingEndpoints,
+  ReportFilters,
+} from '@/api/endpoints/finance-reporting.endpoints';
 import { BudgetUtilizationWidget } from './widgets/BudgetUtilizationWidget';
 import { SpendTrendWidget } from './widgets/SpendTrendWidget';
 import { SpendCompositionWidget } from './widgets/SpendCompositionWidget';
@@ -20,7 +40,9 @@ import { CashFlowProjectionWidget } from './widgets/CashFlowProjectionWidget';
 
 export function FinanceDashboard() {
   const [filters, setFilters] = useState<ReportFilters>({
-    startDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0],
+    startDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1)
+      .toISOString()
+      .split('T')[0],
     endDate: new Date().toISOString().split('T')[0],
   });
   const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date }>({
@@ -102,7 +124,11 @@ export function FinanceDashboard() {
 
   const { data: planPerformance } = useQuery({
     queryKey: ['plan-performance', filters, { page: 1, limit: 1000 }],
-    queryFn: () => financeReportingEndpoints.getPlanPerformance(filters, { page: 1, limit: 1000 }),
+    queryFn: () =>
+      financeReportingEndpoints.getPlanPerformance(filters, {
+        page: 1,
+        limit: 1000,
+      }),
     staleTime: 30000,
   });
 
@@ -120,7 +146,11 @@ export function FinanceDashboard() {
 
   const { data: varianceAnalysis } = useQuery({
     queryKey: ['variance-analysis', filters],
-    queryFn: () => financeReportingEndpoints.getVarianceAnalysis(filters, 'budget_vs_actual'),
+    queryFn: () =>
+      financeReportingEndpoints.getVarianceAnalysis(
+        filters,
+        'budget_vs_actual'
+      ),
     staleTime: 30000,
   });
 
@@ -141,7 +171,7 @@ export function FinanceDashboard() {
       mechanicEffectiveness,
       varianceAnalysis,
       cashFlowProjection,
-      filters
+      filters,
     });
   };
 
@@ -151,7 +181,9 @@ export function FinanceDashboard() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Finance Dashboard</h1>
-          <p className="text-gray-500 mt-1">On-Invoice ve Off-Invoice spend analizi ve raporlama</p>
+          <p className="text-gray-500 mt-1">
+            On-Invoice ve Off-Invoice spend analizi ve raporlama
+          </p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={handleExport}>
@@ -197,7 +229,10 @@ export function FinanceDashboard() {
 
             <Popover>
               <PopoverTrigger asChild>
-                <Button variant="outline" className="w-[280px] justify-start text-left font-normal">
+                <Button
+                  variant="outline"
+                  className="w-[280px] justify-start text-left font-normal"
+                >
                   <CalendarIcon className="mr-2 h-4 w-4" />
                   {dateRange.from && dateRange.to ? (
                     <>
@@ -235,7 +270,11 @@ export function FinanceDashboard() {
               size="sm"
               onClick={() => toggleWidget('budget')}
             >
-              {expandedWidget === 'budget' ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+              {expandedWidget === 'budget' ? (
+                <Minimize2 className="h-4 w-4" />
+              ) : (
+                <Maximize2 className="h-4 w-4" />
+              )}
             </Button>
           </CardHeader>
           <CardContent>
@@ -252,7 +291,11 @@ export function FinanceDashboard() {
               size="sm"
               onClick={() => toggleWidget('trend')}
             >
-              {expandedWidget === 'trend' ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+              {expandedWidget === 'trend' ? (
+                <Minimize2 className="h-4 w-4" />
+              ) : (
+                <Maximize2 className="h-4 w-4" />
+              )}
             </Button>
           </CardHeader>
           <CardContent>
@@ -261,7 +304,9 @@ export function FinanceDashboard() {
         </Card>
 
         {/* Spend Composition - On-Invoice */}
-        <Card className={expandedWidget === 'composition-on' ? 'lg:col-span-2' : ''}>
+        <Card
+          className={expandedWidget === 'composition-on' ? 'lg:col-span-2' : ''}
+        >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle>On-Invoice Spend Kompozisyonu</CardTitle>
             <Button
@@ -269,7 +314,11 @@ export function FinanceDashboard() {
               size="sm"
               onClick={() => toggleWidget('composition-on')}
             >
-              {expandedWidget === 'composition-on' ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+              {expandedWidget === 'composition-on' ? (
+                <Minimize2 className="h-4 w-4" />
+              ) : (
+                <Maximize2 className="h-4 w-4" />
+              )}
             </Button>
           </CardHeader>
           <CardContent>
@@ -278,7 +327,11 @@ export function FinanceDashboard() {
         </Card>
 
         {/* Spend Composition - Off-Invoice */}
-        <Card className={expandedWidget === 'composition-off' ? 'lg:col-span-2' : ''}>
+        <Card
+          className={
+            expandedWidget === 'composition-off' ? 'lg:col-span-2' : ''
+          }
+        >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle>Off-Invoice Spend Kompozisyonu</CardTitle>
             <Button
@@ -286,7 +339,11 @@ export function FinanceDashboard() {
               size="sm"
               onClick={() => toggleWidget('composition-off')}
             >
-              {expandedWidget === 'composition-off' ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+              {expandedWidget === 'composition-off' ? (
+                <Minimize2 className="h-4 w-4" />
+              ) : (
+                <Maximize2 className="h-4 w-4" />
+              )}
             </Button>
           </CardHeader>
           <CardContent>
@@ -303,7 +360,11 @@ export function FinanceDashboard() {
               size="sm"
               onClick={() => toggleWidget('risk')}
             >
-              {expandedWidget === 'risk' ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+              {expandedWidget === 'risk' ? (
+                <Minimize2 className="h-4 w-4" />
+              ) : (
+                <Maximize2 className="h-4 w-4" />
+              )}
             </Button>
           </CardHeader>
           <CardContent>
@@ -320,7 +381,11 @@ export function FinanceDashboard() {
               size="sm"
               onClick={() => toggleWidget('mechanic')}
             >
-              {expandedWidget === 'mechanic' ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+              {expandedWidget === 'mechanic' ? (
+                <Minimize2 className="h-4 w-4" />
+              ) : (
+                <Maximize2 className="h-4 w-4" />
+              )}
             </Button>
           </CardHeader>
           <CardContent>
@@ -329,7 +394,11 @@ export function FinanceDashboard() {
         </Card>
 
         {/* Plan Performance */}
-        <Card className={expandedWidget === 'performance' ? 'lg:col-span-2' : 'lg:col-span-2'}>
+        <Card
+          className={
+            expandedWidget === 'performance' ? 'lg:col-span-2' : 'lg:col-span-2'
+          }
+        >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle>Plan Performans Tablosu</CardTitle>
             <Button
@@ -337,7 +406,11 @@ export function FinanceDashboard() {
               size="sm"
               onClick={() => toggleWidget('performance')}
             >
-              {expandedWidget === 'performance' ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+              {expandedWidget === 'performance' ? (
+                <Minimize2 className="h-4 w-4" />
+              ) : (
+                <Maximize2 className="h-4 w-4" />
+              )}
             </Button>
           </CardHeader>
           <CardContent>
@@ -354,7 +427,11 @@ export function FinanceDashboard() {
               size="sm"
               onClick={() => toggleWidget('variance')}
             >
-              {expandedWidget === 'variance' ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+              {expandedWidget === 'variance' ? (
+                <Minimize2 className="h-4 w-4" />
+              ) : (
+                <Maximize2 className="h-4 w-4" />
+              )}
             </Button>
           </CardHeader>
           <CardContent>
@@ -371,7 +448,11 @@ export function FinanceDashboard() {
               size="sm"
               onClick={() => toggleWidget('cashflow')}
             >
-              {expandedWidget === 'cashflow' ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+              {expandedWidget === 'cashflow' ? (
+                <Minimize2 className="h-4 w-4" />
+              ) : (
+                <Maximize2 className="h-4 w-4" />
+              )}
             </Button>
           </CardHeader>
           <CardContent>

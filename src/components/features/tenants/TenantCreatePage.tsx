@@ -19,9 +19,7 @@ export function TenantCreatePage() {
     <div>
       <div className="mb-6">
         <h1 className="text-3xl font-bold">Yeni Kiracı Oluştur</h1>
-        <p className="text-gray-600 mt-2">
-          Sisteme yeni bir kiracı ekleyin
-        </p>
+        <p className="text-gray-600 mt-2">Sisteme yeni bir kiracı ekleyin</p>
       </div>
 
       <div className="bg-white rounded-lg shadow p-6">

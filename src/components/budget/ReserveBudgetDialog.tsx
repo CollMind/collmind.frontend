@@ -62,7 +62,8 @@ export function ReserveBudgetDialog({
         <DialogHeader>
           <DialogTitle>Budget Rezerve Et</DialogTitle>
           <DialogDescription>
-            {envelope.name} - Kalan: {envelope.availableAmount.toLocaleString('tr-TR')}{' '}
+            {envelope.name} - Kalan:{' '}
+            {envelope.availableAmount.toLocaleString('tr-TR')}{' '}
             {envelope.currency}
           </DialogDescription>
         </DialogHeader>
@@ -92,7 +93,8 @@ export function ReserveBudgetDialog({
               required
             />
             <p className="text-xs text-gray-500 mt-1">
-              Maksimum: {envelope.availableAmount.toLocaleString('tr-TR')} {envelope.currency}
+              Maksimum: {envelope.availableAmount.toLocaleString('tr-TR')}{' '}
+              {envelope.currency}
             </p>
           </div>
 
@@ -117,5 +119,3 @@ export function ReserveBudgetDialog({
     </Dialog>
   );
 }
-
-

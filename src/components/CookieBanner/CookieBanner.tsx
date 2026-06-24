@@ -11,8 +11,12 @@ interface CookieBannerProps {
   className?: string;
 }
 
-export function CookieBanner({ position = 'bottom', className }: CookieBannerProps) {
-  const { showBanner, acceptAll, rejectAll, openPreferences } = useCookieContext();
+export function CookieBanner({
+  position = 'bottom',
+  className,
+}: CookieBannerProps) {
+  const { showBanner, acceptAll, rejectAll, openPreferences } =
+    useCookieContext();
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
@@ -42,8 +46,8 @@ export function CookieBanner({ position = 'bottom', className }: CookieBannerPro
           isVisible
             ? 'translate-y-0 opacity-100'
             : position === 'bottom' || position === 'bottom-center'
-            ? 'translate-y-full opacity-0'
-            : '-translate-y-full opacity-0',
+              ? 'translate-y-full opacity-0'
+              : '-translate-y-full opacity-0',
           className
         )}
         role="dialog"
@@ -64,8 +68,8 @@ export function CookieBanner({ position = 'bottom', className }: CookieBannerPro
                   id="cookie-banner-description"
                   className="text-sm text-gray-600 dark:text-gray-400"
                 >
-                  Our website uses cookies to provide you with the best experience. You can manage
-                  your cookie preferences or{' '}
+                  Our website uses cookies to provide you with the best
+                  experience. You can manage your cookie preferences or{' '}
                   <button
                     onClick={openPreferences}
                     className="text-primary-600 dark:text-primary-400 hover:underline font-medium"
@@ -114,4 +118,3 @@ export function CookieBanner({ position = 'bottom', className }: CookieBannerPro
     </>
   );
 }
-

@@ -3,8 +3,22 @@ import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { EmptyState } from '@/components/common/EmptyState';
 import { EnumBadge } from '@/components/common/EnumBadge';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Edit, Mail, Phone, Building, Briefcase, Calendar, Shield } from 'lucide-react';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import {
+  Edit,
+  Mail,
+  Phone,
+  Building,
+  Briefcase,
+  Calendar,
+  Shield,
+} from 'lucide-react';
 import { format } from 'date-fns';
 import { tr } from 'date-fns/locale';
 
@@ -160,7 +174,9 @@ export function UserDetail({ userId, onEdit }: UserDetailProps) {
             <div className="flex items-start gap-3">
               <Calendar className="h-5 w-5 text-gray-400 mt-0.5" />
               <div>
-                <p className="text-sm font-medium text-gray-500">Oluşturulma Tarihi</p>
+                <p className="text-sm font-medium text-gray-500">
+                  Oluşturulma Tarihi
+                </p>
                 <p className="text-sm text-gray-900">
                   {format(new Date(user.createdAt), 'dd MMMM yyyy, HH:mm', {
                     locale: tr,
@@ -172,7 +188,9 @@ export function UserDetail({ userId, onEdit }: UserDetailProps) {
             <div className="flex items-start gap-3">
               <Calendar className="h-5 w-5 text-gray-400 mt-0.5" />
               <div>
-                <p className="text-sm font-medium text-gray-500">Güncellenme Tarihi</p>
+                <p className="text-sm font-medium text-gray-500">
+                  Güncellenme Tarihi
+                </p>
                 <p className="text-sm text-gray-900">
                   {format(new Date(user.updatedAt), 'dd MMMM yyyy, HH:mm', {
                     locale: tr,

@@ -7,10 +7,10 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { 
-  Clock, 
-  CheckCircle2, 
-  TrendingUp, 
+import {
+  Clock,
+  CheckCircle2,
+  TrendingUp,
   AlertTriangle,
   Search,
   Eye,
@@ -18,7 +18,7 @@ import {
   Check,
   Store,
   Calendar,
-  User
+  User,
 } from 'lucide-react';
 import { useToast } from '@/hooks/useToast';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
@@ -44,10 +44,10 @@ const formatPercentage = (value: number, decimals: number = 1) => {
 const formatDate = (dateString?: string) => {
   if (!dateString) return 'N/A';
   const date = new Date(dateString);
-  return date.toLocaleDateString('tr-TR', { 
-    day: 'numeric', 
-    month: 'long', 
-    year: 'numeric' 
+  return date.toLocaleDateString('tr-TR', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
   });
 };
 
@@ -57,52 +57,76 @@ export function AgreementApprovalsPage() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedAgreement, setSelectedAgreement] = useState<Agreement | null>(null);
-  const [approveAgreement, setApproveAgreement] = useState<Agreement | null>(null);
-  const [rejectAgreement, setRejectAgreement] = useState<Agreement | null>(null);
+  const [selectedAgreement, setSelectedAgreement] = useState<Agreement | null>(
+    null
+  );
+  const [approveAgreement, setApproveAgreement] = useState<Agreement | null>(
+    null
+  );
+  const [rejectAgreement, setRejectAgreement] = useState<Agreement | null>(
+    null
+  );
   const [approveComments, setApproveComments] = useState('');
 
   const { data: agreements, isLoading } = useQuery({
     queryKey: ['pending-approval-agreements'],
-    queryFn: () => agreementEndpoints.getPendingApprovals().then(res => res.data),
+    queryFn: () =>
+      agreementEndpoints.getPendingApprovals().then((res) => res.data),
   });
 
   const approveMutation = useMutation({
-    mutationFn: ({ agreementId, comments }: {
+    mutationFn: ({
+      agreementId,
+      comments,
+    }: {
       agreementId: string;
       comments?: string;
     }) => agreementEndpoints.approve(agreementId, { comments }),
     onSuccess: () => {
       toast.success('Anlaşma başarıyla onaylandı');
-      queryClient.invalidateQueries({ queryKey: ['pending-approval-agreements'] });
+      queryClient.invalidateQueries({
+        queryKey: ['pending-approval-agreements'],
+      });
       setSelectedAgreement(null);
       setApproveAgreement(null);
       setApproveComments('');
     },
     onError: (error: any) => {
-      toast.error(error?.response?.data?.message || 'Anlaşma onaylanırken hata oluştu');
+      toast.error(
+        error?.response?.data?.message || 'Anlaşma onaylanırken hata oluştu'
+      );
     },
   });
 
   const rejectMutation = useMutation({
-    mutationFn: ({ agreementId, reason }: { agreementId: string; reason: string }) =>
-      agreementEndpoints.reject(agreementId, { reason }),
+    mutationFn: ({
+      agreementId,
+      reason,
+    }: {
+      agreementId: string;
+      reason: string;
+    }) => agreementEndpoints.reject(agreementId, { reason }),
     onSuccess: () => {
       toast.success('Anlaşma reddedildi');
-      queryClient.invalidateQueries({ queryKey: ['pending-approval-agreements'] });
+      queryClient.invalidateQueries({
+        queryKey: ['pending-approval-agreements'],
+      });
       setSelectedAgreement(null);
       setRejectAgreement(null);
     },
     onError: (error: any) => {
-      toast.error(error?.response?.data?.message || 'Anlaşma reddedilirken hata oluştu');
+      toast.error(
+        error?.response?.data?.message || 'Anlaşma reddedilirken hata oluştu'
+      );
     },
   });
 
   // Filter agreements by search query
-  const filteredAgreements = (agreements || []).filter(agreement => {
+  const filteredAgreements = (agreements || []).filter((agreement) => {
     if (!searchQuery) return true;
     const query = searchQuery.toLowerCase();
-    const agreementCode = agreement.agreementCode || agreement.agreementNumber || '';
+    const agreementCode =
+      agreement.agreementCode || agreement.agreementNumber || '';
     const agreementName = agreement.agreementName || '';
     return (
       agreementCode.toLowerCase().includes(query) ||
@@ -113,28 +137,31 @@ export function AgreementApprovalsPage() {
   // Calculate summary statistics
   const pendingCount = agreements?.length || 0;
   const approvedTodayCount = 0; // TODO: Calculate from approved agreements
-  
+
   // Backend'den gelen decimal değerleri number'a dönüştür
-  const avgSpend = agreements && agreements.length > 0
-    ? agreements.reduce((sum, a) => {
-        let cap = 0;
-        if (a.capTotalAmount != null) {
-          cap = toNumber(a.capTotalAmount);
-        }
-        return sum + cap;
-      }, 0) / agreements.length
-    : 0;
-  
-  const highSpendCount = agreements?.filter(a => {
-    let cap = 0;
-    if (a.capTotalAmount != null) {
-      const capValue = typeof a.capTotalAmount === 'string' 
-        ? parseFloat(a.capTotalAmount.replace(/,/g, '')) 
-        : Number(a.capTotalAmount);
-      cap = isNaN(capValue) ? 0 : capValue;
-    }
-    return cap > 100000;
-  }).length || 0;
+  const avgSpend =
+    agreements && agreements.length > 0
+      ? agreements.reduce((sum, a) => {
+          let cap = 0;
+          if (a.capTotalAmount != null) {
+            cap = toNumber(a.capTotalAmount);
+          }
+          return sum + cap;
+        }, 0) / agreements.length
+      : 0;
+
+  const highSpendCount =
+    agreements?.filter((a) => {
+      let cap = 0;
+      if (a.capTotalAmount != null) {
+        const capValue =
+          typeof a.capTotalAmount === 'string'
+            ? parseFloat(a.capTotalAmount.replace(/,/g, ''))
+            : Number(a.capTotalAmount);
+        cap = isNaN(capValue) ? 0 : capValue;
+      }
+      return cap > 100000;
+    }).length || 0;
 
   if (isLoading) return <LoadingSpinner />;
 
@@ -147,7 +174,9 @@ export function AgreementApprovalsPage() {
 
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Anlaşma Onayları</h1>
+        <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          Anlaşma Onayları
+        </h1>
         <p className="text-gray-600">
           Onay bekleyen anlaşmaları inceleyin ve onaylayın.
         </p>
@@ -159,8 +188,12 @@ export function AgreementApprovalsPage() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-xs text-gray-500 uppercase mb-1">BEKLEYEN</div>
-                <div className="text-2xl font-bold text-gray-900">{pendingCount}</div>
+                <div className="text-xs text-gray-500 uppercase mb-1">
+                  BEKLEYEN
+                </div>
+                <div className="text-2xl font-bold text-gray-900">
+                  {pendingCount}
+                </div>
               </div>
               <Clock className="h-8 w-8 text-blue-600" />
             </div>
@@ -171,8 +204,12 @@ export function AgreementApprovalsPage() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-xs text-gray-500 uppercase mb-1">BUGÜN ONAYLANAN</div>
-                <div className="text-2xl font-bold text-gray-900">{approvedTodayCount}</div>
+                <div className="text-xs text-gray-500 uppercase mb-1">
+                  BUGÜN ONAYLANAN
+                </div>
+                <div className="text-2xl font-bold text-gray-900">
+                  {approvedTodayCount}
+                </div>
               </div>
               <CheckCircle2 className="h-8 w-8 text-green-600" />
             </div>
@@ -184,12 +221,19 @@ export function AgreementApprovalsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <div className="flex items-center gap-2 mb-1">
-                  <div className="text-xs text-gray-500 uppercase">ORT. TUTAR</div>
-                  <Badge variant="outline" className="text-xs bg-orange-50 text-orange-700 border-orange-200">
+                  <div className="text-xs text-gray-500 uppercase">
+                    ORT. TUTAR
+                  </div>
+                  <Badge
+                    variant="outline"
+                    className="text-xs bg-orange-50 text-orange-700 border-orange-200"
+                  >
                     ORT.
                   </Badge>
                 </div>
-                <div className="text-2xl font-bold text-gray-900">{formatCurrency(avgSpend)}</div>
+                <div className="text-2xl font-bold text-gray-900">
+                  {formatCurrency(avgSpend)}
+                </div>
                 <div className="text-xs text-gray-500">(BEKLEYEN)</div>
               </div>
               <TrendingUp className="h-8 w-8 text-purple-600" />
@@ -201,9 +245,13 @@ export function AgreementApprovalsPage() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-xs text-gray-500 uppercase mb-1">YÜKSEK TUTAR</div>
+                <div className="text-xs text-gray-500 uppercase mb-1">
+                  YÜKSEK TUTAR
+                </div>
                 <div className="text-xs text-gray-500 mb-1">(&gt; 100K)</div>
-                <div className="text-2xl font-bold text-gray-900">{highSpendCount}</div>
+                <div className="text-2xl font-bold text-gray-900">
+                  {highSpendCount}
+                </div>
               </div>
               <AlertTriangle className="h-8 w-8 text-red-600" />
             </div>
@@ -228,7 +276,9 @@ export function AgreementApprovalsPage() {
         {filteredAgreements.length === 0 ? (
           <Card>
             <CardContent className="p-8 text-center text-gray-500">
-              {searchQuery ? 'Arama sonucu bulunamadı' : 'Onay bekleyen anlaşma bulunmamaktadır'}
+              {searchQuery
+                ? 'Arama sonucu bulunamadı'
+                : 'Onay bekleyen anlaşma bulunmamaktadır'}
             </CardContent>
           </Card>
         ) : (
@@ -286,7 +336,10 @@ export function AgreementApprovalsPage() {
               toast.error('Red gerekçesi zorunludur');
               return;
             }
-            rejectMutation.mutate({ agreementId: rejectAgreement.id, reason: note! });
+            rejectMutation.mutate({
+              agreementId: rejectAgreement.id,
+              reason: note!,
+            });
           }}
           title="Anlaşmayı Reddet"
           description={`${rejectAgreement.agreementCode || rejectAgreement.agreementNumber} - ${rejectAgreement.agreementName || 'Anlaşma'} reddetmek istediğinize emin misiniz?`}
@@ -326,11 +379,12 @@ function AgreementApprovalCard({
   const createdBy = (agreement as any).createdBy;
   const { data: creatorUser } = useQuery({
     queryKey: ['user', createdBy],
-    queryFn: () => userEndpoints.getById(createdBy!).then(res => res.data),
+    queryFn: () => userEndpoints.getById(createdBy!).then((res) => res.data),
     enabled: !!createdBy,
   });
 
-  const agreementCode = agreement.agreementCode || agreement.agreementNumber || 'N/A';
+  const agreementCode =
+    agreement.agreementCode || agreement.agreementNumber || 'N/A';
   // Backend'den gelen decimal değeri number'a dönüştür
   let totalSpend = 0;
   if (agreement.capTotalAmount != null) {
@@ -346,13 +400,19 @@ function AgreementApprovalCard({
         <div className="flex items-start justify-between mb-4">
           <div>
             <div className="flex items-center gap-2 mb-1">
-              <span className="text-lg font-semibold text-gray-900">{agreementCode}</span>
-              <Badge className="bg-blue-100 text-blue-800 border-blue-200">YENİ</Badge>
+              <span className="text-lg font-semibold text-gray-900">
+                {agreementCode}
+              </span>
+              <Badge className="bg-blue-100 text-blue-800 border-blue-200">
+                YENİ
+              </Badge>
               <Badge variant="outline" className="text-xs">
                 {agreementType}
               </Badge>
             </div>
-            <h3 className="text-xl font-bold text-gray-900">{agreement.agreementName || 'Anlaşma'}</h3>
+            <h3 className="text-xl font-bold text-gray-900">
+              {agreement.agreementName || 'Anlaşma'}
+            </h3>
           </div>
         </div>
 
@@ -378,19 +438,27 @@ function AgreementApprovalCard({
         <div className="grid grid-cols-4 gap-4 mb-4">
           <div>
             <div className="text-xs text-gray-500 mb-1">TOPLAM TUTAR</div>
-            <div className="text-sm font-semibold text-gray-900">{formatCurrency(totalSpend)}</div>
+            <div className="text-sm font-semibold text-gray-900">
+              {formatCurrency(totalSpend)}
+            </div>
           </div>
           <div>
             <div className="text-xs text-gray-500 mb-1">BAŞLANGIÇ</div>
-            <div className="text-sm font-semibold text-gray-900">{formatDate(agreement.startDate)}</div>
+            <div className="text-sm font-semibold text-gray-900">
+              {formatDate(agreement.startDate)}
+            </div>
           </div>
           <div>
             <div className="text-xs text-gray-500 mb-1">BİTİŞ</div>
-            <div className="text-sm font-semibold text-gray-900">{formatDate(agreement.endDate)}</div>
+            <div className="text-sm font-semibold text-gray-900">
+              {formatDate(agreement.endDate)}
+            </div>
           </div>
           <div>
             <div className="text-xs text-gray-500 mb-1">SPEND TİPİ</div>
-            <div className="text-sm font-semibold text-gray-900">{agreement.spendType || 'N/A'}</div>
+            <div className="text-sm font-semibold text-gray-900">
+              {agreement.spendType || 'N/A'}
+            </div>
           </div>
         </div>
 
@@ -399,18 +467,15 @@ function AgreementApprovalCard({
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4 flex items-start gap-2">
             <AlertTriangle className="h-5 w-5 text-yellow-600 mt-0.5" />
             <div className="text-sm text-yellow-800">
-              Yüksek tutarlı anlaşma ({formatCurrency(totalSpend)}). Dikkatli inceleme önerilir.
+              Yüksek tutarlı anlaşma ({formatCurrency(totalSpend)}). Dikkatli
+              inceleme önerilir.
             </div>
           </div>
         )}
 
         {/* Action Buttons */}
         <div className="flex gap-2">
-          <Button
-            variant="outline"
-            onClick={onReview}
-            className="flex-1"
-          >
+          <Button variant="outline" onClick={onReview} className="flex-1">
             <Eye className="mr-2 h-4 w-4" />
             Detay İncele
           </Button>

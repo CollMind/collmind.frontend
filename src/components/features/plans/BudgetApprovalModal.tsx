@@ -23,7 +23,10 @@ import {
   Shield,
   ArrowRight,
 } from 'lucide-react';
-import { planEndpoints, BudgetCheckResult } from '@/api/endpoints/plans.endpoints';
+import {
+  planEndpoints,
+  BudgetCheckResult,
+} from '@/api/endpoints/plans.endpoints';
 
 interface BudgetApprovalModalProps {
   isOpen: boolean;
@@ -31,7 +34,11 @@ interface BudgetApprovalModalProps {
   planName: string;
   planCode: string;
   onClose: () => void;
-  onApprove: (data: { comments?: string; autoCreateBudget?: boolean; budgetAmount?: number }) => void;
+  onApprove: (data: {
+    comments?: string;
+    autoCreateBudget?: boolean;
+    budgetAmount?: number;
+  }) => void;
   isApproving: boolean;
 }
 
@@ -55,11 +62,13 @@ export function BudgetApprovalModal({
 }: BudgetApprovalModalProps) {
   const [comments, setComments] = useState('');
   const [budgetAmount, setBudgetAmount] = useState<number>(0);
-  const [step, setStep] = useState<'checking' | 'budget-found' | 'no-budget'>('checking');
+  const [step, setStep] = useState<'checking' | 'budget-found' | 'no-budget'>(
+    'checking'
+  );
 
   const { data: budgetCheck, isLoading } = useQuery({
     queryKey: ['budget-check', planId],
-    queryFn: () => planEndpoints.checkBudget(planId).then(res => res.data),
+    queryFn: () => planEndpoints.checkBudget(planId).then((res) => res.data),
     enabled: isOpen,
   });
 
@@ -112,7 +121,9 @@ export function BudgetApprovalModal({
               <CheckCircle2 className="h-5 w-5 text-green-600" />
             </div>
             <div className="flex-1">
-              <h4 className="text-sm font-semibold text-green-800 mb-1">Bütçe Mevcut</h4>
+              <h4 className="text-sm font-semibold text-green-800 mb-1">
+                Bütçe Mevcut
+              </h4>
               <p className="text-xs text-green-700">
                 Bu plan için uygun bütçe zarfı bulundu.
               </p>
@@ -125,7 +136,9 @@ export function BudgetApprovalModal({
       <div className="border border-gray-200 rounded-lg p-4 space-y-3">
         <div className="flex items-center gap-2 mb-2">
           <Wallet className="h-4 w-4 text-gray-500" />
-          <span className="text-sm font-semibold text-gray-700">Bütçe Detayları</span>
+          <span className="text-sm font-semibold text-gray-700">
+            Bütçe Detayları
+          </span>
         </div>
 
         <div className="grid grid-cols-2 gap-3 text-sm">
@@ -139,11 +152,15 @@ export function BudgetApprovalModal({
           </div>
           <div>
             <span className="text-gray-500 block text-xs">Toplam Bütçe</span>
-            <span className="font-medium">{formatCurrency(budget.envelope?.allocatedAmount || 0)}</span>
+            <span className="font-medium">
+              {formatCurrency(budget.envelope?.allocatedAmount || 0)}
+            </span>
           </div>
           <div>
             <span className="text-gray-500 block text-xs">Kullanılabilir</span>
-            <span className={`font-medium ${budget.sufficient ? 'text-green-600' : 'text-red-600'}`}>
+            <span
+              className={`font-medium ${budget.sufficient ? 'text-green-600' : 'text-red-600'}`}
+            >
               {formatCurrency(budget.envelope?.availableAmount || 0)}
             </span>
           </div>
@@ -152,7 +169,9 @@ export function BudgetApprovalModal({
         <div className="border-t border-gray-100 pt-3">
           <div className="flex items-center justify-between text-sm">
             <span className="text-gray-600">Plan Toplam Harcama</span>
-            <span className="font-bold text-gray-900">{formatCurrency(budget.planTotalSpend)}</span>
+            <span className="font-bold text-gray-900">
+              {formatCurrency(budget.planTotalSpend)}
+            </span>
           </div>
         </div>
 
@@ -160,7 +179,10 @@ export function BudgetApprovalModal({
           <div className="bg-red-50 border border-red-200 rounded p-2 flex items-start gap-2">
             <AlertTriangle className="h-4 w-4 text-red-500 mt-0.5 flex-shrink-0" />
             <span className="text-xs text-red-700">
-              Kullanılabilir bütçe ({formatCurrency(budget.envelope?.availableAmount || 0)}) plan harcamasından ({formatCurrency(budget.planTotalSpend)}) düşük. Yine de onaylayabilirsiniz.
+              Kullanılabilir bütçe (
+              {formatCurrency(budget.envelope?.availableAmount || 0)}) plan
+              harcamasından ({formatCurrency(budget.planTotalSpend)}) düşük.
+              Yine de onaylayabilirsiniz.
             </span>
           </div>
         )}
@@ -168,14 +190,19 @@ export function BudgetApprovalModal({
         {budget.sufficient && (
           <div className="flex items-center gap-2 text-xs text-green-600">
             <Shield className="h-3 w-3" />
-            <span>Bütçe yeterli. Onay sonrası {formatCurrency(budget.planTotalSpend)} commit edilecektir.</span>
+            <span>
+              Bütçe yeterli. Onay sonrası{' '}
+              {formatCurrency(budget.planTotalSpend)} commit edilecektir.
+            </span>
           </div>
         )}
       </div>
 
       {/* Comments */}
       <div>
-        <Label htmlFor="approval-comments" className="text-sm">Onay Notu (opsiyonel)</Label>
+        <Label htmlFor="approval-comments" className="text-sm">
+          Onay Notu (opsiyonel)
+        </Label>
         <Textarea
           id="approval-comments"
           value={comments}
@@ -197,10 +224,13 @@ export function BudgetApprovalModal({
               <AlertTriangle className="h-5 w-5 text-amber-600" />
             </div>
             <div className="flex-1">
-              <h4 className="text-sm font-semibold text-amber-800 mb-1">Bütçe Bulunamadı</h4>
+              <h4 className="text-sm font-semibold text-amber-800 mb-1">
+                Bütçe Bulunamadı
+              </h4>
               <p className="text-xs text-amber-700">
-                <strong>{budget.channelName}</strong> kanalı ve <strong>{budget.period}</strong> dönemi için
-                aktif bütçe zarfı tanımlı değil.
+                <strong>{budget.channelName}</strong> kanalı ve{' '}
+                <strong>{budget.period}</strong> dönemi için aktif bütçe zarfı
+                tanımlı değil.
               </p>
             </div>
           </div>
@@ -211,17 +241,22 @@ export function BudgetApprovalModal({
       <div className="border border-blue-200 bg-blue-50 rounded-lg p-4 space-y-3">
         <div className="flex items-center gap-2">
           <Plus className="h-4 w-4 text-blue-600" />
-          <span className="text-sm font-semibold text-blue-800">Otomatik Bütçe Oluştur</span>
+          <span className="text-sm font-semibold text-blue-800">
+            Otomatik Bütçe Oluştur
+          </span>
         </div>
         <p className="text-xs text-blue-700">
-          Aşağıdaki bilgilerle otomatik bütçe zarfı oluşturulacak ve plan onaylanacaktır.
+          Aşağıdaki bilgilerle otomatik bütçe zarfı oluşturulacak ve plan
+          onaylanacaktır.
         </p>
 
         <div className="space-y-2">
           <div className="grid grid-cols-2 gap-3 text-sm">
             <div>
               <span className="text-blue-600 block text-xs">Kanal</span>
-              <span className="font-medium text-gray-900">{budget.channelName}</span>
+              <span className="font-medium text-gray-900">
+                {budget.channelName}
+              </span>
             </div>
             <div>
               <span className="text-blue-600 block text-xs">Dönem</span>
@@ -230,8 +265,12 @@ export function BudgetApprovalModal({
           </div>
 
           <div>
-            <span className="text-blue-600 block text-xs mb-1">Plan Toplam Harcama</span>
-            <span className="font-bold text-gray-900">{formatCurrency(budget.planTotalSpend)}</span>
+            <span className="text-blue-600 block text-xs mb-1">
+              Plan Toplam Harcama
+            </span>
+            <span className="font-bold text-gray-900">
+              {formatCurrency(budget.planTotalSpend)}
+            </span>
           </div>
 
           <div>
@@ -257,14 +296,19 @@ export function BudgetApprovalModal({
       <div className="flex items-start gap-2 text-xs text-gray-500">
         <Info className="h-3 w-3 mt-0.5 flex-shrink-0" />
         <span>
-          Bütçe zarfı <strong>{budget.channel}/{budget.period}</strong> kodu ile oluşturulacak ve
-          otomatik olarak aktif duruma getirilecektir.
+          Bütçe zarfı{' '}
+          <strong>
+            {budget.channel}/{budget.period}
+          </strong>{' '}
+          kodu ile oluşturulacak ve otomatik olarak aktif duruma getirilecektir.
         </span>
       </div>
 
       {/* Comments */}
       <div>
-        <Label htmlFor="approval-comments-create" className="text-sm">Onay Notu (opsiyonel)</Label>
+        <Label htmlFor="approval-comments-create" className="text-sm">
+          Onay Notu (opsiyonel)
+        </Label>
         <Textarea
           id="approval-comments-create"
           value={comments}
@@ -291,7 +335,9 @@ export function BudgetApprovalModal({
 
         {(isLoading || step === 'checking') && renderChecking()}
 
-        {step === 'budget-found' && budgetCheck && renderBudgetFound(budgetCheck)}
+        {step === 'budget-found' &&
+          budgetCheck &&
+          renderBudgetFound(budgetCheck)}
 
         {step === 'no-budget' && budgetCheck && renderNoBudget(budgetCheck)}
 
@@ -324,7 +370,10 @@ export function BudgetApprovalModal({
             {step === 'no-budget' && (
               <Button
                 onClick={handleApproveWithAutoCreate}
-                disabled={isApproving || budgetAmount < (budgetCheck?.planTotalSpend || 0)}
+                disabled={
+                  isApproving ||
+                  budgetAmount < (budgetCheck?.planTotalSpend || 0)
+                }
                 className="bg-blue-600 hover:bg-blue-700 text-white"
               >
                 {isApproving ? (

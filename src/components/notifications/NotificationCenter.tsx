@@ -7,7 +7,10 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { useUnreadNotifications, useMarkNotificationAsRead } from '@/services/notifications.service';
+import {
+  useUnreadNotifications,
+  useMarkNotificationAsRead,
+} from '@/services/notifications.service';
 import { NotificationItem } from './NotificationItem';
 
 export function NotificationCenter() {
@@ -25,9 +28,9 @@ export function NotificationCenter() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button 
-          variant="ghost" 
-          size="icon" 
+        <Button
+          variant="ghost"
+          size="icon"
           className="relative text-gray-300 hover:text-white hover:bg-gray-800"
         >
           <Bell className="h-5 w-5" />
@@ -47,7 +50,9 @@ export function NotificationCenter() {
         </div>
         <div className="max-h-96 overflow-y-auto">
           {isLoading ? (
-            <div className="p-4 text-center text-sm text-gray-500">Yükleniyor...</div>
+            <div className="p-4 text-center text-sm text-gray-500">
+              Yükleniyor...
+            </div>
           ) : unreadNotifications && unreadNotifications.length > 0 ? (
             unreadNotifications.map((notification) => (
               <NotificationItem
@@ -66,4 +71,3 @@ export function NotificationCenter() {
     </DropdownMenu>
   );
 }
-

@@ -52,7 +52,12 @@ export interface DistributionValidationResult {
 
 export interface ValidationError {
   severity: 'ERROR' | 'WARNING' | 'INFO';
-  category: 'INPUT_ERROR' | 'COMBINATION_ERROR' | 'BUDGET_ERROR' | 'BUSINESS_RULE_ERROR' | 'CALCULATION_ERROR';
+  category:
+    | 'INPUT_ERROR'
+    | 'COMBINATION_ERROR'
+    | 'BUDGET_ERROR'
+    | 'BUSINESS_RULE_ERROR'
+    | 'CALCULATION_ERROR';
   message: string;
   field?: string;
   fuId?: string;
@@ -102,27 +107,43 @@ export interface PreSubmissionValidation {
 export const spendCalculationEndpoints = {
   // Distribution
   distributeMechanicSpend: (planFuId: string, mechanicId: string) =>
-    apiClient.post<DistributionResult>(`/spend-calculation/distribute/${planFuId}/${mechanicId}`),
+    apiClient.post<DistributionResult>(
+      `/spend-calculation/distribute/${planFuId}/${mechanicId}`
+    ),
 
   recalculateOnVolumeChange: (skuId: string, newVolume: number) =>
-    apiClient.post(`/spend-calculation/recalculate-on-volume-change/${skuId}`, { newVolume }),
+    apiClient.post(`/spend-calculation/recalculate-on-volume-change/${skuId}`, {
+      newVolume,
+    }),
 
   getDistributionBreakdown: (planFuId: string) =>
-    apiClient.get<FUDistributionBreakdown>(`/spend-calculation/breakdown/${planFuId}`),
+    apiClient.get<FUDistributionBreakdown>(
+      `/spend-calculation/breakdown/${planFuId}`
+    ),
 
   validateDistribution: (planFuId: string) =>
-    apiClient.get<DistributionValidationResult>(`/spend-calculation/validate-distribution/${planFuId}`),
+    apiClient.get<DistributionValidationResult>(
+      `/spend-calculation/validate-distribution/${planFuId}`
+    ),
 
   // Validation
   validateInputs: (planFuId: string) =>
-    apiClient.get<InputValidationResult>(`/spend-calculation/validate-inputs/${planFuId}`),
+    apiClient.get<InputValidationResult>(
+      `/spend-calculation/validate-inputs/${planFuId}`
+    ),
 
   validateCombinations: (planFuId: string) =>
-    apiClient.get<CombinationValidationResult>(`/spend-calculation/validate-combinations/${planFuId}`),
+    apiClient.get<CombinationValidationResult>(
+      `/spend-calculation/validate-combinations/${planFuId}`
+    ),
 
   validateBudget: (planId: string) =>
-    apiClient.get<BudgetValidationResult>(`/spend-calculation/validate-budget/${planId}`),
+    apiClient.get<BudgetValidationResult>(
+      `/spend-calculation/validate-budget/${planId}`
+    ),
 
   validateBeforeSubmission: (planId: string) =>
-    apiClient.get<PreSubmissionValidation>(`/spend-calculation/validate-before-submission/${planId}`),
+    apiClient.get<PreSubmissionValidation>(
+      `/spend-calculation/validate-before-submission/${planId}`
+    ),
 };

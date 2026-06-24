@@ -10,7 +10,10 @@ import {
 import { Button } from '@/components/ui/button';
 import { CategoryToggle } from './CategoryToggle';
 import { useCookieContext } from '@/context/CookieContext';
-import type { CookieCategoryInfo, CookiePreferences } from '@/types/cookie.types';
+import type {
+  CookieCategoryInfo,
+  CookiePreferences,
+} from '@/types/cookie.types';
 import { getDefaultPreferences } from '@/utils/cookieStorage';
 import { Separator } from '@/components/ui/separator';
 
@@ -75,7 +78,10 @@ export function CookiePreferencesModal() {
     };
   }, [showPreferences]);
 
-  const handleCategoryChange = (categoryId: keyof CookiePreferences, checked: boolean) => {
+  const handleCategoryChange = (
+    categoryId: keyof CookiePreferences,
+    checked: boolean
+  ) => {
     setPreferences((prev) => ({
       ...prev,
       [categoryId]: checked,
@@ -96,8 +102,8 @@ export function CookiePreferencesModal() {
         <DialogHeader>
           <DialogTitle>Cookie Preferences</DialogTitle>
           <DialogDescription>
-            You can choose which cookies to accept. Necessary cookies are required for the website
-            to function and cannot be disabled.
+            You can choose which cookies to accept. Necessary cookies are
+            required for the website to function and cannot be disabled.
           </DialogDescription>
         </DialogHeader>
 
@@ -112,7 +118,8 @@ export function CookiePreferencesModal() {
                 }
                 disabled={category.required}
               />
-              {category.id !== COOKIE_CATEGORIES[COOKIE_CATEGORIES.length - 1].id && (
+              {category.id !==
+                COOKIE_CATEGORIES[COOKIE_CATEGORIES.length - 1].id && (
                 <Separator className="mt-4" />
               )}
             </div>
@@ -120,7 +127,11 @@ export function CookiePreferencesModal() {
         </div>
 
         <DialogFooter className="flex-col sm:flex-row gap-2">
-          <Button variant="outline" onClick={closePreferences} className="w-full sm:w-auto">
+          <Button
+            variant="outline"
+            onClick={closePreferences}
+            className="w-full sm:w-auto"
+          >
             Cancel
           </Button>
           <Button
@@ -138,4 +149,3 @@ export function CookiePreferencesModal() {
     </Dialog>
   );
 }
-

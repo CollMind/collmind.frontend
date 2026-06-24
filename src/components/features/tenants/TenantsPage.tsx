@@ -32,7 +32,11 @@ export function TenantsPage() {
   };
 
   const handleSuccess = () => {
-    toast.success(editingTenant ? 'Kiracı başarıyla güncellendi' : 'Kiracı başarıyla oluşturuldu');
+    toast.success(
+      editingTenant
+        ? 'Kiracı başarıyla güncellendi'
+        : 'Kiracı başarıyla oluşturuldu'
+    );
     handleDialogClose();
   };
 

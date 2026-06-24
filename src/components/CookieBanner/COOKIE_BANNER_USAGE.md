@@ -96,12 +96,12 @@ To change the cookie banner position:
 import { useCookieContext } from '@/context/CookieContext';
 
 function AdminPanel() {
-  const { 
-    acceptAll, 
-    rejectAll, 
-    updatePreferences, 
+  const {
+    acceptAll,
+    rejectAll,
+    updatePreferences,
     resetConsent,
-    openPreferences 
+    openPreferences,
   } = useCookieContext();
 
   return (

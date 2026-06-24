@@ -138,8 +138,9 @@ export function useChangeUserPassword() {
     mutationFn: ({ id, data }: { id: string; data: ChangePasswordDto }) =>
       userEndpoints.changePassword(id, data),
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: userKeys.detail(variables.id) });
+      queryClient.invalidateQueries({
+        queryKey: userKeys.detail(variables.id),
+      });
     },
   });
 }
-

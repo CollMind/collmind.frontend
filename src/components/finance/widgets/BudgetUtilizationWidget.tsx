@@ -1,5 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
-import { financeReportingEndpoints, ReportFilters } from '@/api/endpoints/finance-reporting.endpoints';
+import {
+  financeReportingEndpoints,
+  ReportFilters,
+} from '@/api/endpoints/finance-reporting.endpoints';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { Progress } from '@/components/ui/progress';
 
@@ -7,7 +10,9 @@ interface BudgetUtilizationWidgetProps {
   filters: ReportFilters;
 }
 
-export function BudgetUtilizationWidget({ filters }: BudgetUtilizationWidgetProps) {
+export function BudgetUtilizationWidget({
+  filters,
+}: BudgetUtilizationWidgetProps) {
   const { data, isLoading, error } = useQuery({
     queryKey: ['budget-utilization', filters],
     queryFn: async () => {
@@ -22,7 +27,9 @@ export function BudgetUtilizationWidget({ filters }: BudgetUtilizationWidgetProp
   }
 
   if (error || !data) {
-    return <div className="text-red-500 text-sm">Veri yüklenirken hata oluştu</div>;
+    return (
+      <div className="text-red-500 text-sm">Veri yüklenirken hata oluştu</div>
+    );
   }
 
   const getStatusColor = (status: string) => {
@@ -56,33 +63,48 @@ export function BudgetUtilizationWidget({ filters }: BudgetUtilizationWidgetProp
             <div className="w-3 h-3 rounded-full bg-blue-500" />
             <span className="text-sm font-medium">On-Invoice Budget</span>
           </div>
-          <span className={`text-xs font-semibold px-2 py-1 rounded ${getStatusColor(data.onInvoice.status)} text-white`}>
+          <span
+            className={`text-xs font-semibold px-2 py-1 rounded ${getStatusColor(data.onInvoice.status)} text-white`}
+          >
             {data.onInvoice.status}
           </span>
         </div>
-        <Progress value={data.onInvoice.utilizationPercent} className="h-3 mb-2" />
+        <Progress
+          value={data.onInvoice.utilizationPercent}
+          className="h-3 mb-2"
+        />
         <div className="grid grid-cols-2 gap-4 text-xs">
           <div>
             <span className="text-gray-500">Allocated:</span>
-            <span className="ml-2 font-semibold">{formatCurrency(data.onInvoice.allocated)}</span>
+            <span className="ml-2 font-semibold">
+              {formatCurrency(data.onInvoice.allocated)}
+            </span>
           </div>
           <div>
             <span className="text-gray-500">Utilized:</span>
-            <span className="ml-2 font-semibold">{formatCurrency(data.onInvoice.utilized)}</span>
+            <span className="ml-2 font-semibold">
+              {formatCurrency(data.onInvoice.utilized)}
+            </span>
           </div>
           <div>
             <span className="text-gray-500">Reserved:</span>
-            <span className="ml-2 font-semibold">{formatCurrency(data.onInvoice.reserved)}</span>
+            <span className="ml-2 font-semibold">
+              {formatCurrency(data.onInvoice.reserved)}
+            </span>
           </div>
           <div>
             <span className="text-gray-500">Available:</span>
-            <span className={`ml-2 font-semibold ${data.onInvoice.available < 0 ? 'text-red-600' : ''}`}>
+            <span
+              className={`ml-2 font-semibold ${data.onInvoice.available < 0 ? 'text-red-600' : ''}`}
+            >
               {formatCurrency(data.onInvoice.available)}
             </span>
           </div>
         </div>
         <div className="mt-2 text-right">
-          <span className="text-sm font-bold">{data.onInvoice.utilizationPercent.toFixed(1)}%</span>
+          <span className="text-sm font-bold">
+            {data.onInvoice.utilizationPercent.toFixed(1)}%
+          </span>
         </div>
       </div>
 
@@ -93,33 +115,48 @@ export function BudgetUtilizationWidget({ filters }: BudgetUtilizationWidgetProp
             <div className="w-3 h-3 rounded-full bg-orange-500" />
             <span className="text-sm font-medium">Off-Invoice Budget</span>
           </div>
-          <span className={`text-xs font-semibold px-2 py-1 rounded ${getStatusColor(data.offInvoice.status)} text-white`}>
+          <span
+            className={`text-xs font-semibold px-2 py-1 rounded ${getStatusColor(data.offInvoice.status)} text-white`}
+          >
             {data.offInvoice.status}
           </span>
         </div>
-        <Progress value={data.offInvoice.utilizationPercent} className="h-3 mb-2" />
+        <Progress
+          value={data.offInvoice.utilizationPercent}
+          className="h-3 mb-2"
+        />
         <div className="grid grid-cols-2 gap-4 text-xs">
           <div>
             <span className="text-gray-500">Allocated:</span>
-            <span className="ml-2 font-semibold">{formatCurrency(data.offInvoice.allocated)}</span>
+            <span className="ml-2 font-semibold">
+              {formatCurrency(data.offInvoice.allocated)}
+            </span>
           </div>
           <div>
             <span className="text-gray-500">Utilized:</span>
-            <span className="ml-2 font-semibold">{formatCurrency(data.offInvoice.utilized)}</span>
+            <span className="ml-2 font-semibold">
+              {formatCurrency(data.offInvoice.utilized)}
+            </span>
           </div>
           <div>
             <span className="text-gray-500">Reserved:</span>
-            <span className="ml-2 font-semibold">{formatCurrency(data.offInvoice.reserved)}</span>
+            <span className="ml-2 font-semibold">
+              {formatCurrency(data.offInvoice.reserved)}
+            </span>
           </div>
           <div>
             <span className="text-gray-500">Available:</span>
-            <span className={`ml-2 font-semibold ${data.offInvoice.available < 0 ? 'text-red-600' : ''}`}>
+            <span
+              className={`ml-2 font-semibold ${data.offInvoice.available < 0 ? 'text-red-600' : ''}`}
+            >
               {formatCurrency(data.offInvoice.available)}
             </span>
           </div>
         </div>
         <div className="mt-2 text-right">
-          <span className="text-sm font-bold">{data.offInvoice.utilizationPercent.toFixed(1)}%</span>
+          <span className="text-sm font-bold">
+            {data.offInvoice.utilizationPercent.toFixed(1)}%
+          </span>
         </div>
       </div>
 
@@ -127,14 +164,18 @@ export function BudgetUtilizationWidget({ filters }: BudgetUtilizationWidgetProp
       <div className="pt-4 border-t">
         <div className="flex items-center justify-between mb-2">
           <span className="text-sm font-semibold">Total Budget</span>
-          <span className={`text-xs font-semibold px-2 py-1 rounded ${getStatusColor(data.total.status)} text-white`}>
+          <span
+            className={`text-xs font-semibold px-2 py-1 rounded ${getStatusColor(data.total.status)} text-white`}
+          >
             {data.total.status}
           </span>
         </div>
         <div className="grid grid-cols-2 gap-4 text-xs">
           <div>
             <span className="text-gray-500">Total Allocated:</span>
-            <span className="ml-2 font-semibold">{formatCurrency(data.total.allocated)}</span>
+            <span className="ml-2 font-semibold">
+              {formatCurrency(data.total.allocated)}
+            </span>
           </div>
           <div>
             <span className="text-gray-500">Total Used:</span>
@@ -146,7 +187,9 @@ export function BudgetUtilizationWidget({ filters }: BudgetUtilizationWidgetProp
         <div className="mt-2">
           <Progress value={data.total.utilizationPercent} className="h-2" />
           <div className="text-right mt-1">
-            <span className="text-sm font-bold">{data.total.utilizationPercent.toFixed(1)}%</span>
+            <span className="text-sm font-bold">
+              {data.total.utilizationPercent.toFixed(1)}%
+            </span>
           </div>
         </div>
       </div>

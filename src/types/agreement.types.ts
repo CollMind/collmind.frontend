@@ -1,6 +1,6 @@
 /**
  * Agreement Types
- * 
+ *
  * Anlaşma yönetimi ile ilgili type tanımlamaları
  */
 
@@ -149,7 +149,7 @@ export interface CreateAgreementDto {
 /**
  * Agreement Güncelleme DTO
  */
-export interface UpdateAgreementDto extends Partial<CreateAgreementDto> { }
+export interface UpdateAgreementDto extends Partial<CreateAgreementDto> {}
 
 /**
  * Agreement Filtreleme DTO

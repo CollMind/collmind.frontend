@@ -106,9 +106,12 @@ export function BudgetEnvelopeList({
       totalReserved,
       totalConsumed,
       totalAvailable,
-      reservedPercentage: totalAllocated > 0 ? (totalReserved / totalAllocated) * 100 : 0,
-      consumedPercentage: totalAllocated > 0 ? (totalConsumed / totalAllocated) * 100 : 0,
-      availablePercentage: totalAllocated > 0 ? (totalAvailable / totalAllocated) * 100 : 0,
+      reservedPercentage:
+        totalAllocated > 0 ? (totalReserved / totalAllocated) * 100 : 0,
+      consumedPercentage:
+        totalAllocated > 0 ? (totalConsumed / totalAllocated) * 100 : 0,
+      availablePercentage:
+        totalAllocated > 0 ? (totalAvailable / totalAllocated) * 100 : 0,
     };
   }, [envelopes]);
 
@@ -124,7 +127,8 @@ export function BudgetEnvelopeList({
         envelope.category?.toLowerCase().includes(searchTerm.toLowerCase());
 
       // Dönem
-      const matchesPeriod = periodFilter === 'all' || envelope.period === periodFilter;
+      const matchesPeriod =
+        periodFilter === 'all' || envelope.period === periodFilter;
 
       // Kanal
       const matchesChannel =
@@ -141,16 +145,27 @@ export function BudgetEnvelopeList({
         const consumed = safeNumber(envelope.consumedAmount);
         const reserved = safeNumber(envelope.reservedAmount);
         const utilization =
-          allocated > 0
-            ? ((consumed + reserved) / allocated) * 100
-            : 0;
+          allocated > 0 ? ((consumed + reserved) / allocated) * 100 : 0;
         const ragStatus = getRAGStatus(utilization);
         matchesRAG = ragFilter === ragStatus;
       }
 
-      return matchesSearch && matchesPeriod && matchesChannel && matchesCategory && matchesRAG;
+      return (
+        matchesSearch &&
+        matchesPeriod &&
+        matchesChannel &&
+        matchesCategory &&
+        matchesRAG
+      );
     });
-  }, [envelopes, searchTerm, periodFilter, channelFilter, categoryFilter, ragFilter]);
+  }, [
+    envelopes,
+    searchTerm,
+    periodFilter,
+    channelFilter,
+    categoryFilter,
+    ragFilter,
+  ]);
 
   // Benzersiz değerler
   const uniquePeriods = useMemo(() => {
@@ -164,7 +179,9 @@ export function BudgetEnvelopeList({
   }, [envelopes]);
 
   const uniqueCategories = useMemo(() => {
-    const categories = new Set(envelopes.map((e) => e.category).filter(Boolean));
+    const categories = new Set(
+      envelopes.map((e) => e.category).filter(Boolean)
+    );
     return Array.from(categories).sort();
   }, [envelopes]);
 
@@ -183,13 +200,17 @@ export function BudgetEnvelopeList({
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold">{formatCurrency(summary.totalAllocated)}</p>
+            <p className="text-2xl font-bold">
+              {formatCurrency(summary.totalAllocated)}
+            </p>
           </CardContent>
         </Card>
 
         <Card className="bg-yellow-50 border-yellow-200">
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-gray-700">RESERVED</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-700">
+              RESERVED
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold text-yellow-700">
@@ -203,7 +224,9 @@ export function BudgetEnvelopeList({
 
         <Card className="bg-blue-50 border-blue-200">
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-gray-700">CONSUMED</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-700">
+              CONSUMED
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold text-blue-700">
@@ -217,7 +240,9 @@ export function BudgetEnvelopeList({
 
         <Card className="bg-green-50 border-green-200">
           <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-gray-700">AVAILABLE</CardTitle>
+            <CardTitle className="text-sm font-medium text-gray-700">
+              AVAILABLE
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-2xl font-bold text-green-700">
@@ -318,11 +343,15 @@ export function BudgetEnvelopeList({
               <table className="w-full">
                 <thead>
                   <tr className="border-b">
-                    <th className="text-left p-3 text-sm font-semibold text-gray-700">Kanal</th>
+                    <th className="text-left p-3 text-sm font-semibold text-gray-700">
+                      Kanal
+                    </th>
                     <th className="text-left p-3 text-sm font-semibold text-gray-700">
                       Kategori
                     </th>
-                    <th className="text-left p-3 text-sm font-semibold text-gray-700">Dönem</th>
+                    <th className="text-left p-3 text-sm font-semibold text-gray-700">
+                      Dönem
+                    </th>
                     <th className="text-right p-3 text-sm font-semibold text-gray-700">
                       Tahsis
                     </th>
@@ -338,7 +367,9 @@ export function BudgetEnvelopeList({
                     <th className="text-center p-3 text-sm font-semibold text-gray-700">
                       Utilization
                     </th>
-                    <th className="text-center p-3 text-sm font-semibold text-gray-700">RAG</th>
+                    <th className="text-center p-3 text-sm font-semibold text-gray-700">
+                      RAG
+                    </th>
                     <th className="text-center p-3 text-sm font-semibold text-gray-700">
                       Actions
                     </th>
@@ -357,7 +388,10 @@ export function BudgetEnvelopeList({
                     const ragStatus = getRAGStatus(utilization);
 
                     return (
-                      <tr key={envelope.id} className="border-b hover:bg-gray-50">
+                      <tr
+                        key={envelope.id}
+                        className="border-b hover:bg-gray-50"
+                      >
                         <td className="p-3">{envelope.channel || '-'}</td>
                         <td className="p-3">{envelope.category || '-'}</td>
                         <td className="p-3">{envelope.period}</td>
@@ -380,8 +414,8 @@ export function BudgetEnvelopeList({
                                 ragStatus === 'critical'
                                   ? 'text-red-600'
                                   : ragStatus === 'warning'
-                                  ? 'text-yellow-600'
-                                  : 'text-green-600'
+                                    ? 'text-yellow-600'
+                                    : 'text-green-600'
                               }`}
                             >
                               %{utilization.toFixed(1)}
@@ -392,8 +426,8 @@ export function BudgetEnvelopeList({
                                 ragStatus === 'critical'
                                   ? 'bg-red-200'
                                   : ragStatus === 'warning'
-                                  ? 'bg-yellow-200'
-                                  : 'bg-green-200'
+                                    ? 'bg-yellow-200'
+                                    : 'bg-green-200'
                               }`}
                             />
                           </div>
@@ -403,7 +437,9 @@ export function BudgetEnvelopeList({
                             <div
                               className={`w-2 h-2 rounded-full ${getRAGColor(ragStatus)}`}
                             />
-                            <span className="text-sm">{getRAGLabel(ragStatus)}</span>
+                            <span className="text-sm">
+                              {getRAGLabel(ragStatus)}
+                            </span>
                           </div>
                         </td>
                         <td className="p-3 text-center">
@@ -416,16 +452,17 @@ export function BudgetEnvelopeList({
                             >
                               <Eye className="h-4 w-4" />
                             </Button>
-                            {onReserveClick && safeNumber(envelope.availableAmount) > 0 && (
-                              <Button
-                                variant="default"
-                                size="sm"
-                                onClick={() => onReserveClick(envelope)}
-                                title="Rezerve Et"
-                              >
-                                Rezerve Et
-                              </Button>
-                            )}
+                            {onReserveClick &&
+                              safeNumber(envelope.availableAmount) > 0 && (
+                                <Button
+                                  variant="default"
+                                  size="sm"
+                                  onClick={() => onReserveClick(envelope)}
+                                  title="Rezerve Et"
+                                >
+                                  Rezerve Et
+                                </Button>
+                              )}
                           </div>
                         </td>
                       </tr>

@@ -99,16 +99,18 @@ export function exportFinanceReport(
       name: 'Budget Utilization',
       data: [
         {
-          'Period': `${reports.budgetUtilization.periodStart} - ${reports.budgetUtilization.periodEnd}`,
+          Period: `${reports.budgetUtilization.periodStart} - ${reports.budgetUtilization.periodEnd}`,
           'On-Invoice Allocated': reports.budgetUtilization.onInvoice.allocated,
           'On-Invoice Utilized': reports.budgetUtilization.onInvoice.utilized,
           'On-Invoice Reserved': reports.budgetUtilization.onInvoice.reserved,
           'On-Invoice Available': reports.budgetUtilization.onInvoice.available,
           'On-Invoice Utilization %': `${reports.budgetUtilization.onInvoice.utilizationPercent.toFixed(1)}%`,
-          'Off-Invoice Allocated': reports.budgetUtilization.offInvoice.allocated,
+          'Off-Invoice Allocated':
+            reports.budgetUtilization.offInvoice.allocated,
           'Off-Invoice Utilized': reports.budgetUtilization.offInvoice.utilized,
           'Off-Invoice Reserved': reports.budgetUtilization.offInvoice.reserved,
-          'Off-Invoice Available': reports.budgetUtilization.offInvoice.available,
+          'Off-Invoice Available':
+            reports.budgetUtilization.offInvoice.available,
           'Off-Invoice Utilization %': `${reports.budgetUtilization.offInvoice.utilizationPercent.toFixed(1)}%`,
         },
       ],

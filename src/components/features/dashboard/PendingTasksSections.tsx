@@ -174,7 +174,10 @@ export function PendingManualClaimsSection({
                 <p className="mt-1 text-[11px] text-gray-500">
                   {item.channelCode} · {item.period}
                   {item.isPastPeriod && (
-                    <span className="font-medium text-red-700"> · gecikmiş</span>
+                    <span className="font-medium text-red-700">
+                      {' '}
+                      · gecikmiş
+                    </span>
                   )}
                   <span> · {formatCurrency(item.capTotalAmount)}</span>
                 </p>
@@ -222,7 +225,9 @@ export function SubmittedClaimsSection({
 
       <div className="mt-4">
         {allItems.length === 0 ? (
-          <p className="py-6 text-sm text-gray-500">Onay bekleyen hakediş yok.</p>
+          <p className="py-6 text-sm text-gray-500">
+            Onay bekleyen hakediş yok.
+          </p>
         ) : (
           items.map((item, idx) => (
             <div
@@ -285,7 +290,9 @@ export function AwaitingInvoiceClaimsSection({
 
       <div className="mt-4">
         {allItems.length === 0 ? (
-          <p className="py-6 text-sm text-gray-500">Fatura bekleyen kayıt yok.</p>
+          <p className="py-6 text-sm text-gray-500">
+            Fatura bekleyen kayıt yok.
+          </p>
         ) : (
           items.map((item, idx) => (
             <div

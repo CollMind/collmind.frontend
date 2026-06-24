@@ -1,6 +1,12 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent } from '@/components/ui/card';
@@ -15,13 +21,21 @@ interface AddFuDialogProps {
   onAdd: (fuIds: string[]) => Promise<void>;
 }
 
-export function AddFuDialog({ plan, isOpen, onClose, onAdd }: AddFuDialogProps) {
+export function AddFuDialog({
+  plan,
+  isOpen,
+  onClose,
+  onAdd,
+}: AddFuDialogProps) {
   const [selectedFuIds, setSelectedFuIds] = useState<Set<string>>(new Set());
 
   // Fetch available FUs for the plan's category
   const { data: fus, isLoading } = useQuery({
     queryKey: ['fus', plan.categoryId],
-    queryFn: () => fuEndpoints.getAll(true, undefined, plan.categoryId).then(res => res.data),
+    queryFn: () =>
+      fuEndpoints
+        .getAll(true, undefined, plan.categoryId)
+        .then((res) => res.data),
     enabled: isOpen && !!plan.categoryId,
   });
 
@@ -79,13 +93,17 @@ export function AddFuDialog({ plan, isOpen, onClose, onAdd }: AddFuDialogProps) 
                       <Checkbox
                         id={`add-fu-${fu.id}`}
                         checked={selectedFuIds.has(fu.id)}
-                        onCheckedChange={(checked) => handleFuToggle(fu.id, checked as boolean)}
+                        onCheckedChange={(checked) =>
+                          handleFuToggle(fu.id, checked as boolean)
+                        }
                       />
                       <label
                         htmlFor={`add-fu-${fu.id}`}
                         className="flex-1 cursor-pointer text-sm"
                       >
-                        <span className="font-medium">{fu.code}: {fu.name}</span>
+                        <span className="font-medium">
+                          {fu.code}: {fu.name}
+                        </span>
                         {fu.skus && (
                           <span className="text-gray-500 ml-2">
                             ({fu.skus.length} SKU içeriyor)

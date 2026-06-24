@@ -3,12 +3,25 @@ import { offInvoiceEndpoints } from '@/api/endpoints/off-invoice.endpoints';
 import { agreementEndpoints } from '@/api/endpoints/agreements.endpoints';
 import { budgetEndpoints } from '@/api/endpoints/budget.endpoints';
 import { CreateOffInvoiceTransactionDto } from '@/types/off-invoice.types';
-import { Agreement, AgreementStatus, AgreementType } from '@/types/agreement.types';
+import {
+  Agreement,
+  AgreementStatus,
+  AgreementType,
+} from '@/types/agreement.types';
 import { BudgetEnvelope } from '@/types/budget.types';
 import { useToast } from '@/hooks/useToast';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { useQuery } from '@tanstack/react-query';
-import { X, Search, ChevronRight, ChevronLeft, Paperclip, FileText, Save, Check } from 'lucide-react';
+import {
+  X,
+  Search,
+  ChevronRight,
+  ChevronLeft,
+  Paperclip,
+  FileText,
+  Save,
+  Check,
+} from 'lucide-react';
 import { toNumber } from '@/utils/numberUtils';
 
 interface OffInvoiceManualEntryModalProps {
@@ -24,7 +37,9 @@ export function OffInvoiceManualEntryModal({
 }: OffInvoiceManualEntryModalProps) {
   const toast = useToast();
   const [step, setStep] = useState(1);
-  const [selectedAgreement, setSelectedAgreement] = useState<Agreement | null>(null);
+  const [selectedAgreement, setSelectedAgreement] = useState<Agreement | null>(
+    null
+  );
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState<'ALL' | 'STA' | 'LTA'>('ALL');
   const [cplFilter, setCplFilter] = useState<string>('ALL');
@@ -46,7 +61,10 @@ export function OffInvoiceManualEntryModal({
   // Get current agreement total for cap calculation
   const { data: agreementTotal } = useQuery({
     queryKey: ['agreement-total', selectedAgreement?.id],
-    queryFn: () => selectedAgreement ? offInvoiceEndpoints.getTotalByAgreement(selectedAgreement.id) : 0,
+    queryFn: () =>
+      selectedAgreement
+        ? offInvoiceEndpoints.getTotalByAgreement(selectedAgreement.id)
+        : 0,
     enabled: !!selectedAgreement?.id,
   });
 
@@ -55,7 +73,10 @@ export function OffInvoiceManualEntryModal({
     queryKey: ['budget-impact', selectedAgreement?.id, formData.fiscalPeriod],
     queryFn: () => {
       if (!selectedAgreement || !formData.fiscalPeriod) return null;
-      return offInvoiceEndpoints.getBudgetImpact(selectedAgreement.id, formData.fiscalPeriod);
+      return offInvoiceEndpoints.getBudgetImpact(
+        selectedAgreement.id,
+        formData.fiscalPeriod
+      );
     },
     enabled: !!selectedAgreement && !!formData.fiscalPeriod,
   });
@@ -65,7 +86,9 @@ export function OffInvoiceManualEntryModal({
     queryKey: ['agreements', 'approved-active'],
     queryFn: async () => {
       const response = await agreementEndpoints.getAll();
-      const allAgreements = Array.isArray(response.data) ? response.data : response.data || [];
+      const allAgreements = Array.isArray(response.data)
+        ? response.data
+        : response.data || [];
       return allAgreements.filter(
         (agreement: Agreement) =>
           agreement.status === AgreementStatus.APPROVED ||
@@ -93,8 +116,12 @@ export function OffInvoiceManualEntryModal({
       // Search filter
       if (searchQuery) {
         const query = searchQuery.toLowerCase();
-        const matchesCode = agreement.agreementCode?.toLowerCase().includes(query);
-        const matchesName = agreement.agreementName?.toLowerCase().includes(query);
+        const matchesCode = agreement.agreementCode
+          ?.toLowerCase()
+          .includes(query);
+        const matchesName = agreement.agreementName
+          ?.toLowerCase()
+          .includes(query);
         // TODO: Add customer name search when relation is available
         if (!matchesCode && !matchesName) return false;
       }
@@ -156,8 +183,18 @@ export function OffInvoiceManualEntryModal({
         const monthStr = String(month + 1).padStart(2, '0');
         const periodValue = `${year}-${monthStr}`;
         const monthNames = [
-          'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran',
-          'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'
+          'Ocak',
+          'Şubat',
+          'Mart',
+          'Nisan',
+          'Mayıs',
+          'Haziran',
+          'Temmuz',
+          'Ağustos',
+          'Eylül',
+          'Ekim',
+          'Kasım',
+          'Aralık',
         ];
         options.push({
           value: periodValue,
@@ -175,7 +212,8 @@ export function OffInvoiceManualEntryModal({
     if (!selectedAgreement || !formData.amount) {
       return null;
     }
-    const currentRemaining = toNumber(selectedAgreement.capTotalAmount) - (agreementTotal || 0);
+    const currentRemaining =
+      toNumber(selectedAgreement.capTotalAmount) - (agreementTotal || 0);
     const afterTransaction = currentRemaining - formData.amount;
     return {
       currentRemaining,
@@ -234,11 +272,13 @@ export function OffInvoiceManualEntryModal({
 
     try {
       await offInvoiceEndpoints.createTransaction(formData);
-      const successMessage = saveAsDraft ? 'Taslak kaydedildi' : 'Off-Invoice fatura girişi başarıyla oluşturuldu';
+      const successMessage = saveAsDraft
+        ? 'Taslak kaydedildi'
+        : 'Off-Invoice fatura girişi başarıyla oluşturuldu';
       if (toast?.success) {
         toast.success(successMessage);
       }
-      
+
       // Reset form state
       setStep(1);
       setSelectedAgreement(null);
@@ -255,13 +295,16 @@ export function OffInvoiceManualEntryModal({
         notes: '',
       });
       setSelectedFile(null);
-      
+
       // Close modal and refresh data
       if (!saveAsDraft) {
         onSuccess?.();
       }
     } catch (error: any) {
-      const errorMessage = error?.response?.data?.message || error?.message || 'Fatura girişi başarısız oldu';
+      const errorMessage =
+        error?.response?.data?.message ||
+        error?.message ||
+        'Fatura girişi başarısız oldu';
       if (toast?.error) {
         toast.error(errorMessage);
       } else {
@@ -385,7 +428,9 @@ export function OffInvoiceManualEntryModal({
                 <div>
                   <p className="text-sm text-gray-600 mb-1">SEÇİLEN ANLAŞMA</p>
                   <p className="font-semibold text-lg">
-                    {selectedAgreement.agreementName || selectedAgreement.agreementNumber || selectedAgreement.id}
+                    {selectedAgreement.agreementName ||
+                      selectedAgreement.agreementNumber ||
+                      selectedAgreement.id}
                   </p>
                 </div>
                 <button
@@ -428,15 +473,23 @@ export function OffInvoiceManualEntryModal({
                         if (!formData.fiscalPeriod && newDate) {
                           const date = new Date(newDate);
                           const year = date.getFullYear();
-                          const month = String(date.getMonth() + 1).padStart(2, '0');
-                          setFormData(prev => ({ ...prev, fiscalPeriod: `${year}-${month}` }));
+                          const month = String(date.getMonth() + 1).padStart(
+                            2,
+                            '0'
+                          );
+                          setFormData((prev) => ({
+                            ...prev,
+                            fiscalPeriod: `${year}-${month}`,
+                          }));
                         }
                       }}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                     {formData.invoiceDate && (
                       <p className="text-xs text-gray-500 mt-1">
-                        {new Date(formData.invoiceDate).toLocaleDateString('tr-TR')}
+                        {new Date(formData.invoiceDate).toLocaleDateString(
+                          'tr-TR'
+                        )}
                       </p>
                     )}
                   </div>
@@ -447,7 +500,10 @@ export function OffInvoiceManualEntryModal({
                     <select
                       value={formData.fiscalPeriod}
                       onChange={(e) =>
-                        setFormData({ ...formData, fiscalPeriod: e.target.value })
+                        setFormData({
+                          ...formData,
+                          fiscalPeriod: e.target.value,
+                        })
                       }
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
@@ -467,14 +523,19 @@ export function OffInvoiceManualEntryModal({
                       Tutar (₺) *
                     </label>
                     <div className="relative">
-                      <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">₺</span>
+                      <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
+                        ₺
+                      </span>
                       <input
                         type="number"
                         step="0.01"
                         min="0.01"
                         value={formData.amount}
                         onChange={(e) =>
-                          setFormData({ ...formData, amount: parseFloat(e.target.value) || 0 })
+                          setFormData({
+                            ...formData,
+                            amount: parseFloat(e.target.value) || 0,
+                          })
                         }
                         className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         placeholder="0.00"
@@ -538,16 +599,24 @@ export function OffInvoiceManualEntryModal({
                       </p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-600 mb-1">Fatura Tutarı</p>
+                      <p className="text-sm text-gray-600 mb-1">
+                        Fatura Tutarı
+                      </p>
                       <p className="text-lg font-semibold text-blue-600">
                         -{formatCurrency(agreementCapImpact.invoiceAmount)}
                       </p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-600 mb-1">İşlem Sonrası</p>
-                      <p className={`text-lg font-semibold ${
-                        agreementCapImpact.afterTransaction >= 0 ? 'text-green-600' : 'text-red-600'
-                      }`}>
+                      <p className="text-sm text-gray-600 mb-1">
+                        İşlem Sonrası
+                      </p>
+                      <p
+                        className={`text-lg font-semibold ${
+                          agreementCapImpact.afterTransaction >= 0
+                            ? 'text-green-600'
+                            : 'text-red-600'
+                        }`}
+                      >
                         {formatCurrency(agreementCapImpact.afterTransaction)}
                       </p>
                     </div>
@@ -556,30 +625,35 @@ export function OffInvoiceManualEntryModal({
               )}
 
               {/* Budget Impact */}
-              {budgetImpact && budgetImpact.envelope && formData.fiscalPeriod && (
-                <div className="bg-gray-50 rounded-lg p-4 space-y-3">
-                  <h3 className="font-semibold text-lg">BÜTÇE ETKİSİ</h3>
-                  <div>
-                    <p className="text-sm text-gray-600 mb-2">
-                      {budgetImpact.channel || 'N/A'} / {budgetImpact.category || 'N/A'} ({formData.fiscalPeriod})
-                    </p>
-                    <div className="flex items-center space-x-4">
-                      <div>
-                        <p className="text-sm text-gray-600">Available:</p>
-                        <div className="flex items-center space-x-2">
-                          <span className="line-through text-gray-400">
-                            {formatCurrency(budgetImpact.currentAvailable)}
-                          </span>
-                          <span className="text-green-600 font-semibold">
-                            {formatCurrency(budgetImpact.currentAvailable - formData.amount)}
-                          </span>
+              {budgetImpact &&
+                budgetImpact.envelope &&
+                formData.fiscalPeriod && (
+                  <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+                    <h3 className="font-semibold text-lg">BÜTÇE ETKİSİ</h3>
+                    <div>
+                      <p className="text-sm text-gray-600 mb-2">
+                        {budgetImpact.channel || 'N/A'} /{' '}
+                        {budgetImpact.category || 'N/A'} (
+                        {formData.fiscalPeriod})
+                      </p>
+                      <div className="flex items-center space-x-4">
+                        <div>
+                          <p className="text-sm text-gray-600">Available:</p>
+                          <div className="flex items-center space-x-2">
+                            <span className="line-through text-gray-400">
+                              {formatCurrency(budgetImpact.currentAvailable)}
+                            </span>
+                            <span className="text-green-600 font-semibold">
+                              {formatCurrency(
+                                budgetImpact.currentAvailable - formData.amount
+                              )}
+                            </span>
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              )}
-
+                )}
             </div>
           )}
         </div>
@@ -714,7 +788,8 @@ function AgreementCard({
           <div className="flex-1">
             <div className="flex items-center space-x-2 mb-1">
               <span className="font-medium text-sm">
-                {agreement.agreementType} - {agreement.agreementNumber || agreement.id}
+                {agreement.agreementType} -{' '}
+                {agreement.agreementNumber || agreement.id}
               </span>
             </div>
             <div className="text-sm font-semibold text-gray-900 mb-1">

@@ -1,5 +1,10 @@
 import apiClient from '../client';
-import { Tenant, CreateTenantDto, UpdateTenantDto, TenantStats } from '@/types/tenant.types';
+import {
+  Tenant,
+  CreateTenantDto,
+  UpdateTenantDto,
+  TenantStats,
+} from '@/types/tenant.types';
 
 export const tenantEndpoints = {
   getAll: () => apiClient.get<Tenant[]>('/tenants'),
@@ -13,12 +18,9 @@ export const tenantEndpoints = {
 
   delete: (id: string) => apiClient.delete(`/tenants/${id}`),
 
-  activate: (id: string) =>
-    apiClient.post<Tenant>(`/tenants/${id}/activate`),
+  activate: (id: string) => apiClient.post<Tenant>(`/tenants/${id}/activate`),
 
-  suspend: (id: string) =>
-    apiClient.post<Tenant>(`/tenants/${id}/suspend`),
+  suspend: (id: string) => apiClient.post<Tenant>(`/tenants/${id}/suspend`),
 
   getStats: (id: string) => apiClient.get<TenantStats>(`/tenants/${id}/stats`),
 };
-

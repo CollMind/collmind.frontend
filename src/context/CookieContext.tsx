@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+} from 'react';
 import type { CookiePreferences } from '@/types/cookie.types';
 import {
   getCookieConsent,
@@ -22,7 +28,9 @@ interface CookieContextType {
 const CookieContext = createContext<CookieContextType | undefined>(undefined);
 
 export function CookieProvider({ children }: { children: React.ReactNode }) {
-  const [cookieConsent, setCookieConsent] = useState<CookiePreferences | null>(null);
+  const [cookieConsent, setCookieConsent] = useState<CookiePreferences | null>(
+    null
+  );
   const [showBanner, setShowBanner] = useState(false);
   const [showPreferences, setShowPreferences] = useState(false);
 
@@ -108,7 +116,9 @@ export function CookieProvider({ children }: { children: React.ReactNode }) {
     resetConsent,
   };
 
-  return <CookieContext.Provider value={value}>{children}</CookieContext.Provider>;
+  return (
+    <CookieContext.Provider value={value}>{children}</CookieContext.Provider>
+  );
 }
 
 export function useCookieContext() {
@@ -118,4 +128,3 @@ export function useCookieContext() {
   }
   return context;
 }
-

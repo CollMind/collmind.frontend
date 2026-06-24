@@ -44,7 +44,9 @@ interface MasterDataManagementPageProps<T> {
   queryKey: string[];
 }
 
-export function MasterDataManagementPage<T extends { id: string; code: string; name: string; isActive?: boolean }>({
+export function MasterDataManagementPage<
+  T extends { id: string; code: string; name: string; isActive?: boolean },
+>({
   title,
   description,
   entityName,
@@ -72,7 +74,10 @@ export function MasterDataManagementPage<T extends { id: string; code: string; n
       handleDialogClose();
     },
     onError: (error: any) => {
-      toast.error(error?.response?.data?.message || `${entityName} oluşturulurken hata oluştu`);
+      toast.error(
+        error?.response?.data?.message ||
+          `${entityName} oluşturulurken hata oluştu`
+      );
     },
   });
 
@@ -85,7 +90,10 @@ export function MasterDataManagementPage<T extends { id: string; code: string; n
       handleDialogClose();
     },
     onError: (error: any) => {
-      toast.error(error?.response?.data?.message || `${entityName} güncellenirken hata oluştu`);
+      toast.error(
+        error?.response?.data?.message ||
+          `${entityName} güncellenirken hata oluştu`
+      );
     },
   });
 
@@ -96,7 +104,9 @@ export function MasterDataManagementPage<T extends { id: string; code: string; n
       queryClient.invalidateQueries({ queryKey });
     },
     onError: (error: any) => {
-      toast.error(error?.response?.data?.message || `${entityName} silinirken hata oluştu`);
+      toast.error(
+        error?.response?.data?.message || `${entityName} silinirken hata oluştu`
+      );
     },
   });
 
@@ -138,13 +148,13 @@ export function MasterDataManagementPage<T extends { id: string; code: string; n
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Ensure isActive is always included (default to true if not set)
     const submitData = {
       ...formData,
       isActive: formData.isActive !== undefined ? formData.isActive : true,
     };
-    
+
     if (editingItem) {
       updateMutation.mutate({ id: editingItem.id, data: submitData });
     } else {
@@ -153,21 +163,27 @@ export function MasterDataManagementPage<T extends { id: string; code: string; n
   };
 
   const handleDelete = (id: string) => {
-    if (window.confirm(`Bu ${entityName.toLowerCase()}ı silmek istediğinizden emin misiniz?`)) {
+    if (
+      window.confirm(
+        `Bu ${entityName.toLowerCase()}ı silmek istediğinizden emin misiniz?`
+      )
+    ) {
       deleteMutation.mutate(id);
     }
   };
 
-  const renderField = (field: typeof fields[0]) => {
+  const renderField = (field: (typeof fields)[0]) => {
     const value = formData[field.key] ?? '';
-    
+
     switch (field.type) {
       case 'textarea':
         return (
           <Textarea
             id={field.key}
             value={value}
-            onChange={(e) => setFormData({ ...formData, [field.key]: e.target.value })}
+            onChange={(e) =>
+              setFormData({ ...formData, [field.key]: e.target.value })
+            }
             rows={3}
             required={field.required}
           />
@@ -190,7 +206,9 @@ export function MasterDataManagementPage<T extends { id: string; code: string; n
           <select
             id={field.key}
             value={value}
-            onChange={(e) => setFormData({ ...formData, [field.key]: e.target.value })}
+            onChange={(e) =>
+              setFormData({ ...formData, [field.key]: e.target.value })
+            }
             className="w-full px-3 py-2 border border-gray-300 rounded-lg"
             required={field.required}
           >
@@ -208,7 +226,12 @@ export function MasterDataManagementPage<T extends { id: string; code: string; n
             id={field.key}
             type="number"
             value={value}
-            onChange={(e) => setFormData({ ...formData, [field.key]: parseFloat(e.target.value) || 0 })}
+            onChange={(e) =>
+              setFormData({
+                ...formData,
+                [field.key]: parseFloat(e.target.value) || 0,
+              })
+            }
             required={field.required}
           />
         );
@@ -217,7 +240,9 @@ export function MasterDataManagementPage<T extends { id: string; code: string; n
           <Input
             id={field.key}
             value={value}
-            onChange={(e) => setFormData({ ...formData, [field.key]: e.target.value })}
+            onChange={(e) =>
+              setFormData({ ...formData, [field.key]: e.target.value })
+            }
             required={field.required}
           />
         );
@@ -261,10 +286,17 @@ export function MasterDataManagementPage<T extends { id: string; code: string; n
               </div>
             ))}
             <div className="flex justify-end gap-2">
-              <Button type="button" variant="outline" onClick={handleDialogClose}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleDialogClose}
+              >
                 İptal
               </Button>
-              <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
+              <Button
+                type="submit"
+                disabled={createMutation.isPending || updateMutation.isPending}
+              >
                 {editingItem ? 'Güncelle' : 'Oluştur'}
               </Button>
             </div>

@@ -1,4 +1,8 @@
-export type CookieCategory = 'necessary' | 'functional' | 'analytics' | 'marketing';
+export type CookieCategory =
+  | 'necessary'
+  | 'functional'
+  | 'analytics'
+  | 'marketing';
 
 export interface CookiePreferences {
   necessary: boolean;
@@ -19,4 +23,3 @@ export interface CookieCategoryInfo {
   description: string;
   required?: boolean;
 }
-

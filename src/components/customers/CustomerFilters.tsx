@@ -39,10 +39,10 @@ export function CustomerFilters({
 
   const hasActiveFilters = Boolean(
     filters.channel ||
-      filters.status ||
-      filters.city ||
-      filters.isVip !== undefined ||
-      filters.search
+    filters.status ||
+    filters.city ||
+    filters.isVip !== undefined ||
+    filters.search
   );
 
   return (
@@ -64,11 +64,7 @@ export function CustomerFilters({
               Temizle
             </Button>
           )}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setIsOpen(!isOpen)}
-          >
+          <Button variant="ghost" size="sm" onClick={() => setIsOpen(!isOpen)}>
             {isOpen ? 'Gizle' : 'Göster'}
           </Button>
         </div>
@@ -96,7 +92,10 @@ export function CustomerFilters({
             <Select
               value={filters.channel || 'all'}
               onValueChange={(value) =>
-                handleFilterChange('channel', value === 'all' ? undefined : value)
+                handleFilterChange(
+                  'channel',
+                  value === 'all' ? undefined : value
+                )
               }
             >
               <SelectTrigger>
@@ -121,7 +120,10 @@ export function CustomerFilters({
             <Select
               value={filters.status || 'all'}
               onValueChange={(value) =>
-                handleFilterChange('status', value === 'all' ? undefined : value)
+                handleFilterChange(
+                  'status',
+                  value === 'all' ? undefined : value
+                )
               }
             >
               <SelectTrigger>
@@ -160,8 +162,8 @@ export function CustomerFilters({
                 filters.isVip === undefined
                   ? 'all'
                   : filters.isVip
-                  ? 'true'
-                  : 'false'
+                    ? 'true'
+                    : 'false'
               }
               onValueChange={(value) =>
                 handleFilterChange(

@@ -43,12 +43,13 @@ export function Header() {
     dispatch(setTheme(theme === 'light' ? 'dark' : 'light'));
   };
 
-  const userInitials = user?.fullName
-    ?.split(' ')
-    .map((n) => n[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2) || 'U';
+  const userInitials =
+    user?.fullName
+      ?.split(' ')
+      .map((n) => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2) || 'U';
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-gray-800 bg-gradient-to-r from-collmind-darker via-gray-900 to-collmind-darker shadow-lg">
@@ -65,12 +66,11 @@ export function Header() {
 
         {/* Logo */}
         <Link to="/dashboard" className="mr-6 group flex items-center">
-          <CollMindLogo 
-            showText={true} 
+          <CollMindLogo
+            showText={true}
             size="md"
             className="group-hover:opacity-90 transition-opacity [&_span]:text-white"
           />
-         
         </Link>
 
         {/* Search Bar (Desktop) */}
@@ -112,13 +112,18 @@ export function Header() {
                 className="flex items-center space-x-2 h-auto py-2 px-3 text-gray-300 hover:text-white hover:bg-gray-800"
               >
                 <Avatar className="h-8 w-8 ring-2 ring-primary-500/50">
-                  <AvatarImage src={(user as any)?.avatarUrl} alt={user?.fullName} />
+                  <AvatarImage
+                    src={(user as any)?.avatarUrl}
+                    alt={user?.fullName}
+                  />
                   <AvatarFallback className="bg-primary-600 text-white font-semibold">
                     {userInitials}
                   </AvatarFallback>
                 </Avatar>
                 <div className="hidden md:block text-left">
-                  <div className="text-sm font-medium text-white">{user?.fullName}</div>
+                  <div className="text-sm font-medium text-white">
+                    {user?.fullName}
+                  </div>
                   <div className="text-xs text-gray-400">{user?.role}</div>
                 </div>
                 <ChevronDown className="hidden md:block h-4 w-4 text-gray-400" />
@@ -145,7 +150,10 @@ export function Header() {
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-red-600">
+              <DropdownMenuItem
+                onClick={handleLogout}
+                className="cursor-pointer text-red-600"
+              >
                 <LogOut className="mr-2 h-4 w-4" />
                 Log out
               </DropdownMenuItem>
@@ -156,4 +164,3 @@ export function Header() {
     </header>
   );
 }
-

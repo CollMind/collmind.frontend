@@ -128,7 +128,8 @@ export function BudgetLedgerPage() {
       <div>
         <h1 className="text-3xl font-bold">Financial Ledger</h1>
         <p className="text-gray-500 mt-2">
-          Bütçe hareketleri denetim kaydı (Read Only). Tüm rezervasyon ve harcamalar burada listelenir.
+          Bütçe hareketleri denetim kaydı (Read Only). Tüm rezervasyon ve
+          harcamalar burada listelenir.
         </p>
       </div>
 
@@ -195,17 +196,13 @@ export function BudgetLedgerPage() {
                       <td className="p-3 font-mono text-sm">
                         {formatDateTime(entry.createdAt)}
                       </td>
-                      <td className="p-3 text-sm">
-                        {getScope(entry)}
-                      </td>
+                      <td className="p-3 text-sm">{getScope(entry)}</td>
                       <td className="p-3">
                         <Badge variant="outline" className="text-xs">
                           {getEntityType(entry)}
                         </Badge>
                       </td>
-                      <td className="p-3 text-sm">
-                        {getReference(entry)}
-                      </td>
+                      <td className="p-3 text-sm">{getReference(entry)}</td>
                       <td className="p-3">
                         <Badge
                           variant="outline"
@@ -215,11 +212,12 @@ export function BudgetLedgerPage() {
                         </Badge>
                       </td>
                       <td className="p-3 text-right font-medium text-red-600">
-                        {formatCurrency(-Math.abs(entry.amount), entry.currency)}
+                        {formatCurrency(
+                          -Math.abs(entry.amount),
+                          entry.currency
+                        )}
                       </td>
-                      <td className="p-3 text-sm">
-                        {getUserName(entry)}
-                      </td>
+                      <td className="p-3 text-sm">{getUserName(entry)}</td>
                     </tr>
                   ))
                 )}

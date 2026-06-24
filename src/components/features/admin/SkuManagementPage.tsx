@@ -1,7 +1,12 @@
 import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { skuEndpoints } from '@/api/endpoints/master-data.endpoints';
-import { useSkus, useBrands, useCategories, useGenericUnits } from '@/hooks/useMasterData';
+import {
+  useSkus,
+  useBrands,
+  useCategories,
+  useGenericUnits,
+} from '@/hooks/useMasterData';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -22,7 +27,17 @@ import {
 } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/useToast';
-import { Plus, Edit, Trash2, Search, Upload, Hash, Tag, DollarSign, Package } from 'lucide-react';
+import {
+  Plus,
+  Edit,
+  Trash2,
+  Search,
+  Upload,
+  Hash,
+  Tag,
+  DollarSign,
+  Package,
+} from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -105,7 +120,9 @@ export function SkuManagementPage() {
 
     if (selectedStatus !== 'all') {
       const isActive = selectedStatus === 'active';
-      filtered = filtered.filter((sku) => (sku.isActive !== false) === isActive);
+      filtered = filtered.filter(
+        (sku) => (sku.isActive !== false) === isActive
+      );
     }
 
     return filtered;
@@ -121,7 +138,10 @@ export function SkuManagementPage() {
     },
     onError: (error: any) => {
       console.error('SKU oluşturma hatası:', error);
-      const errorMessage = error?.response?.data?.message || error?.message || 'SKU oluşturulurken hata oluştu';
+      const errorMessage =
+        error?.response?.data?.message ||
+        error?.message ||
+        'SKU oluşturulurken hata oluştu';
       toast.error(errorMessage);
     },
   });
@@ -135,7 +155,9 @@ export function SkuManagementPage() {
       handleDialogClose();
     },
     onError: (error: any) => {
-      toast.error(error?.response?.data?.message || 'SKU güncellenirken hata oluştu');
+      toast.error(
+        error?.response?.data?.message || 'SKU güncellenirken hata oluştu'
+      );
     },
   });
 
@@ -146,7 +168,9 @@ export function SkuManagementPage() {
       queryClient.invalidateQueries({ queryKey: ['skus'] });
     },
     onError: (error: any) => {
-      toast.error(error?.response?.data?.message || 'SKU silinirken hata oluştu');
+      toast.error(
+        error?.response?.data?.message || 'SKU silinirken hata oluştu'
+      );
     },
   });
 
@@ -197,11 +221,19 @@ export function SkuManagementPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    console.log('Form submit başladı', { formData, genericUnitsCount: genericUnits.length });
-    
+
+    console.log('Form submit başladı', {
+      formData,
+      genericUnitsCount: genericUnits.length,
+    });
+
     // Validate required fields
-    if (!formData.code?.trim() || !formData.name?.trim() || !formData.brandId || !formData.categoryId) {
+    if (
+      !formData.code?.trim() ||
+      !formData.name?.trim() ||
+      !formData.brandId ||
+      !formData.categoryId
+    ) {
       console.log('Validasyon hatası: Zorunlu alanlar eksik');
       toast.error('Lütfen tüm zorunlu alanları doldurun');
       return;
@@ -225,10 +257,10 @@ export function SkuManagementPage() {
     // Check if genericUnits are loaded
     if (!genericUnits || genericUnits.length === 0) {
       console.error('Generic Units yüklenemedi');
-      toast.error('Generic Unit\'ler yüklenemedi. Lütfen sayfayı yenileyin.');
+      toast.error("Generic Unit'ler yüklenemedi. Lütfen sayfayı yenileyin.");
       return;
     }
-    
+
     // Debug: Log all Generic Units with their brand/category info BEFORE searching
     console.log('🔍 Generic Unit aranıyor:', {
       formBrandId: formData.brandId,
@@ -243,32 +275,38 @@ export function SkuManagementPage() {
         categoryIdFromRelation: gu.category?.id,
         brandName: gu.brand?.name,
         categoryName: gu.category?.name,
-        fullGu: gu
-      }))
+        fullGu: gu,
+      })),
     });
-    
+
     // Find Generic Unit by brand and category
     // Generic Unit might have brand and category as relations or direct IDs
     const genericUnit = genericUnits.find((gu: any) => {
       // Try multiple ways to get brand and category IDs
       const guBrandId = gu.brandId || gu.brand?.id;
       const guCategoryId = gu.categoryId || gu.category?.id;
-      
+
       // Convert to string for comparison (in case of UUID vs string mismatch)
-      const brandMatch = guBrandId && formData.brandId && String(guBrandId) === String(formData.brandId);
-      const categoryMatch = guCategoryId && formData.categoryId && String(guCategoryId) === String(formData.categoryId);
-      
+      const brandMatch =
+        guBrandId &&
+        formData.brandId &&
+        String(guBrandId) === String(formData.brandId);
+      const categoryMatch =
+        guCategoryId &&
+        formData.categoryId &&
+        String(guCategoryId) === String(formData.categoryId);
+
       if (brandMatch && categoryMatch) {
         console.log('✅ Generic Unit bulundu:', {
           gu,
           guBrandId,
           guCategoryId,
           formBrandId: formData.brandId,
-          formCategoryId: formData.categoryId
+          formCategoryId: formData.categoryId,
         });
         return true;
       }
-      
+
       // Debug: Log why this GU doesn't match
       if (guBrandId && guCategoryId) {
         console.log('❌ Generic Unit eşleşmedi:', {
@@ -278,29 +316,36 @@ export function SkuManagementPage() {
           brandMatch,
           guCategoryId,
           formCategoryId: formData.categoryId,
-          categoryMatch
+          categoryMatch,
         });
       }
-      
+
       return false;
     });
 
     if (!genericUnit) {
-      const brandName = brands.find((b: any) => b.id === formData.brandId)?.name || 'Seçilen marka';
-      const categoryName = categories.find((c: any) => c.id === formData.categoryId)?.name || 'Seçilen kategori';
-      
+      const brandName =
+        brands.find((b: any) => b.id === formData.brandId)?.name ||
+        'Seçilen marka';
+      const categoryName =
+        categories.find((c: any) => c.id === formData.categoryId)?.name ||
+        'Seçilen kategori';
+
       // Show available Generic Units for debugging
       const availableCombinations = genericUnits
         .map((gu: any) => {
           const guBrandId = gu.brandId || gu.brand?.id;
           const guCategoryId = gu.categoryId || gu.category?.id;
-          const guBrandName = brands.find((b: any) => b.id === guBrandId)?.name || 'Bilinmeyen';
-          const guCategoryName = categories.find((c: any) => c.id === guCategoryId)?.name || 'Bilinmeyen';
+          const guBrandName =
+            brands.find((b: any) => b.id === guBrandId)?.name || 'Bilinmeyen';
+          const guCategoryName =
+            categories.find((c: any) => c.id === guCategoryId)?.name ||
+            'Bilinmeyen';
           return `${guBrandName} - ${guCategoryName}`;
         })
         .filter((combo: string) => combo !== 'Bilinmeyen - Bilinmeyen')
         .join(', ');
-      
+
       console.error('Generic Unit bulunamadı:', {
         brandId: formData.brandId,
         categoryId: formData.categoryId,
@@ -308,13 +353,13 @@ export function SkuManagementPage() {
         categoryName,
         availableGenericUnits: genericUnits.length,
         availableCombinations,
-        allGenericUnits: genericUnits
+        allGenericUnits: genericUnits,
       });
-      
+
       const errorMessage = availableCombinations
         ? `${brandName} ve ${categoryName} için Generic Unit bulunamadı. Mevcut kombinasyonlar: ${availableCombinations}. Lütfen önce Generic Unit oluşturun.`
         : `${brandName} ve ${categoryName} için Generic Unit bulunamadı. Lütfen önce Generic Unit oluşturun.`;
-      
+
       toast.error(errorMessage);
       console.log('Form submit iptal edildi - Generic Unit bulunamadı');
       return;
@@ -325,12 +370,17 @@ export function SkuManagementPage() {
       name: formData.name.trim(),
       description: formData.description?.trim() || '',
       guId: genericUnit.id,
-      unitPrice: formData.unitPrice ? parseFloat(formData.unitPrice) : undefined,
+      unitPrice: formData.unitPrice
+        ? parseFloat(formData.unitPrice)
+        : undefined,
       cogs: formData.cogs ? parseFloat(formData.cogs) : undefined,
       isActive: formData.isActive,
     };
 
-    console.log('Form submit ediliyor:', { submitData, editingSku: editingSku?.id });
+    console.log('Form submit ediliyor:', {
+      submitData,
+      editingSku: editingSku?.id,
+    });
 
     if (editingSku) {
       updateMutation.mutate({ id: editingSku.id, data: submitData });
@@ -340,11 +390,10 @@ export function SkuManagementPage() {
   };
 
   const handleDelete = (id: string) => {
-    if (window.confirm('Bu SKU\'yu silmek istediğinizden emin misiniz?')) {
+    if (window.confirm("Bu SKU'yu silmek istediğinizden emin misiniz?")) {
       deleteMutation.mutate(id);
     }
   };
-
 
   return (
     <div className="space-y-6">
@@ -514,15 +563,15 @@ export function SkuManagementPage() {
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <Label htmlFor="code">
-                SKU Kodu *
-              </Label>
+              <Label htmlFor="code">SKU Kodu *</Label>
               <div className="relative">
                 <Hash className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                 <Input
                   id="code"
                   value={formData.code}
-                  onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, code: e.target.value })
+                  }
                   placeholder="Örn: SKU-HC-001"
                   className="pl-10"
                   required
@@ -536,7 +585,9 @@ export function SkuManagementPage() {
                 <Input
                   id="name"
                   value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, name: e.target.value })
+                  }
                   placeholder="Örn: Elidor Onarıcı Bakım 500ml"
                   className="pl-10"
                   required
@@ -574,7 +625,9 @@ export function SkuManagementPage() {
                   type="number"
                   step="0.01"
                   value={formData.unitPrice}
-                  onChange={(e) => setFormData({ ...formData, unitPrice: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, unitPrice: e.target.value })
+                  }
                   placeholder="0.00"
                   className="pl-10"
                   required
@@ -590,7 +643,9 @@ export function SkuManagementPage() {
                   type="number"
                   step="0.01"
                   value={formData.cogs}
-                  onChange={(e) => setFormData({ ...formData, cogs: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, cogs: e.target.value })
+                  }
                   placeholder="0.00"
                   className="pl-10"
                   required
@@ -633,11 +688,20 @@ export function SkuManagementPage() {
               </div>
             </div>
             <div className="flex justify-end gap-2">
-              <Button type="button" variant="outline" onClick={handleDialogClose}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleDialogClose}
+              >
                 İptal
               </Button>
-              <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
-                {createMutation.isPending || updateMutation.isPending ? 'Kaydediliyor...' : 'Kaydet'}
+              <Button
+                type="submit"
+                disabled={createMutation.isPending || updateMutation.isPending}
+              >
+                {createMutation.isPending || updateMutation.isPending
+                  ? 'Kaydediliyor...'
+                  : 'Kaydet'}
               </Button>
             </div>
           </form>

@@ -46,8 +46,8 @@ CUST002,Örnek Müşteri 2,WHOLESALE,DISTRIBUTOR,ACTIVE,Ankara,ornek2@example.co
             <h2 className="text-xl font-semibold">Template İndir</h2>
           </div>
           <p className="text-gray-600 mb-4">
-            Müşteri verilerini toplu olarak eklemek için örnek template dosyasını
-            indirin ve doldurun.
+            Müşteri verilerini toplu olarak eklemek için örnek template
+            dosyasını indirin ve doldurun.
           </p>
           <Button onClick={handleDownloadTemplate} variant="outline">
             <Download className="mr-2 h-4 w-4" />
@@ -62,8 +62,8 @@ CUST002,Örnek Müşteri 2,WHOLESALE,DISTRIBUTOR,ACTIVE,Ankara,ornek2@example.co
             <h2 className="text-xl font-semibold">Dosya Yükle</h2>
           </div>
           <p className="text-gray-600 mb-4">
-            Doldurduğunuz Excel (.xlsx, .xls) veya CSV (.csv) dosyasını yükleyin.
-            Maksimum dosya boyutu 10MB'dır.
+            Doldurduğunuz Excel (.xlsx, .xls) veya CSV (.csv) dosyasını
+            yükleyin. Maksimum dosya boyutu 10MB'dır.
           </p>
           <CustomerImportButton />
         </Card>

@@ -53,7 +53,9 @@ export function CategoryManagementPage() {
       handleDialogClose();
     },
     onError: (error: any) => {
-      toast.error(error?.response?.data?.message || 'Kategori oluşturulurken hata oluştu');
+      toast.error(
+        error?.response?.data?.message || 'Kategori oluşturulurken hata oluştu'
+      );
     },
   });
 
@@ -67,7 +69,9 @@ export function CategoryManagementPage() {
       handleDialogClose();
     },
     onError: (error: any) => {
-      toast.error(error?.response?.data?.message || 'Kategori güncellenirken hata oluştu');
+      toast.error(
+        error?.response?.data?.message || 'Kategori güncellenirken hata oluştu'
+      );
     },
   });
 
@@ -79,7 +83,9 @@ export function CategoryManagementPage() {
       queryClient.invalidateQueries({ queryKey: ['categories'] });
     },
     onError: (error: any) => {
-      toast.error(error?.response?.data?.message || 'Kategori silinirken hata oluştu');
+      toast.error(
+        error?.response?.data?.message || 'Kategori silinirken hata oluştu'
+      );
     },
   });
 
@@ -113,12 +119,12 @@ export function CategoryManagementPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const submitData = {
       ...formData,
       isActive: formData.isActive !== undefined ? formData.isActive : true,
     };
-    
+
     if (editingItem) {
       updateMutation.mutate({ id: editingItem.id, data: submitData });
     } else {
@@ -137,7 +143,9 @@ export function CategoryManagementPage() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">Kategori Yönetimi</h1>
-          <p className="text-gray-600 mt-2">Sistem kategorilerini görüntüleyin, oluşturun ve yönetin</p>
+          <p className="text-gray-600 mt-2">
+            Sistem kategorilerini görüntüleyin, oluşturun ve yönetin
+          </p>
         </div>
         <Button onClick={handleCreate}>
           <Plus className="h-4 w-4 mr-2" />
@@ -159,24 +167,24 @@ export function CategoryManagementPage() {
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <Label htmlFor="code">
-                Kod *
-              </Label>
+              <Label htmlFor="code">Kod *</Label>
               <Input
                 id="code"
                 value={formData.code || ''}
-                onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, code: e.target.value })
+                }
                 required
               />
             </div>
             <div>
-              <Label htmlFor="name">
-                İsim *
-              </Label>
+              <Label htmlFor="name">İsim *</Label>
               <Input
                 id="name"
                 value={formData.name || ''}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
                 required
               />
             </div>
@@ -185,14 +193,18 @@ export function CategoryManagementPage() {
               <Textarea
                 id="description"
                 value={formData.description || ''}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, description: e.target.value })
+                }
                 rows={3}
               />
             </div>
             <div className="flex items-center space-x-2">
               <Checkbox
                 id="isActive"
-                checked={formData.isActive !== undefined ? formData.isActive : true}
+                checked={
+                  formData.isActive !== undefined ? formData.isActive : true
+                }
                 onCheckedChange={(checked) =>
                   setFormData({ ...formData, isActive: checked as boolean })
                 }
@@ -200,10 +212,17 @@ export function CategoryManagementPage() {
               <Label htmlFor="isActive">Aktif</Label>
             </div>
             <div className="flex justify-end gap-2">
-              <Button type="button" variant="outline" onClick={handleDialogClose}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleDialogClose}
+              >
                 İptal
               </Button>
-              <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
+              <Button
+                type="submit"
+                disabled={createMutation.isPending || updateMutation.isPending}
+              >
                 {editingItem ? 'Güncelle' : 'Oluştur'}
               </Button>
             </div>

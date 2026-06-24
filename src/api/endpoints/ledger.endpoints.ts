@@ -19,7 +19,9 @@ export const ledgerEndpoints = {
 
   // Anlaşma için tüketilen tutar
   getConsumedByAgreement: (agreementId: string) =>
-    apiClient.get<ConsumedAmountResponse>(`/ledger/agreement/${agreementId}/consumed`),
+    apiClient.get<ConsumedAmountResponse>(
+      `/ledger/agreement/${agreementId}/consumed`
+    ),
 
   // Bütçe zarfına ait defter kayıtları
   getByEnvelope: (envelopeId: string) =>
@@ -27,5 +29,7 @@ export const ledgerEndpoints = {
 
   // Bütçe zarfı için tüketilen tutar
   getConsumedByEnvelope: (envelopeId: string) =>
-    apiClient.get<ConsumedAmountResponse>(`/ledger/envelope/${envelopeId}/consumed`),
+    apiClient.get<ConsumedAmountResponse>(
+      `/ledger/envelope/${envelopeId}/consumed`
+    ),
 };

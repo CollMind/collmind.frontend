@@ -3,11 +3,11 @@ import { useCookieContext } from '@/context/CookieContext';
 
 /**
  * Custom hook to check cookie consent status
- * 
+ *
  * @example
  * ```tsx
  * const { canUseAnalytics, canUseMarketing } = useCookieConsent();
- * 
+ *
  * useEffect(() => {
  *   if (canUseAnalytics) {
  *     // Initialize Google Analytics
@@ -36,4 +36,3 @@ export function useCookieConsent() {
     };
   }, [cookieConsent]);
 }
-

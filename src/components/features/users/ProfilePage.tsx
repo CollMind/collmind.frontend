@@ -6,7 +6,13 @@ import { EnumBadge } from '@/components/common/EnumBadge';
 import { ChangePasswordForm } from '@/components/users';
 import { UserForm } from '@/components/forms/UserForm';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -14,7 +20,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { Edit, Mail, Phone, Building, Briefcase, Calendar, Shield, Lock } from 'lucide-react';
+import {
+  Edit,
+  Mail,
+  Phone,
+  Building,
+  Briefcase,
+  Calendar,
+  Shield,
+  Lock,
+} from 'lucide-react';
 import { format } from 'date-fns';
 import { tr } from 'date-fns/locale';
 import { useToast } from '@/hooks/useToast';
@@ -47,10 +62,15 @@ export function ProfilePage() {
       <div className="flex justify-between items-start">
         <div>
           <h1 className="text-3xl font-bold">Profilim</h1>
-          <p className="text-gray-600 mt-1">Hesap bilgilerinizi görüntüleyin ve düzenleyin</p>
+          <p className="text-gray-600 mt-1">
+            Hesap bilgilerinizi görüntüleyin ve düzenleyin
+          </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => setIsPasswordDialogOpen(true)}>
+          <Button
+            variant="outline"
+            onClick={() => setIsPasswordDialogOpen(true)}
+          >
             <Lock className="mr-2 h-4 w-4" />
             Şifre Değiştir
           </Button>
@@ -74,7 +94,9 @@ export function ProfilePage() {
               <div>
                 <p className="text-sm font-medium text-gray-500">Email</p>
                 <p className="text-sm text-gray-900">{user.email}</p>
-                <p className="text-xs text-gray-400 mt-1">Email adresi değiştirilemez</p>
+                <p className="text-xs text-gray-400 mt-1">
+                  Email adresi değiştirilemez
+                </p>
               </div>
             </div>
 
@@ -136,7 +158,9 @@ export function ProfilePage() {
       <Card>
         <CardHeader>
           <CardTitle>Ek Bilgiler</CardTitle>
-          <CardDescription>Hesap oluşturulma ve güncellenme bilgileri</CardDescription>
+          <CardDescription>
+            Hesap oluşturulma ve güncellenme bilgileri
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -171,7 +195,9 @@ export function ProfilePage() {
             <div className="flex items-start gap-3">
               <Calendar className="h-5 w-5 text-gray-400 mt-0.5" />
               <div>
-                <p className="text-sm font-medium text-gray-500">Oluşturulma Tarihi</p>
+                <p className="text-sm font-medium text-gray-500">
+                  Oluşturulma Tarihi
+                </p>
                 <p className="text-sm text-gray-900">
                   {format(new Date(user.createdAt), 'dd MMMM yyyy, HH:mm', {
                     locale: tr,
@@ -183,7 +209,9 @@ export function ProfilePage() {
             <div className="flex items-start gap-3">
               <Calendar className="h-5 w-5 text-gray-400 mt-0.5" />
               <div>
-                <p className="text-sm font-medium text-gray-500">Güncellenme Tarihi</p>
+                <p className="text-sm font-medium text-gray-500">
+                  Güncellenme Tarihi
+                </p>
                 <p className="text-sm text-gray-900">
                   {format(new Date(user.updatedAt), 'dd MMMM yyyy, HH:mm', {
                     locale: tr,
@@ -213,7 +241,10 @@ export function ProfilePage() {
       </Dialog>
 
       {/* Change Password Dialog */}
-      <Dialog open={isPasswordDialogOpen} onOpenChange={setIsPasswordDialogOpen}>
+      <Dialog
+        open={isPasswordDialogOpen}
+        onOpenChange={setIsPasswordDialogOpen}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Şifre Değiştir</DialogTitle>

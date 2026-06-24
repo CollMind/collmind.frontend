@@ -11,12 +11,12 @@ export function ToastContainer() {
   useEffect(() => {
     // Her notification için otomatik kapanma timer'ı ayarla
     const timers: NodeJS.Timeout[] = [];
-    
+
     notifications.forEach((notification) => {
       const timer = setTimeout(() => {
         dispatch(removeNotification(notification.id));
       }, 5000); // 5 saniye sonra otomatik kapan
-      
+
       timers.push(timer);
     });
 
@@ -87,7 +87,9 @@ export function ToastContainer() {
                 {getIcon(notification.type)}
               </div>
               <div className="flex-1 min-w-0">
-                <p className={`text-sm font-medium ${getTextColor(notification.type)}`}>
+                <p
+                  className={`text-sm font-medium ${getTextColor(notification.type)}`}
+                >
                   {notification.message}
                 </p>
               </div>

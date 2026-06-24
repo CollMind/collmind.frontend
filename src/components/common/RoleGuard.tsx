@@ -9,7 +9,11 @@ interface RoleGuardProps {
   fallback?: React.ReactNode;
 }
 
-export function RoleGuard({ allowedRoles, children, fallback = null }: RoleGuardProps) {
+export function RoleGuard({
+  allowedRoles,
+  children,
+  fallback = null,
+}: RoleGuardProps) {
   const user = useAppSelector((state) => state.auth.user);
 
   // Admin has access to everything
@@ -19,5 +23,3 @@ export function RoleGuard({ allowedRoles, children, fallback = null }: RoleGuard
 
   return <>{children}</>;
 }
-
-

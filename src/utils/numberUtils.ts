@@ -17,7 +17,9 @@ export function toNumber(value: string | number | null | undefined): number {
 /**
  * Safe number conversion that returns null if invalid
  */
-export function toNumberOrNull(value: string | number | null | undefined): number | null {
+export function toNumberOrNull(
+  value: string | number | null | undefined
+): number | null {
   if (value === null || value === undefined) return null;
   if (typeof value === 'number') return value;
   if (typeof value === 'string') {

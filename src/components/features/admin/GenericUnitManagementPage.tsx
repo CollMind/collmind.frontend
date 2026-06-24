@@ -77,7 +77,10 @@ export function GenericUnitManagementPage() {
       handleDialogClose();
     },
     onError: (error: any) => {
-      toast.error(error?.response?.data?.message || 'Generic Unit oluşturulurken hata oluştu');
+      toast.error(
+        error?.response?.data?.message ||
+          'Generic Unit oluşturulurken hata oluştu'
+      );
     },
   });
 
@@ -90,7 +93,10 @@ export function GenericUnitManagementPage() {
       handleDialogClose();
     },
     onError: (error: any) => {
-      toast.error(error?.response?.data?.message || 'Generic Unit güncellenirken hata oluştu');
+      toast.error(
+        error?.response?.data?.message ||
+          'Generic Unit güncellenirken hata oluştu'
+      );
     },
   });
 
@@ -101,7 +107,9 @@ export function GenericUnitManagementPage() {
       queryClient.invalidateQueries({ queryKey: ['generic-units'] });
     },
     onError: (error: any) => {
-      toast.error(error?.response?.data?.message || 'Generic Unit silinirken hata oluştu');
+      toast.error(
+        error?.response?.data?.message || 'Generic Unit silinirken hata oluştu'
+      );
     },
   });
 
@@ -148,7 +156,12 @@ export function GenericUnitManagementPage() {
     e.preventDefault();
 
     // Validate required fields
-    if (!formData.code?.trim() || !formData.name?.trim() || !formData.brandId || !formData.categoryId) {
+    if (
+      !formData.code?.trim() ||
+      !formData.name?.trim() ||
+      !formData.brandId ||
+      !formData.categoryId
+    ) {
       toast.error('Lütfen tüm zorunlu alanları doldurun');
       return;
     }
@@ -170,7 +183,9 @@ export function GenericUnitManagementPage() {
   };
 
   const handleDelete = (id: string) => {
-    if (window.confirm('Bu Generic Unit\'i silmek istediğinizden emin misiniz?')) {
+    if (
+      window.confirm("Bu Generic Unit'i silmek istediğinizden emin misiniz?")
+    ) {
       deleteMutation.mutate(id);
     }
   };
@@ -180,7 +195,9 @@ export function GenericUnitManagementPage() {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold">Generic Unit Yönetimi</h1>
-          <p className="text-gray-600 mt-2">Generic Unit'leri görüntüleyin, oluşturun ve yönetin</p>
+          <p className="text-gray-600 mt-2">
+            Generic Unit'leri görüntüleyin, oluşturun ve yönetin
+          </p>
         </div>
         <Button onClick={handleCreate}>
           <Plus className="h-4 w-4 mr-2" />
@@ -208,7 +225,9 @@ export function GenericUnitManagementPage() {
               <Input
                 id="code"
                 value={formData.code}
-                onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, code: e.target.value })
+                }
                 required
               />
             </div>
@@ -220,7 +239,9 @@ export function GenericUnitManagementPage() {
               <Input
                 id="name"
                 value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
                 required
               />
             </div>
@@ -230,7 +251,9 @@ export function GenericUnitManagementPage() {
               <Textarea
                 id="description"
                 value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, description: e.target.value })
+                }
                 rows={3}
               />
             </div>
@@ -241,7 +264,9 @@ export function GenericUnitManagementPage() {
               </Label>
               <BrandSelect
                 value={formData.brandId}
-                onChange={(value) => setFormData({ ...formData, brandId: value })}
+                onChange={(value) =>
+                  setFormData({ ...formData, brandId: value })
+                }
                 required
                 id="brandId"
               />
@@ -253,7 +278,9 @@ export function GenericUnitManagementPage() {
               </Label>
               <CategorySelect
                 value={formData.categoryId}
-                onChange={(value) => setFormData({ ...formData, categoryId: value })}
+                onChange={(value) =>
+                  setFormData({ ...formData, categoryId: value })
+                }
                 required
                 id="categoryId"
               />
@@ -271,10 +298,17 @@ export function GenericUnitManagementPage() {
             </div>
 
             <div className="flex justify-end gap-2">
-              <Button type="button" variant="outline" onClick={handleDialogClose}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleDialogClose}
+              >
                 İptal
               </Button>
-              <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending}>
+              <Button
+                type="submit"
+                disabled={createMutation.isPending || updateMutation.isPending}
+              >
                 {editingItem ? 'Güncelle' : 'Oluştur'}
               </Button>
             </div>
@@ -313,10 +347,14 @@ export function GenericUnitManagementPage() {
                   <TableCell>{item.code}</TableCell>
                   <TableCell>{item.name}</TableCell>
                   <TableCell>
-                    {item.brand?.name || brands.find((b) => b.id === item.brandId)?.name || '-'}
+                    {item.brand?.name ||
+                      brands.find((b) => b.id === item.brandId)?.name ||
+                      '-'}
                   </TableCell>
                   <TableCell>
-                    {item.category?.name || categories.find((c) => c.id === item.categoryId)?.name || '-'}
+                    {item.category?.name ||
+                      categories.find((c) => c.id === item.categoryId)?.name ||
+                      '-'}
                   </TableCell>
                   <TableCell>
                     <span

@@ -121,7 +121,7 @@ export function BudgetEnvelopeForm({
     }
 
     if (allocatedAmount <= 0) {
-      newErrors.allocatedAmount = 'Tahsis edilen tutar 0\'dan büyük olmalıdır';
+      newErrors.allocatedAmount = "Tahsis edilen tutar 0'dan büyük olmalıdır";
     }
 
     setErrors(newErrors);
@@ -165,11 +165,13 @@ export function BudgetEnvelopeForm({
               <SelectValue placeholder="Yıl seçin" />
             </SelectTrigger>
             <SelectContent>
-              {Array.from({ length: 5 }, (_, i) => currentYear + i).map((year) => (
-                <SelectItem key={year} value={year.toString()}>
-                  {year}
-                </SelectItem>
-              ))}
+              {Array.from({ length: 5 }, (_, i) => currentYear + i).map(
+                (year) => (
+                  <SelectItem key={year} value={year.toString()}>
+                    {year}
+                  </SelectItem>
+                )
+              )}
             </SelectContent>
           </Select>
           {errors.fiscalYear && (
@@ -192,7 +194,9 @@ export function BudgetEnvelopeForm({
               ))}
             </SelectContent>
           </Select>
-          {errors.month && <p className="text-xs text-red-600 mt-1">{errors.month}</p>}
+          {errors.month && (
+            <p className="text-xs text-red-600 mt-1">{errors.month}</p>
+          )}
         </div>
       </div>
 
@@ -211,11 +215,17 @@ export function BudgetEnvelopeForm({
               ))}
             </SelectContent>
           </Select>
-          {errors.channel && <p className="text-xs text-red-600 mt-1">{errors.channel}</p>}
+          {errors.channel && (
+            <p className="text-xs text-red-600 mt-1">{errors.channel}</p>
+          )}
         </div>
         <div>
           <Label htmlFor="category">Kategori *</Label>
-          <Select value={category} onValueChange={setCategory} disabled={categoriesLoading}>
+          <Select
+            value={category}
+            onValueChange={setCategory}
+            disabled={categoriesLoading}
+          >
             <SelectTrigger id="category">
               {categoriesLoading ? (
                 <div className="flex items-center gap-2">
@@ -227,11 +237,13 @@ export function BudgetEnvelopeForm({
               )}
             </SelectTrigger>
             <SelectContent>
-              {categories.map((cat: { id: string; code: string; name: string }) => (
-                <SelectItem key={cat.id} value={cat.code}>
-                  {cat.name}
-                </SelectItem>
-              ))}
+              {categories.map(
+                (cat: { id: string; code: string; name: string }) => (
+                  <SelectItem key={cat.id} value={cat.code}>
+                    {cat.name}
+                  </SelectItem>
+                )
+              )}
             </SelectContent>
           </Select>
           {errors.category && (
@@ -264,8 +276,10 @@ export function BudgetEnvelopeForm({
             <div className="flex-1">
               <p className="text-sm text-gray-700">
                 <span className="font-medium">{preview}</span> için{' '}
-                <span className="font-medium">{formatCurrency(allocatedAmount)}</span> tahsis
-                edilecek.
+                <span className="font-medium">
+                  {formatCurrency(allocatedAmount)}
+                </span>{' '}
+                tahsis edilecek.
               </p>
             </div>
           </div>
@@ -291,7 +305,9 @@ export function BudgetEnvelopeForm({
           </Button>
         )}
         <Button type="submit" disabled={isLoading}>
-          {isLoading ? 'Oluşturuluyor...' : (
+          {isLoading ? (
+            'Oluşturuluyor...'
+          ) : (
             <>
               <span className="mr-2">✓</span>
               Oluştur

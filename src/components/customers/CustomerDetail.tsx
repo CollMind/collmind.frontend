@@ -107,9 +107,7 @@ export function CustomerDetail() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-500">Toplam Sipariş</p>
-                <p className="text-2xl font-bold">
-                  {stats.totalOrders || 0}
-                </p>
+                <p className="text-2xl font-bold">{stats.totalOrders || 0}</p>
               </div>
               <TrendingUp className="h-8 w-8 text-blue-500" />
             </div>
@@ -195,7 +193,10 @@ export function CustomerDetail() {
             </div>
             {customer.isVip && (
               <div>
-                <Badge variant="outline" className="bg-yellow-100 text-yellow-800">
+                <Badge
+                  variant="outline"
+                  className="bg-yellow-100 text-yellow-800"
+                >
                   VIP Müşteri
                 </Badge>
               </div>
@@ -211,7 +212,9 @@ export function CustomerDetail() {
               <div className="flex items-start gap-2">
                 <User className="h-5 w-5 text-gray-400 mt-0.5" />
                 <div>
-                  <label className="text-sm text-gray-500">İletişim Kişisi</label>
+                  <label className="text-sm text-gray-500">
+                    İletişim Kişisi
+                  </label>
                   <p className="font-medium">{customer.contactPerson}</p>
                 </div>
               </div>
@@ -266,8 +269,8 @@ export function CustomerDetail() {
           <DialogHeader>
             <DialogTitle>Müşteriyi Sil</DialogTitle>
             <DialogDescription>
-              {customer.name} müşterisini silmek istediğinizden emin misiniz?
-              Bu işlem geri alınamaz.
+              {customer.name} müşterisini silmek istediğinizden emin misiniz? Bu
+              işlem geri alınamaz.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
