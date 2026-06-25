@@ -656,7 +656,7 @@ function ValidationStep({
                       className={`py-2 px-3 text-right ${
                         impact.status === 'RED'
                           ? 'text-red-600'
-                          : impact.status === 'YELLOW'
+                          : impact.status === 'AMBER'
                             ? 'text-yellow-600'
                             : 'text-green-600'
                       }`}

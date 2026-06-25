@@ -39,7 +39,7 @@ export interface ValidationResponseDto {
     current: number;
     thisUpload: number;
     after: number;
-    status: 'GREEN' | 'YELLOW' | 'RED';
+    status: 'GREEN' | 'AMBER' | 'RED';
   }>;
   errors: Array<{
     rowNumber: number;

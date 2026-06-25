@@ -54,7 +54,7 @@ export const budgetEndpoints = {
       reserved: number;
       consumed: number;
       planned: number;
-      status: 'GREEN' | 'YELLOW' | 'RED';
+      status: 'GREEN' | 'AMBER' | 'RED';
     }>('/budget/status', {
       params: { channel, categoryId, periodMonth },
     }),
