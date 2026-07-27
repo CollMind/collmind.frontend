@@ -110,7 +110,10 @@ export function DashboardPage() {
     !readonly &&
     (role === UserRole.ADMIN ||
       role === UserRole.PLANNER ||
-      role === UserRole.MANAGER);
+      role === UserRole.MANAGER ||
+      // T-028a: backend @Roles MANAGER→CATEGORY_MANAGER konsolidasyonu
+      // (deprecated alias korunur, canonical eklenir).
+      role === UserRole.CATEGORY_MANAGER);
   const canMutate = !readonly;
 
   return (

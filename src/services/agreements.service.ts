@@ -245,13 +245,21 @@ export function useAgreementPermissions(agreement: Agreement | undefined) {
     agreement.status === AgreementStatus.PENDING &&
     (userRole === UserRole.ADMIN ||
       userRole === UserRole.MANAGER ||
-      userRole === UserRole.FINANCE);
+      userRole === UserRole.FINANCE ||
+      // T-028a: backend @Roles MANAGER→CATEGORY_MANAGER, FINANCE→FINANCE_MANAGER
+      // konsolidasyonu (deprecated alias'lar korunur, canonical eklenir).
+      userRole === UserRole.CATEGORY_MANAGER ||
+      userRole === UserRole.FINANCE_MANAGER);
 
   const canReject =
     agreement.status === AgreementStatus.PENDING &&
     (userRole === UserRole.ADMIN ||
       userRole === UserRole.MANAGER ||
-      userRole === UserRole.FINANCE);
+      userRole === UserRole.FINANCE ||
+      // T-028a: backend @Roles MANAGER→CATEGORY_MANAGER, FINANCE→FINANCE_MANAGER
+      // konsolidasyonu (deprecated alias'lar korunur, canonical eklenir).
+      userRole === UserRole.CATEGORY_MANAGER ||
+      userRole === UserRole.FINANCE_MANAGER);
 
   const canCancel =
     (agreement.status === AgreementStatus.APPROVED ||
