@@ -3,6 +3,7 @@ import {
   Agreement,
   CreateAgreementDto,
   UpdateAgreementDto,
+  DeleteAgreementDto,
   AgreementFilterDto,
   ApproveAgreementDto,
   RejectAgreementDto,
@@ -26,7 +27,12 @@ export const agreementEndpoints = {
     apiClient.patch<Agreement>(`/agreements/${id}`, data),
 
   // Anlaşma Silme (Sadece DRAFT)
-  delete: (id: string) => apiClient.delete(`/agreements/${id}`),
+  // T-034f: axios DELETE gövdesi `{ data }` config'i ile gider, ikinci
+  // pozisyonel argüman olarak DEĞİL (bkz. plans.endpoints.ts removeFu/delete
+  // yorumu — aksi halde gövde sessizce düşer, backend 409 MISSING_VERSION
+  // döner).
+  delete: (id: string, data: DeleteAgreementDto) =>
+    apiClient.delete(`/agreements/${id}`, { data }),
 
   // Durum Geçişleri
   submit: (id: string) => apiClient.post<Agreement>(`/agreements/${id}/submit`),

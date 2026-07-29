@@ -76,6 +76,13 @@ export enum SkuScope {
  */
 export interface Agreement {
   id: string;
+  /**
+   * T-034f: optimistic-locking CAS token for `agreements.version`. Always
+   * present on entities read from the backend since T-034 (strict mode) —
+   * see docs/analysis/0005-optimistic-locking-design.md. Send back on
+   * update/delete.
+   */
+  version: number;
   agreementCode?: string; // Backend'den gelen kod (örn: STA-2026-025)
   agreementNumber: string; // Otomatik oluşturulan numara (örn: STA-2026-025) - legacy support
   agreementName?: string;
@@ -149,7 +156,18 @@ export interface CreateAgreementDto {
 /**
  * Agreement Güncelleme DTO
  */
-export interface UpdateAgreementDto extends Partial<CreateAgreementDto> {}
+export interface UpdateAgreementDto extends Partial<CreateAgreementDto> {
+  /** T-034f: expected current `agreements.version` (optimistic locking). */
+  version?: number;
+}
+
+/**
+ * Agreement Silme DTO (T-034f)
+ */
+export interface DeleteAgreementDto {
+  /** Expected current `agreements.version` (optimistic locking). */
+  version?: number;
+}
 
 /**
  * Agreement Filtreleme DTO

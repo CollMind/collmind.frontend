@@ -27,6 +27,8 @@ import {
   Settings2,
 } from 'lucide-react';
 import { useToast } from '@/hooks/useToast';
+import { useVersionConflict } from '@/hooks/useVersionConflict';
+import { VersionConflictDialog } from '@/components/common/VersionConflictDialog';
 import { AddFuDialog } from './AddFuDialog';
 import { planEndpoints } from '@/api/endpoints/plans.endpoints';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -752,6 +754,10 @@ export function PlanningGridEnhanced({ plan, canEdit }: PlanningGridProps) {
   const editInputRef = useRef<HTMLInputElement>(null);
   const toast = useToast();
   const queryClient = useQueryClient();
+  // T-034f: shared 409 STALE_VERSION/MISSING_VERSION UX for every
+  // version-guarded mutation below. `reload` refetches ['plan', plan.id] —
+  // it never resubmits the user's edit (see useVersionConflict.ts).
+  const versionConflict = useVersionConflict([['plan', plan.id]]);
 
   // Fetch applicable mechanics for this plan context
   const { data: applicableMechanics = [] } = useQuery({
@@ -905,8 +911,15 @@ export function PlanningGridEnhanced({ plan, canEdit }: PlanningGridProps) {
 
   const addFuMutation = useMutation({
     mutationFn: async (fuIds: string[]) => {
+      // T-034f: addFu bumps plans.version by exactly +1 per call (backend
+      // CAS: `version = version + 1`, see docs/analysis/0005 §2). Tracking
+      // it locally lets a multi-FU batch stay in a single mutation without
+      // an extra GET between each call — the response is a PlanFu, not the
+      // Plan, so the server never hands the bumped plans.version back here.
+      let planVersion = plan.version;
       for (const fuId of fuIds) {
-        await planEndpoints.addFu(plan.id, { fuId });
+        await planEndpoints.addFu(plan.id, { fuId, planVersion });
+        planVersion += 1;
       }
     },
     onSuccess: () => {
@@ -914,6 +927,7 @@ export function PlanningGridEnhanced({ plan, canEdit }: PlanningGridProps) {
       queryClient.invalidateQueries({ queryKey: ['plan', plan.id] });
     },
     onError: (error: any) => {
+      if (versionConflict.handleError(error)) return;
       toast.error(
         error?.response?.data?.message || 'FU eklenirken hata oluştu'
       );
@@ -927,14 +941,16 @@ export function PlanningGridEnhanced({ plan, canEdit }: PlanningGridProps) {
       skuId,
       field,
       value,
+      version,
     }: {
       planId: string;
       fuId: string;
       skuId: string;
       field: string;
       value: number;
+      version: number;
     }) => {
-      const data: any = {};
+      const data: any = { version };
       if (field === 'BASE_VOL') data.baseVolume = value;
       if (field === 'PLAN_VOL') data.plannedVolume = value;
       await planEndpoints.updateSkuVolume(planId, fuId, skuId, data);
@@ -943,6 +959,7 @@ export function PlanningGridEnhanced({ plan, canEdit }: PlanningGridProps) {
       queryClient.invalidateQueries({ queryKey: ['plan', plan.id] });
     },
     onError: (error: any) => {
+      if (versionConflict.handleError(error)) return;
       toast.error(
         error?.response?.data?.message || 'Değer güncellenirken hata oluştu'
       );
@@ -955,15 +972,17 @@ export function PlanningGridEnhanced({ plan, canEdit }: PlanningGridProps) {
       fuId,
       mechanicCode,
       value,
+      version,
     }: {
       planId: string;
       fuId: string;
       mechanicCode: string;
       value: number;
+      version: number;
     }) => {
-      // TODO: Implement tactic update endpoint
       await planEndpoints.updateFuTactic(planId, fuId, {
         tactics: { [mechanicCode]: value },
+        version,
       });
     },
     onSuccess: () => {
@@ -971,6 +990,7 @@ export function PlanningGridEnhanced({ plan, canEdit }: PlanningGridProps) {
       toast.success('Tactic güncellendi');
     },
     onError: (error: any) => {
+      if (versionConflict.handleError(error)) return;
       toast.error(
         error?.response?.data?.message || 'Tactic güncellenirken hata oluştu'
       );
@@ -979,13 +999,16 @@ export function PlanningGridEnhanced({ plan, canEdit }: PlanningGridProps) {
 
   const removeFuMutation = useMutation({
     mutationFn: async (fuId: string) => {
-      await planEndpoints.removeFu(plan.id, fuId);
+      await planEndpoints.removeFu(plan.id, fuId, {
+        planVersion: plan.version,
+      });
     },
     onSuccess: () => {
       toast.success('FU başarıyla kaldırıldı');
       queryClient.invalidateQueries({ queryKey: ['plan', plan.id] });
     },
     onError: (error: any) => {
+      if (versionConflict.handleError(error)) return;
       toast.error(
         error?.response?.data?.message || 'FU kaldırılırken hata oluştu'
       );
@@ -1053,6 +1076,7 @@ export function PlanningGridEnhanced({ plan, canEdit }: PlanningGridProps) {
           skuId: planSku.skuId,
           field,
           value,
+          version: planSku.version,
         });
       } else {
         // FU level edit (tactic)
@@ -1061,6 +1085,7 @@ export function PlanningGridEnhanced({ plan, canEdit }: PlanningGridProps) {
           fuId: planFu.fuId,
           mechanicCode: field,
           value,
+          version: planFu.version,
         });
       }
       setEditingCell(null);
@@ -1275,6 +1300,12 @@ export function PlanningGridEnhanced({ plan, canEdit }: PlanningGridProps) {
         isOpen={isAddFuDialogOpen}
         onClose={() => setIsAddFuDialogOpen(false)}
         onAdd={handleAddFu}
+      />
+
+      <VersionConflictDialog
+        conflict={versionConflict.conflict}
+        onReload={versionConflict.reload}
+        onDismiss={versionConflict.dismiss}
       />
     </Card>
   );

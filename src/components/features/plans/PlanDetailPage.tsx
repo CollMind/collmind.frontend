@@ -22,6 +22,8 @@ import {
   AlertTriangle,
 } from 'lucide-react';
 import { useToast } from '@/hooks/useToast';
+import { useVersionConflict } from '@/hooks/useVersionConflict';
+import { VersionConflictDialog } from '@/components/common/VersionConflictDialog';
 import { PlanningGridEnhanced as PlanningGrid } from './PlanningGridEnhanced';
 import { GrandTotals } from './GrandTotals';
 import { PlanAnalysis } from './PlanAnalysis';
@@ -55,6 +57,8 @@ export function PlanDetailPage() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isSubmitDialogOpen, setIsSubmitDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  // T-034f: shared 409 STALE_VERSION/MISSING_VERSION UX (update/delete).
+  const versionConflict = useVersionConflict([['plan', id], ['plans']]);
 
   const {
     data: plan,
@@ -78,7 +82,8 @@ export function PlanDetailPage() {
 
   // Update plan mutation
   const updateMutation = useMutation({
-    mutationFn: (data: UpdatePlanDto) => planEndpoints.update(id!, data),
+    mutationFn: (data: UpdatePlanDto) =>
+      planEndpoints.update(id!, { ...data, version: plan?.version }),
     onSuccess: () => {
       toast.success('Plan başarıyla güncellendi');
       queryClient.invalidateQueries({ queryKey: ['plan', id] });
@@ -86,6 +91,7 @@ export function PlanDetailPage() {
       setIsEditDialogOpen(false);
     },
     onError: (error: any) => {
+      if (versionConflict.handleError(error)) return;
       toast.error(
         error?.response?.data?.message || 'Plan güncellenirken hata oluştu'
       );
@@ -108,7 +114,7 @@ export function PlanDetailPage() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: () => planEndpoints.delete(id!),
+    mutationFn: () => planEndpoints.delete(id!, { version: plan?.version }),
     onSuccess: () => {
       toast.success('Plan başarıyla silindi');
       queryClient.invalidateQueries({ queryKey: ['plans'] });
@@ -116,6 +122,7 @@ export function PlanDetailPage() {
       navigate('/plans');
     },
     onError: (error: any) => {
+      if (versionConflict.handleError(error)) return;
       toast.error(
         error?.response?.data?.message || 'Plan silinirken hata oluştu'
       );
@@ -396,6 +403,13 @@ export function PlanDetailPage() {
         variant="destructive"
         isLoading={deleteMutation.isPending}
         icon={<AlertTriangle className="h-5 w-5 text-red-600" />}
+      />
+
+      {/* Version Conflict Dialog (T-034f) */}
+      <VersionConflictDialog
+        conflict={versionConflict.conflict}
+        onReload={versionConflict.reload}
+        onDismiss={versionConflict.dismiss}
       />
     </div>
   );

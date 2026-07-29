@@ -96,7 +96,10 @@ export function useDeleteAgreement() {
   const toast = useToast();
 
   return useMutation({
-    mutationFn: (id: string) => agreementEndpoints.delete(id),
+    // T-034f: delete requires `agreements.version` (optimistic locking,
+    // strict mode) — see agreements.endpoints.ts#delete.
+    mutationFn: ({ id, version }: { id: string; version?: number }) =>
+      agreementEndpoints.delete(id, { version }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: agreementKeys.lists() });
       toast.success('Anlaşma başarıyla silindi');

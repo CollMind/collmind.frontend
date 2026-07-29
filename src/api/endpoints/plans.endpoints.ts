@@ -11,6 +11,13 @@ export interface CalculationResult {
 
 export interface Plan {
   id: string;
+  /**
+   * T-034f: optimistic-locking CAS token for plans.* (structural/header
+   * mutations). Always present on entities read from the backend since
+   * T-034 (strict mode) — see docs/analysis/0005-optimistic-locking-design.md.
+   * Send back on update/addFu(planVersion)/removeFu(planVersion)/delete.
+   */
+  version: number;
   planCode: string;
   planName: string;
   description?: string;
@@ -47,6 +54,8 @@ export interface Plan {
 
 export interface PlanFu {
   id: string;
+  /** T-034f: optimistic-locking CAS token for this plan_fus row (tactics). */
+  version: number;
   planId: string;
   fuId: string;
   tactics?: Record<string, number>;
@@ -63,6 +72,8 @@ export interface PlanFu {
 
 export interface PlanSku {
   id: string;
+  /** T-034f: optimistic-locking CAS token for this plan_skus row (volume). */
+  version: number;
   planFuId: string;
   skuId: string;
   baseVolume?: number;
@@ -104,20 +115,43 @@ export interface CreatePlanDto {
   comments?: string;
 }
 
-export interface UpdatePlanDto extends Partial<CreatePlanDto> {}
+export interface UpdatePlanDto extends Partial<CreatePlanDto> {
+  /**
+   * T-034f: expected current `plans.version` (optimistic locking, strict
+   * mode). Omitting it → 409 MISSING_VERSION; a stale value → 409
+   * STALE_VERSION. See docs/analysis/0005-optimistic-locking-design.md §5.
+   */
+  version?: number;
+}
 
 export interface AddFuDto {
   fuId: string;
   tactics?: Record<string, number>;
+  /** T-034f: expected current `plans.version` (adding an FU is structural). */
+  planVersion?: number;
 }
 
 export interface UpdateFuTacticDto {
   tactics?: Record<string, number>;
+  /** T-034f: expected current `plan_fus.version` (row-level CAS). */
+  version?: number;
 }
 
 export interface UpdateSkuVolumeDto {
   baseVolume?: number;
   plannedVolume?: number;
+  /** T-034f: expected current `plan_skus.version` (row-level CAS). */
+  version?: number;
+}
+
+export interface RemoveFuDto {
+  /** T-034f: expected current `plans.version` (removing an FU is structural). */
+  planVersion?: number;
+}
+
+export interface DeletePlanDto {
+  /** T-034f: expected current `plans.version`. */
+  version?: number;
 }
 
 export interface PlanMechanicValue {
@@ -229,8 +263,11 @@ export const planEndpoints = {
     apiClient.patch<PlanFu>(`/plans/${planId}/fus/${fuId}/tactics`, data),
 
   // FU Silme
-  removeFu: (planId: string, fuId: string) =>
-    apiClient.delete(`/plans/${planId}/fus/${fuId}`),
+  // T-034f: axios DELETE gövdesi `{ data }` config'i ile gider, ikinci
+  // pozisyonel argüman olarak DEĞİL — aksi halde gövde sessizce düşer ve
+  // backend her seferinde 409 MISSING_VERSION döner.
+  removeFu: (planId: string, fuId: string, data: RemoveFuDto) =>
+    apiClient.delete(`/plans/${planId}/fus/${fuId}`, { data }),
 
   // SKU Volume Güncelleme
   updateSkuVolume: (
@@ -264,7 +301,9 @@ export const planEndpoints = {
     apiClient.post<Plan>(`/plans/${id}/reject`, data),
 
   // Plan Silme
-  delete: (id: string) => apiClient.delete(`/plans/${id}`),
+  // T-034f: bkz. removeFu yorumu — DELETE gövdesi `{ data }` config'i.
+  delete: (id: string, data: DeletePlanDto) =>
+    apiClient.delete(`/plans/${id}`, { data }),
 
   // Plan Analizi
   getAnalysis: (id: string) => apiClient.get(`/plans/${id}/analysis`),

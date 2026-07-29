@@ -333,8 +333,14 @@ export function PlanningGrid({ plan, canEdit }: PlanningGridProps) {
 
   const addFuMutation = useMutation({
     mutationFn: async (fuIds: string[]) => {
+      // T-034f: addFu requires planVersion; bumps +1 per call (backend CAS)
+      // — see PlanningGridEnhanced.tsx's addFuMutation for the full
+      // rationale (this component is currently unused/dead code, kept
+      // type-consistent so it doesn't silently bit-rot).
+      let planVersion = plan.version;
       for (const fuId of fuIds) {
-        await planEndpoints.addFu(plan.id, { fuId });
+        await planEndpoints.addFu(plan.id, { fuId, planVersion });
+        planVersion += 1;
       }
     },
     onSuccess: () => {
@@ -379,7 +385,7 @@ export function PlanningGrid({ plan, canEdit }: PlanningGridProps) {
 
   const removeFuMutation = useMutation({
     mutationFn: async (fuId: string) => {
-      await planEndpoints.removeFu(plan.id, fuId);
+      await planEndpoints.removeFu(plan.id, fuId, { planVersion: plan.version });
     },
     onSuccess: () => {
       toast.success('FU başarıyla kaldırıldı');

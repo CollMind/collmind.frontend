@@ -9,6 +9,8 @@ import { UpdateAgreementDto } from '@/types/agreement.types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useVersionConflict } from '@/hooks/useVersionConflict';
+import { VersionConflictDialog } from '@/components/common/VersionConflictDialog';
 
 export function AgreementEditPage() {
   const { id } = useParams<{ id: string }>();
@@ -17,6 +19,11 @@ export function AgreementEditPage() {
   const { data: agreement, isLoading, error } = useAgreement(id || '');
 
   const updateMutation = useUpdateAgreement();
+  // T-034f: shared 409 STALE_VERSION/MISSING_VERSION UX for update.
+  const versionConflict = useVersionConflict([
+    ['agreements', 'detail', id],
+    ['agreements', 'list'],
+  ]);
 
   if (isLoading) {
     return <LoadingSpinner />;
@@ -41,10 +48,16 @@ export function AgreementEditPage() {
 
   const handleUpdate = async (data: UpdateAgreementDto) => {
     try {
-      await updateMutation.mutateAsync({ id: agreement.id, data });
+      await updateMutation.mutateAsync({
+        id: agreement.id,
+        data: { ...data, version: agreement.version },
+      });
       navigate(`/agreements/${agreement.id}`);
     } catch (error) {
-      // Error is handled by the hook
+      // Generic toast already shown by useUpdateAgreement's onError; a
+      // version conflict additionally gets the reload dialog here (T-034f
+      // — never auto-retry, see useVersionConflict.ts).
+      versionConflict.handleError(error);
     }
   };
 
@@ -79,6 +92,13 @@ export function AgreementEditPage() {
           />
         </CardContent>
       </Card>
+
+      {/* Version Conflict Dialog (T-034f) */}
+      <VersionConflictDialog
+        conflict={versionConflict.conflict}
+        onReload={versionConflict.reload}
+        onDismiss={versionConflict.dismiss}
+      />
     </div>
   );
 }

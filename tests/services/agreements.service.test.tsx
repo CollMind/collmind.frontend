@@ -199,11 +199,43 @@ describe('useUpdateAgreement', () => {
 
     await result.current.mutateAsync({
       id: '1',
-      data: { name: 'Updated Agreement' },
+      data: { name: 'Updated Agreement', version: 3 },
     });
 
     await waitFor(() => {
       expect(result.current.isSuccess).toBe(true);
+    });
+  });
+
+  it('rejects (and does not silently swallow) a 409 STALE_VERSION conflict', async () => {
+    server.use(
+      http.patch('http://localhost:3000/agreements/:id', () => {
+        return HttpResponse.json(
+          {
+            statusCode: 409,
+            code: 'STALE_VERSION',
+            message: 'This record was modified by another user.',
+            entity: 'AGREEMENT',
+            entityId: '1',
+            expectedVersion: 2,
+            currentVersion: 3,
+          },
+          { status: 409 }
+        );
+      })
+    );
+
+    const { result } = renderHook(() => useUpdateAgreement(), { wrapper });
+
+    await expect(
+      result.current.mutateAsync({
+        id: '1',
+        data: { name: 'Updated Agreement', version: 2 },
+      })
+    ).rejects.toBeTruthy();
+
+    await waitFor(() => {
+      expect(result.current.isError).toBe(true);
     });
   });
 });
@@ -222,7 +254,8 @@ describe('useDeleteAgreement', () => {
 
     const { result } = renderHook(() => useDeleteAgreement(), { wrapper });
 
-    await result.current.mutateAsync('1');
+    // T-034f: delete requires `version` (optimistic locking, strict mode).
+    await result.current.mutateAsync({ id: '1', version: 1 });
 
     await waitFor(() => {
       expect(result.current.isSuccess).toBe(true);

@@ -19,6 +19,8 @@ import {
   useAgreementPermissions,
 } from '@/services/agreements.service';
 import { Send, Check, X, Ban, Trash2, Edit } from 'lucide-react';
+import { useVersionConflict } from '@/hooks/useVersionConflict';
+import { VersionConflictDialog } from '@/components/common/VersionConflictDialog';
 
 interface AgreementActionsProps {
   agreement: Agreement;
@@ -39,6 +41,11 @@ export function AgreementActions({
   const rejectMutation = useRejectAgreement();
   const cancelMutation = useCancelAgreement();
   const deleteMutation = useDeleteAgreement();
+  // T-034f: shared 409 STALE_VERSION/MISSING_VERSION UX for delete.
+  const versionConflict = useVersionConflict([
+    ['agreements', 'detail', agreement.id],
+    ['agreements', 'list'],
+  ]);
 
   const [submitDialogOpen, setSubmitDialogOpen] = useState(false);
   const [approveDialogOpen, setApproveDialogOpen] = useState(false);
@@ -110,7 +117,10 @@ export function AgreementActions({
 
   const handleDelete = async () => {
     try {
-      await deleteMutation.mutateAsync(agreement.id);
+      await deleteMutation.mutateAsync({
+        id: agreement.id,
+        version: agreement.version,
+      });
       setDeleteDialogOpen(false);
       // Call onDeleteSuccess if provided, otherwise call onSuccess
       if (onDeleteSuccess) {
@@ -119,7 +129,10 @@ export function AgreementActions({
         onSuccess?.();
       }
     } catch (error) {
-      // Error handled by hook
+      // Generic toast already shown by useDeleteAgreement's onError; a
+      // version conflict additionally gets the reload dialog here (T-034f
+      // — never auto-retry, see useVersionConflict.ts).
+      versionConflict.handleError(error);
     }
   };
 
@@ -363,6 +376,13 @@ export function AgreementActions({
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Version Conflict Dialog (T-034f) */}
+      <VersionConflictDialog
+        conflict={versionConflict.conflict}
+        onReload={versionConflict.reload}
+        onDismiss={versionConflict.dismiss}
+      />
     </>
   );
 }

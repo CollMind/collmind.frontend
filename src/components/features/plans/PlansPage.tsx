@@ -24,6 +24,8 @@ import { CreatePlanForm } from './CreatePlanForm';
 import { PlanList } from './PlanList';
 import { Plus, Download, FileText, Copy, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/useToast';
+import { useVersionConflict } from '@/hooks/useVersionConflict';
+import { VersionConflictDialog } from '@/components/common/VersionConflictDialog';
 
 const formatCurrency = (amount: number, currency: string = 'TRY') => {
   return new Intl.NumberFormat('tr-TR', {
@@ -44,6 +46,8 @@ export function PlansPage() {
   const [isCopying, setIsCopying] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const toast = useToast();
+  // T-034f: shared 409 STALE_VERSION/MISSING_VERSION UX (delete/addFu here).
+  const versionConflict = useVersionConflict([['plans']]);
 
   // Query parametrelerinden filtreleri al
   const filters = useMemo<PlanFilterDto>(() => {
@@ -138,11 +142,21 @@ export function PlansPage() {
       const planId = result.data?.id;
 
       // Add selected FUs if any
+      // T-034f: addFu requires planVersion; bumps +1 per call (backend CAS),
+      // tracked locally same as PlanningGridEnhanced's addFuMutation — see
+      // that file's comment for why (response is PlanFu, not Plan).
       if (planId && selectedFuIds && selectedFuIds.length > 0) {
+        let planVersion = result.data?.version;
         for (const fuId of selectedFuIds) {
           try {
-            await planEndpoints.addFu(planId, { fuId });
+            await planEndpoints.addFu(planId, { fuId, planVersion });
+            if (planVersion !== undefined) planVersion += 1;
           } catch (err) {
+            if (versionConflict.handleError(err)) {
+              // Stale/missing version on a plan we just created — bail out
+              // of the batch rather than keep hammering a bad version.
+              break;
+            }
             console.error('Error adding FU:', err);
           }
         }
@@ -223,11 +237,14 @@ export function PlansPage() {
     if (!deleteTarget) return;
     setIsDeleting(true);
     try {
-      await planEndpoints.delete(deleteTarget.id);
+      await planEndpoints.delete(deleteTarget.id, {
+        version: deleteTarget.version,
+      });
       toast.success('Plan başarıyla silindi');
       setDeleteTarget(null);
       refetch();
     } catch (error: any) {
+      if (versionConflict.handleError(error)) return;
       toast.error(
         error?.response?.data?.message || 'Plan silinirken hata oluştu'
       );
@@ -377,6 +394,13 @@ export function PlansPage() {
         variant="destructive"
         isLoading={isDeleting}
         icon={<AlertTriangle className="h-5 w-5 text-red-600" />}
+      />
+
+      {/* Version Conflict Dialog (T-034f) */}
+      <VersionConflictDialog
+        conflict={versionConflict.conflict}
+        onReload={versionConflict.reload}
+        onDismiss={versionConflict.dismiss}
       />
     </div>
   );
