@@ -98,8 +98,13 @@ export function PlanDetailPage() {
     },
   });
 
+  // T-034f/T-034b: submit() is the one status transition that ALSO
+  // validates plans.version (unlike approve/reject, which are status-CAS
+  // only) — it commits the plan's current totalSpend to a budget reserve.
+  // Send the version we last loaded; on 409 STALE_VERSION/MISSING_VERSION
+  // route through the shared conflict dialog, never auto-retry.
   const submitMutation = useMutation({
-    mutationFn: () => planEndpoints.submit(id!),
+    mutationFn: () => planEndpoints.submit(id!, { version: plan?.version }),
     onSuccess: () => {
       toast.success('Plan onaya gönderildi');
       queryClient.invalidateQueries({ queryKey: ['plan', id] });
@@ -107,6 +112,10 @@ export function PlanDetailPage() {
       setIsSubmitDialogOpen(false);
     },
     onError: (error: any) => {
+      if (versionConflict.handleError(error)) {
+        setIsSubmitDialogOpen(false);
+        return;
+      }
       toast.error(
         error?.response?.data?.message || 'Plan onaya gönderilirken hata oluştu'
       );

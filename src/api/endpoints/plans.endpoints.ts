@@ -154,6 +154,17 @@ export interface DeletePlanDto {
   version?: number;
 }
 
+export interface SubmitPlanDto {
+  /**
+   * T-034f: expected current `plans.version`. Unlike approve/reject/
+   * returnToDraft (status-CAS only), submit() ALSO validates version because
+   * it commits the plan's current totalSpend to a budget reserve — see
+   * submit-plan.dto.ts on the backend. Omitting it → 409 MISSING_VERSION; a
+   * stale value → 409 STALE_VERSION.
+   */
+  version?: number;
+}
+
 export interface PlanMechanicValue {
   id: string;
   planFuId: string;
@@ -282,7 +293,11 @@ export const planEndpoints = {
     ),
 
   // Durum Geçişleri
-  submit: (id: string) => apiClient.post<Plan>(`/plans/${id}/submit`),
+  // T-034f: submit() is the one status transition that ALSO requires
+  // `version` (see SubmitPlanDto). approve/reject deliberately do NOT take
+  // version — do not add it there.
+  submit: (id: string, data: SubmitPlanDto) =>
+    apiClient.post<Plan>(`/plans/${id}/submit`, data),
 
   approve: (
     id: string,
