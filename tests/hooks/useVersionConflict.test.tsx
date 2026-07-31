@@ -137,7 +137,15 @@ describe('version conflict end-to-end (no auto-retry)', () => {
   });
 
   it('shows the reload dialog on 409 STALE_VERSION and does not resubmit automatically', async () => {
-    const user = userEvent.setup();
+    // `delay: null` disables userEvent v14's internal real setTimeout-based
+    // pacing between simulated pointer/keyboard events. With it left on
+    // default, this test's click -> waitFor round trip depends on real
+    // macrotasks firing promptly; under CPU contention from other
+    // concurrently-running processes on the same machine, those real
+    // timers can be delayed enough to blow past `waitFor`'s default 1000ms
+    // budget, independent of anything wrong with the code under test (see
+    // T-040 — this was flaky under load, not on an idle machine).
+    const user = userEvent.setup({ delay: null });
     let callCount = 0;
 
     server.use(
@@ -197,7 +205,7 @@ describe('version conflict end-to-end (no auto-retry)', () => {
   });
 
   it('shows a distinct message for 409 MISSING_VERSION without retrying', async () => {
-    const user = userEvent.setup();
+    const user = userEvent.setup({ delay: null });
     let callCount = 0;
 
     server.use(

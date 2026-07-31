@@ -114,7 +114,11 @@ describe('plan submit — version conflict (no auto-retry)', () => {
   });
 
   it('shows the reload dialog on 409 STALE_VERSION and never resends the submit automatically', async () => {
-    const user = userEvent.setup();
+    // `delay: null` — see the identical comment in
+    // tests/hooks/useVersionConflict.test.tsx: removes userEvent's internal
+    // real-timer pacing so this test doesn't depend on real macrotasks
+    // firing within `waitFor`'s default window under CPU contention (T-040).
+    const user = userEvent.setup({ delay: null });
     let callCount = 0;
     let lastBody: unknown = null;
 
@@ -164,7 +168,7 @@ describe('plan submit — version conflict (no auto-retry)', () => {
   });
 
   it('shows the missing-version message on 409 MISSING_VERSION without retrying', async () => {
-    const user = userEvent.setup();
+    const user = userEvent.setup({ delay: null });
     let callCount = 0;
 
     server.use(

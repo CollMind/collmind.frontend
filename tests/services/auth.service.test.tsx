@@ -118,7 +118,15 @@ describe('useLogout', () => {
 
     const { result } = renderHook(() => useLogout(), { wrapper });
 
-    await result.current.mutateAsync();
+    // mutateAsync rejects (logout endpoint mocked to 500) — that's the
+    // whole point of this test (onError still clears local state despite
+    // the failure). The rejection must be caught here: `await
+    // mutateAsync()` unguarded throws out of the test before the
+    // assertions below ever run, and the resulting unhandled-rejection
+    // window (a promise reject with no synchronously-attached handler)
+    // is exactly the "AxiosError could not be cloned" worker-serialization
+    // failure seen elsewhere in this suite (see T-040).
+    await result.current.mutateAsync().catch(() => {});
 
     // Should still clear local state
     const authState = store.getState().auth;

@@ -110,7 +110,12 @@ describe('useMarkNotificationAsRead', () => {
 
   it('should mark notification as read successfully', async () => {
     server.use(
-      http.patch('http://localhost:3000/notifications/:id/read', ({ params }) => {
+      // Endpoint sends POST (@Post(':id/read') in notification.controller.ts),
+      // not PATCH. A mismatched mock method means MSW never matches the
+      // real request, throws "no matching handler" asynchronously, and the
+      // resulting axios error escapes as an unhandled rejection the worker
+      // can't serialize back to the reporter (see T-040).
+      http.post('http://localhost:3000/notifications/:id/read', ({ params }) => {
         return HttpResponse.json({
           ...mockNotification,
           id: params.id as string,
@@ -130,7 +135,8 @@ describe('useMarkNotificationAsRead', () => {
 
   it('should handle mark as read error', async () => {
     server.use(
-      http.patch('http://localhost:3000/notifications/:id/read', () => {
+      // Same method fix as above — see comment on the previous handler.
+      http.post('http://localhost:3000/notifications/:id/read', () => {
         return HttpResponse.json(
           { message: 'Notification not found' },
           { status: 404 }

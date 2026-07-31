@@ -41,6 +41,14 @@ describe('retry', () => {
     const fn = vi.fn().mockRejectedValue(error);
 
     const promise = retry(fn, { maxRetries: 2, retryDelay: 100 });
+    // Attach a handler synchronously so this rejection is never briefly
+    // "unhandled": `retry()`'s rejection can settle on a microtask before
+    // the `advanceTimersByTimeAsync` line below runs, and Node/Vitest flag
+    // that window regardless of the `.rejects` assertion attached later —
+    // it doesn't suppress the real assertion, just avoids the race (see
+    // T-040: this produced a genuine "AxiosError could not be cloned"
+    // worker-serialization failure for the same root cause elsewhere).
+    promise.catch(() => {});
 
     // Fast-forward time for all retries
     await vi.advanceTimersByTimeAsync(300);
@@ -64,6 +72,10 @@ describe('retry', () => {
       retryDelay: 100,
       retryCondition,
     });
+    // See comment on the equivalent line in the previous test — this
+    // rejects synchronously (retryCondition is false, no delay awaited),
+    // before any handler is otherwise attached.
+    promise.catch(() => {});
 
     await vi.advanceTimersByTimeAsync(100);
 
