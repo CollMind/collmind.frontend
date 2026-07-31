@@ -1,6 +1,17 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { renderHook } from '@testing-library/react';
+import { renderHook, act } from '@testing-library/react';
 import { useDebounce } from '@/hooks/useDebounce';
+
+// T-040: `advanceTimersByTimeAsync` zamanlayıcıyı ilerletir, ama tetiklediği
+// React state güncellemesi `act()` ile sarılmazsa `result.current`'a yansıması
+// GARANTİ DEĞİLDİR — genelde yansır, ara sıra yansımaz. "should debounce value
+// changes" 6 koşumda 1 düşüyordu. Zamanlayıcı ilerletmeleri act() içine alındı;
+// kararsızlığın kaynağı buydu, gerçek bir hook hatası değil.
+const advance = async (ms: number) => {
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(ms);
+  });
+};
 
 describe('useDebounce', () => {
   beforeEach(() => {
@@ -33,7 +44,7 @@ describe('useDebounce', () => {
     expect(result.current).toBe('initial');
 
     // Fast-forward time
-    await vi.advanceTimersByTimeAsync(500);
+    await advance(500);
 
     expect(result.current).toBe('updated');
   });
@@ -47,16 +58,16 @@ describe('useDebounce', () => {
     );
 
     rerender({ value: 'value2', delay: 500 });
-    await vi.advanceTimersByTimeAsync(300);
+    await advance(300);
 
     rerender({ value: 'value3', delay: 500 });
-    await vi.advanceTimersByTimeAsync(300);
+    await advance(300);
 
     // Should still be initial value
     expect(result.current).toBe('value1');
 
     // Complete the delay
-    await vi.advanceTimersByTimeAsync(200);
+    await advance(200);
 
     expect(result.current).toBe('value3');
   });
@@ -71,10 +82,10 @@ describe('useDebounce', () => {
 
     rerender({ value: 'updated', delay: 1000 });
 
-    await vi.advanceTimersByTimeAsync(500);
+    await advance(500);
     expect(result.current).toBe('test');
 
-    await vi.advanceTimersByTimeAsync(500);
+    await advance(500);
 
     expect(result.current).toBe('updated');
   });
@@ -89,7 +100,7 @@ describe('useDebounce', () => {
 
     rerender({ value: 100, delay: 500 });
 
-    await vi.advanceTimersByTimeAsync(500);
+    await advance(500);
 
     expect(result.current).toBe(100);
   });
@@ -107,7 +118,7 @@ describe('useDebounce', () => {
 
     rerender({ value: updatedObj, delay: 500 });
 
-    await vi.advanceTimersByTimeAsync(500);
+    await advance(500);
 
     expect(result.current).toEqual(updatedObj);
   });

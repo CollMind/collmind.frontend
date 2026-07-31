@@ -288,7 +288,11 @@ describe('useBudgetReservedAmount', () => {
 
   it('should fetch reserved amount', async () => {
     server.use(
-      http.get('http://localhost:3000/budget/envelopes/:id/reserved-amount', () => {
+      // T-040: mock yolu `/reserved-amount` idi; gerçek endpoint `/reserved`
+      // (backend `budget.controller.ts:90` @Get('envelopes/:id/reserved'),
+      // frontend `budget.endpoints.ts:23`). Handler hiç eşleşmiyor, istek
+      // düşüyor ve `isSuccess` false kalıyordu. Üretim kodu doğru, mock yanlıştı.
+      http.get('http://localhost:3000/budget/envelopes/:id/reserved', () => {
         return HttpResponse.json({
           reservedAmount: 20000,
         });

@@ -11,11 +11,18 @@ import { User } from '@/types/user.types';
 import { http, HttpResponse } from 'msw';
 import { server } from '../../setup';
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: { retry: false },
-  },
-});
+// T-040: her render KENDİ QueryClient'ını alır. Modül seviyesinde tek bir
+// client paylaşılıyordu; bir testin başarılı `/users/me` yanıtı cache'te
+// kalıp sonraki testte 401 handler'ı devre dışı bırakıyordu (`useMe` cache'ten
+// dönüyor, hata hiç oluşmuyor, dolayısıyla logout dispatch edilmiyordu).
+// Testler arası paylaşılan mutable durum — izolasyon her testin kendi
+// client'ında.
+const createTestQueryClient = () =>
+  new QueryClient({
+    defaultOptions: {
+      queries: { retry: false, gcTime: 0, staleTime: 0 },
+    },
+  });
 
 const createMockStore = (authState: any) => {
   return configureStore({
@@ -50,7 +57,7 @@ const renderWithProviders = (ui: React.ReactElement, store: any) => {
   // at `/`, matching real per-navigation isolation (see T-040).
   return render(
     <Provider store={store}>
-      <QueryClientProvider client={queryClient}>
+      <QueryClientProvider client={createTestQueryClient()}>
         <MemoryRouter initialEntries={['/']}>
           <Routes>
             <Route path="/login" element={<div>Login Page</div>} />
@@ -64,6 +71,12 @@ const renderWithProviders = (ui: React.ReactElement, store: any) => {
 };
 
 describe('ProtectedRoute', () => {
+  // T-040: localStorage jsdom'da süreç geneli — bir testin yazdığı token
+  // sonrakine sızar. Her testten önce temizleniyor.
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
   const mockUser: User = {
     id: '1',
     email: 'test@example.com',
@@ -111,6 +124,14 @@ describe('ProtectedRoute', () => {
   });
 
   it('should fetch user when token exists but user is missing (page refresh scenario)', async () => {
+    // T-040: ProtectedRoute (`ProtectedRoute.tsx:55-56`) `setCredentials`'ı
+    // ancak localStorage'da refreshToken DA varsa dispatch ediyor — gerçek
+    // sayfa-yenileme senaryosunda her iki token da orada olur. Test bu ön
+    // koşulu kurmuyordu, bu yüzden user hiç store'a yazılmıyor ve component
+    // `/login`'e yönleniyordu.
+    localStorage.setItem('accessToken', 'access-token');
+    localStorage.setItem('refreshToken', 'refresh-token');
+
     const store = createMockStore({
       isAuthenticated: false,
       user: null,
