@@ -98,9 +98,9 @@ export function LoginForm({
           render={({ field }) => (
             <FormItem>
               <FormLabel>Email Address</FormLabel>
-              <FormControl>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <FormControl>
                   <Input
                     {...field}
                     type="email"
@@ -112,8 +112,8 @@ export function LoginForm({
                       handleFieldChange();
                     }}
                   />
-                </div>
-              </FormControl>
+                </FormControl>
+              </div>
               <FormMessage />
             </FormItem>
           )}
@@ -137,9 +137,9 @@ export function LoginForm({
                   </button>
                 )}
               </div>
-              <FormControl>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <FormControl>
                   <Input
                     {...field}
                     type="password"
@@ -151,8 +151,8 @@ export function LoginForm({
                       handleFieldChange();
                     }}
                   />
-                </div>
-              </FormControl>
+                </FormControl>
+              </div>
               <FormMessage />
             </FormItem>
           )}

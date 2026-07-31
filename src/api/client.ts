@@ -59,6 +59,17 @@ apiClient.interceptors.request.use(
       config.headers['x-tenant-id'] = tenantId;
     }
 
+    // FormData requests (e.g. file uploads like customer import) must not
+    // carry the instance-wide 'Content-Type: application/json' default —
+    // it stomps on the multipart boundary the browser/axios would otherwise
+    // set automatically, so the server always rejects the upload body as
+    // malformed. Removing the header here lets axios set the correct
+    // 'multipart/form-data; boundary=...' value itself (found via T-040:
+    // useCustomerImport's "happy path" test was actually hitting a 500).
+    if (typeof FormData !== 'undefined' && config.data instanceof FormData) {
+      delete config.headers['Content-Type'];
+    }
+
     return config;
   },
   (error) => Promise.reject(error)
@@ -79,6 +90,7 @@ apiClient.interceptors.response.use(
 
       // Log technical error for debugging
       console.error('403 Forbidden Error:', {
+        status: 403,
         url: originalRequest?.url,
         method: originalRequest?.method,
         message: errorMessage,
@@ -237,6 +249,7 @@ apiClient.interceptors.response.use(
         | { message?: string }
         | undefined;
       console.error('500 Internal Server Error:', {
+        status: 500,
         url: originalRequest?.url,
         method: originalRequest?.method,
         message: errorData500?.message || error.message,

@@ -112,15 +112,27 @@ describe('UserList', () => {
   });
 
   it('should filter users by role', async () => {
-    const user = userEvent.setup();
+    // pointerEventsCheck: 0 — see CustomerFilters.test.tsx for why (Radix
+    // Select option text nodes are inert; mixing fireEvent with an
+    // in-flight userEvent pointer session left userEvent's internal state
+    // inconsistent for later files sharing the worker, a leading suspect
+    // for an intermittent full-suite hang, see T-040).
+    const user = userEvent.setup({ pointerEventsCheck: 0 });
     customRender(<UserList />);
 
-    const roleFilter = screen.getByText(/rol filtrele/i);
+    // The Role/Status filters default to "all" (Select value="all"), so
+    // SelectValue renders "Tüm Roller"/"Tüm Durumlar" rather than its
+    // `placeholder` prop ("Rol Filtrele"/"Durum Filtrele") — the placeholder
+    // text the original test looked for is never actually on screen. Target
+    // the trigger by its combobox role instead (see T-040).
+    const roleFilter = screen.getAllByRole('combobox')[0];
     await user.click(roleFilter);
 
     // Select role filter
-    const adminOption = screen.getByText('Admin');
-    await user.click(adminOption);
+    await waitFor(() => {
+      expect(screen.getByRole('option', { name: 'Admin' })).toBeInTheDocument();
+    });
+    await user.click(screen.getByRole('option', { name: 'Admin' }));
 
     await waitFor(() => {
       expect(screen.getByText('User One')).toBeInTheDocument();
@@ -129,15 +141,19 @@ describe('UserList', () => {
   });
 
   it('should filter users by status', async () => {
-    const user = userEvent.setup();
+    const user = userEvent.setup({ pointerEventsCheck: 0 });
     customRender(<UserList />);
 
-    const statusFilter = screen.getByText(/durum filtrele/i);
+    const statusFilter = screen.getAllByRole('combobox')[1];
     await user.click(statusFilter);
 
     // Select status filter
-    const activeOption = screen.getByText('Active');
-    await user.click(activeOption);
+    await waitFor(() => {
+      expect(
+        screen.getByRole('option', { name: /^active$/i })
+      ).toBeInTheDocument();
+    });
+    await user.click(screen.getByRole('option', { name: /^active$/i }));
 
     await waitFor(() => {
       expect(screen.getByText('User One')).toBeInTheDocument();

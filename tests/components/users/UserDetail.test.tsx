@@ -46,8 +46,12 @@ describe('UserDetail', () => {
   it('should render user details', () => {
     customRender(<UserDetail userId="1" />);
 
+    // The email is legitimately rendered twice: once as the page header
+    // subtitle, and again inside the detail card. getByText requires a
+    // single match, so assert there are exactly the two expected instances
+    // instead (see T-040).
     expect(screen.getByText('Test User')).toBeInTheDocument();
-    expect(screen.getByText('user@example.com')).toBeInTheDocument();
+    expect(screen.getAllByText('user@example.com')).toHaveLength(2);
     expect(screen.getByText('IT')).toBeInTheDocument();
     expect(screen.getByText('Developer')).toBeInTheDocument();
   });

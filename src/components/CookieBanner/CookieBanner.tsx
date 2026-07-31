@@ -29,13 +29,23 @@ export function CookieBanner({
     }
   }, [showBanner]);
 
-  if (!showBanner) return null;
-
   const positionClasses = {
     bottom: 'bottom-0 left-0 right-0',
     'bottom-center': 'bottom-4 left-1/2 -translate-x-1/2 max-w-4xl mx-4',
     top: 'top-0 left-0 right-0',
   };
+
+  // NOTE: CookiePreferencesModal must always be rendered (outside the
+  // `!showBanner` guard below), regardless of the banner's own visibility.
+  // openPreferences() sets `showBanner: false` and `showPreferences: true`
+  // in the same update (see CookieContext), specifically so the banner
+  // hides while the modal opens. If the modal were nested inside an early
+  // `if (!showBanner) return null;`, it would never render, and clicking
+  // "Manage Preferences" would silently do nothing — a real bug found via
+  // T-040's test-suite repair, not just a test issue.
+  if (!showBanner) {
+    return <CookiePreferencesModal />;
+  }
 
   return (
     <>
@@ -96,7 +106,7 @@ export function CookieBanner({
                   size="sm"
                   onClick={openPreferences}
                   className="flex-1 sm:flex-none"
-                  aria-label="Manage cookie preferences"
+                  aria-label="Manage Preferences for cookies"
                 >
                   Manage Preferences
                 </Button>

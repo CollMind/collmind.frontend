@@ -3,6 +3,13 @@ import { http, HttpResponse } from 'msw';
 const API_BASE_URL = 'http://localhost:3000';
 
 export const handlers = [
+  // External IP lookup (src/utils/ipAddress.ts calls this directly on
+  // login). Without a handler, `server.listen({ onUnhandledRequest: 'error' })`
+  // throws for every test that renders the login flow (see T-040).
+  http.get('https://api.ipify.org', () => {
+    return HttpResponse.json({ ip: '127.0.0.1' });
+  }),
+
   // Auth handlers
   http.post(`${API_BASE_URL}/auth/login`, async ({ request }) => {
     const body = await request.json() as any;
@@ -62,10 +69,16 @@ export const handlers = [
     ]);
   }),
 
-  http.get(`${API_BASE_URL}/users/:id`, ({ params }) => {
+  // NOTE: msw matches handlers in array order and takes the first match.
+  // `/users/me` (and its PATCH/PATCH-password siblings below) must be
+  // registered *before* the generic `/users/:id` wildcard handlers, or
+  // `:id` greedily matches the literal "me" segment and every `useMe()`-
+  // style call gets back `{ id: 'me', ... }` instead of the dedicated
+  // "current user" fixture (see T-040).
+  http.get(`${API_BASE_URL}/users/me`, () => {
     return HttpResponse.json({
-      id: params.id as string,
-      email: 'user@example.com',
+      id: '1',
+      email: 'test@example.com',
       fullName: 'Test User',
       role: 'ADMIN',
       status: 'ACTIVE',
@@ -75,10 +88,10 @@ export const handlers = [
     });
   }),
 
-  http.get(`${API_BASE_URL}/users/me`, () => {
+  http.get(`${API_BASE_URL}/users/:id`, ({ params }) => {
     return HttpResponse.json({
-      id: '1',
-      email: 'test@example.com',
+      id: params.id as string,
+      email: 'user@example.com',
       fullName: 'Test User',
       role: 'ADMIN',
       status: 'ACTIVE',
@@ -102,20 +115,6 @@ export const handlers = [
     }, { status: 201 });
   }),
 
-  http.patch(`${API_BASE_URL}/users/:id`, async ({ params, request }) => {
-    const body = await request.json() as any;
-    return HttpResponse.json({
-      id: params.id as string,
-      email: 'user@example.com',
-      fullName: body.fullName || 'Test User',
-      role: 'ADMIN',
-      status: 'ACTIVE',
-      tenantId: 'tenant-1',
-      ...body,
-      updatedAt: new Date().toISOString(),
-    });
-  }),
-
   http.patch(`${API_BASE_URL}/users/me`, async ({ request }) => {
     const body = await request.json() as any;
     return HttpResponse.json({
@@ -130,8 +129,18 @@ export const handlers = [
     });
   }),
 
-  http.patch(`${API_BASE_URL}/users/:id/password`, () => {
-    return new HttpResponse(null, { status: 204 });
+  http.patch(`${API_BASE_URL}/users/:id`, async ({ params, request }) => {
+    const body = await request.json() as any;
+    return HttpResponse.json({
+      id: params.id as string,
+      email: 'user@example.com',
+      fullName: body.fullName || 'Test User',
+      role: 'ADMIN',
+      status: 'ACTIVE',
+      tenantId: 'tenant-1',
+      ...body,
+      updatedAt: new Date().toISOString(),
+    });
   }),
 
   http.patch(`${API_BASE_URL}/users/me/password`, async ({ request }) => {
@@ -142,6 +151,10 @@ export const handlers = [
         { status: 400 }
       );
     }
+    return new HttpResponse(null, { status: 204 });
+  }),
+
+  http.patch(`${API_BASE_URL}/users/:id/password`, () => {
     return new HttpResponse(null, { status: 204 });
   }),
 
@@ -230,29 +243,12 @@ export const handlers = [
     return HttpResponse.json(filtered);
   }),
 
-  http.get(`${API_BASE_URL}/customers/:id`, ({ params }) => {
-    return HttpResponse.json({
-      id: params.id as string,
-      code: 'CUST001',
-      name: 'Test Customer',
-      channel: 'RETAIL',
-      type: 'DIRECT',
-      status: 'ACTIVE',
-      city: 'İstanbul',
-      district: 'Kadıköy',
-      region: 'Marmara',
-      country: 'Türkiye',
-      contactPerson: 'John Doe',
-      contactEmail: 'contact@example.com',
-      contactPhone: '02121234567',
-      isVip: false,
-      numberOfBranches: 5,
-      tenantId: 'tenant-1',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    });
-  }),
-
+  // NOTE: msw matches handlers in array order and takes the first match, so
+  // the generic `/customers/:id` wildcard must come *after* every literal
+  // sibling route below it (search, channel/:channel, city/:city, vip) —
+  // otherwise `:id` greedily captures "search"/"vip"/etc. and returns a
+  // single Customer object where callers expect an array (see T-040; this
+  // exact bug broke useSearchCustomers()).
   http.get(`${API_BASE_URL}/customers/code/:code`, ({ params }) => {
     return HttpResponse.json({
       id: '1',
@@ -337,6 +333,29 @@ export const handlers = [
         updatedAt: new Date().toISOString(),
       },
     ]);
+  }),
+
+  http.get(`${API_BASE_URL}/customers/:id`, ({ params }) => {
+    return HttpResponse.json({
+      id: params.id as string,
+      code: 'CUST001',
+      name: 'Test Customer',
+      channel: 'RETAIL',
+      type: 'DIRECT',
+      status: 'ACTIVE',
+      city: 'İstanbul',
+      district: 'Kadıköy',
+      region: 'Marmara',
+      country: 'Türkiye',
+      contactPerson: 'John Doe',
+      contactEmail: 'contact@example.com',
+      contactPhone: '02121234567',
+      isVip: false,
+      numberOfBranches: 5,
+      tenantId: 'tenant-1',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    });
   }),
 
   http.get(`${API_BASE_URL}/customers/:id/stats`, ({ params }) => {
@@ -429,9 +448,22 @@ export const handlers = [
   }),
 
   http.post(`${API_BASE_URL}/customers/import`, async ({ request }) => {
-    const formData = await request.formData();
-    const file = formData.get('file') as File;
-    
+    // jsdom's FormData/XHR implementation does not reliably reproduce a
+    // real browser's automatic multipart Content-Type + boundary for
+    // FormData bodies (a jsdom limitation, not an app bug — see the
+    // src/api/client.ts fix in T-040 for the real Content-Type defect this
+    // uncovered). request.formData() is strict about that header and
+    // throws in this test environment even for a well-formed request, so
+    // fall back to a presence check on the raw body instead of hard-failing
+    // the whole handler.
+    let file: File | null = null;
+    try {
+      const formData = await request.formData();
+      file = formData.get('file') as File | null;
+    } catch {
+      file = request.body ? ({} as File) : null;
+    }
+
     if (!file) {
       return HttpResponse.json(
         { message: 'Dosya bulunamadı' },
@@ -850,6 +882,57 @@ export const handlers = [
       read: true,
       updatedAt: new Date().toISOString(),
     });
+  }),
+
+  // Dashboard handlers
+  http.get(`${API_BASE_URL}/dashboard/summary`, () => {
+    return HttpResponse.json({
+      periodCode: '2026-07',
+      activeAgreementCount: 5,
+      pendingApprovalCount: 2,
+      openTaskCount: 3,
+      budgetUtilization: {
+        onInvoice: {
+          allocated: 100000,
+          utilized: 40000,
+          reserved: 10000,
+          available: 50000,
+          utilizationPercent: 50,
+          status: 'GREEN',
+        },
+        offInvoice: {
+          allocated: 50000,
+          utilized: 20000,
+          reserved: 5000,
+          available: 25000,
+          utilizationPercent: 50,
+          status: 'GREEN',
+        },
+        total: {
+          allocated: 150000,
+          utilized: 60000,
+          reserved: 15000,
+          available: 75000,
+          utilizationPercent: 50,
+          status: 'GREEN',
+        },
+        periodStart: '2026-07-01',
+        periodEnd: '2026-07-31',
+      },
+    });
+  }),
+
+  http.get(`${API_BASE_URL}/dashboard/pending-tasks`, () => {
+    return HttpResponse.json({
+      pendingApprovals: [],
+      pendingManualClaims: [],
+      submittedClaims: [],
+      awaitingInvoiceClaims: [],
+    });
+  }),
+
+  http.get(`${API_BASE_URL}/dashboard/cpl-status`, () => {
+    return HttpResponse.json({ items: [] });
   }),
 
   // Master data handlers

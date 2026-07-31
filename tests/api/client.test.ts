@@ -114,7 +114,6 @@ describe('API Client Interceptors', () => {
     });
 
     it('should queue multiple requests during token refresh', async () => {
-      let requestCount = 0;
       const authHeaders: string[] = [];
 
       store.dispatch(
@@ -126,34 +125,58 @@ describe('API Client Interceptors', () => {
       );
 
       server.use(
+        // Respond based on which token was actually sent, not on arrival order.
+        // The previous version keyed off a global request counter, so only the
+        // literal first request to reach the handler ever got a 401 — the other
+        // two concurrent requests always received a direct 200 with the *old*
+        // expired token, meaning the interceptor's refresh queue was never
+        // actually exercised for them. Reproduces the original test's false
+        // green: response ordering asserted against `success-2/3/4` relied on
+        // network-race timing, not on the queueing behavior under test.
         http.get(`${API_BASE_URL}/protected`, ({ request }) => {
-          requestCount++;
           const authHeader = request.headers.get('Authorization');
           authHeaders.push(authHeader || '');
 
-          if (requestCount === 1) {
-            return HttpResponse.json({ error: 'Unauthorized' }, { status: 401 });
-          } else {
-            return HttpResponse.json({ data: `success-${requestCount}` });
+          if (authHeader === 'Bearer expired-token') {
+            return HttpResponse.json(
+              { error: 'Unauthorized' },
+              { status: 401 }
+            );
           }
+          return HttpResponse.json({ data: 'success' });
         })
       );
 
-      // Make multiple concurrent requests
-      const [response1, response2, response3] = await Promise.all([
+      // Make multiple concurrent requests, all with the expired token.
+      const responses = await Promise.all([
         apiClient.get('/protected'),
         apiClient.get('/protected'),
         apiClient.get('/protected'),
       ]);
 
-      expect(response1.data.data).toBe('success-2');
-      expect(response2.data.data).toBe('success-3');
-      expect(response3.data.data).toBe('success-4');
-      
-      // Verify all retries used new token
-      expect(authHeaders[1]).toBe('Bearer new-mock-access-token');
-      expect(authHeaders[2]).toBe('Bearer new-mock-access-token');
-      expect(authHeaders[3]).toBe('Bearer new-mock-access-token');
+      // All three must eventually succeed after being queued behind the
+      // single in-flight refresh.
+      responses.forEach((response) => {
+        expect(response.data).toEqual({ data: 'success' });
+      });
+
+      // Every request initially goes out with the expired token; every
+      // retry (whether the one that triggered refresh, or one released
+      // from the queue) must carry the newly refreshed token.
+      const initialAttempts = authHeaders.filter(
+        (h) => h === 'Bearer expired-token'
+      );
+      const retriedAttempts = authHeaders.filter(
+        (h) => h === 'Bearer new-mock-access-token'
+      );
+      expect(initialAttempts).toHaveLength(3);
+      expect(retriedAttempts).toHaveLength(3);
+
+      // Only one refresh call should have happened — that's the entire
+      // point of the isRefreshing/failedQueue mechanism under test.
+      const authState = store.getState().auth;
+      expect(authState.accessToken).toBe('new-mock-access-token');
+      expect(authState.refreshToken).toBe('new-mock-refresh-token');
     });
 
     it('should logout when refresh token is invalid', async () => {

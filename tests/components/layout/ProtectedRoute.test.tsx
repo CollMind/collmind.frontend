@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
-import { BrowserRouter } from 'react-router-dom';
+import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -28,11 +28,36 @@ const createMockStore = (authState: any) => {
   });
 };
 
+// IMPORTANT (see T-040): `ui` must be rendered *inside* a `<Routes>` tree
+// with sibling routes for every path ProtectedRoute can redirect to
+// (`/login`, `/dashboard`), not as a bare child of `<BrowserRouter>`.
+// ProtectedRoute unconditionally renders `<Navigate>` while its redirect
+// condition holds; in real usage that's fine because the route-matched
+// element (ProtectedRoute) is naturally swapped out for the `/login`
+// route's element once the URL changes. Rendered bare, nothing ever
+// "consumes" the navigation — ProtectedRoute keeps being the thing that's
+// mounted, keeps seeing the same unauthenticated state, and keeps calling
+// `<Navigate>` again on every resulting render. That produced a genuine
+// infinite render/navigation loop that pegged a CPU core and hung the
+// entire vitest worker process indefinitely (reproduced consistently,
+// unrelated to any mocking — see T-040 report for the full trace).
 const renderWithProviders = (ui: React.ReactElement, store: any) => {
+  // MemoryRouter (not BrowserRouter): BrowserRouter drives the real,
+  // process-wide jsdom `window.history`/`window.location`, which persists
+  // across tests within the same file — a prior test's redirect to
+  // `/login` would leak into the next test's initial URL. MemoryRouter
+  // gives every render() call its own isolated in-memory history starting
+  // at `/`, matching real per-navigation isolation (see T-040).
   return render(
     <Provider store={store}>
       <QueryClientProvider client={queryClient}>
-        <BrowserRouter>{ui}</BrowserRouter>
+        <MemoryRouter initialEntries={['/']}>
+          <Routes>
+            <Route path="/login" element={<div>Login Page</div>} />
+            <Route path="/dashboard" element={<div>Dashboard Page</div>} />
+            <Route path="*" element={ui} />
+          </Routes>
+        </MemoryRouter>
       </QueryClientProvider>
     </Provider>
   );

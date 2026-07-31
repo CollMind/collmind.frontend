@@ -33,8 +33,12 @@ describe('ChangePasswordForm', () => {
   it('should render form fields', () => {
     customRender(<ChangePasswordForm />);
 
+    // The unanchored /yeni şifre/i also matched "Yeni Şifre Tekrar *"
+    // (case-insensitive substring), so getByLabelText threw "found multiple
+    // elements". Anchored to only match the "Yeni Şifre *" label (see
+    // T-040).
     expect(screen.getByLabelText(/mevcut şifre/i)).toBeInTheDocument();
-    expect(screen.getByLabelText(/yeni şifre/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/^yeni şifre \*/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/yeni şifre tekrar/i)).toBeInTheDocument();
   });
 
@@ -46,7 +50,7 @@ describe('ChangePasswordForm', () => {
     customRender(<ChangePasswordForm onSuccess={onSuccess} />);
 
     await user.type(screen.getByLabelText(/mevcut şifre/i), 'old-password');
-    await user.type(screen.getByLabelText(/yeni şifre/i), 'new-password123');
+    await user.type(screen.getByLabelText(/^yeni şifre \*/i), 'new-password123');
     await user.type(screen.getByLabelText(/yeni şifre tekrar/i), 'new-password123');
 
     await user.click(screen.getByRole('button', { name: /şifreyi güncelle/i }));
@@ -67,7 +71,7 @@ describe('ChangePasswordForm', () => {
     customRender(<ChangePasswordForm />);
 
     await user.type(screen.getByLabelText(/mevcut şifre/i), 'old-password');
-    await user.type(screen.getByLabelText(/yeni şifre/i), 'new-password123');
+    await user.type(screen.getByLabelText(/^yeni şifre \*/i), 'new-password123');
     await user.type(screen.getByLabelText(/yeni şifre tekrar/i), 'different-password');
 
     await user.click(screen.getByRole('button', { name: /şifreyi güncelle/i }));
@@ -88,7 +92,7 @@ describe('ChangePasswordForm', () => {
     // Admin form should not show currentPassword field
     expect(screen.queryByLabelText(/mevcut şifre/i)).not.toBeInTheDocument();
     
-    await user.type(screen.getByLabelText(/yeni şifre/i), 'new-password123');
+    await user.type(screen.getByLabelText(/^yeni şifre \*/i), 'new-password123');
     await user.type(screen.getByLabelText(/yeni şifre tekrar/i), 'new-password123');
 
     await user.click(screen.getByRole('button', { name: /şifreyi güncelle/i }));

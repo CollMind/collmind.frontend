@@ -1,4 +1,4 @@
-import { expect, afterEach, beforeAll, afterAll, vi, beforeEach } from 'vitest';
+import { expect, afterEach, beforeAll, afterAll } from 'vitest';
 import { cleanup } from '@testing-library/react';
 import * as matchers from '@testing-library/jest-dom/matchers';
 import { setupServer } from 'msw/node';
@@ -51,15 +51,60 @@ Object.defineProperty(window, 'sessionStorage', {
   value: sessionStorageMock,
 });
 
-// Mock window.location for navigation
-delete (window as any).location;
-(window as any).location = {
-  href: '',
-  pathname: '/',
-  assign: vi.fn(),
-  replace: vi.fn(),
-  reload: vi.fn(),
-};
+// jsdom does not implement ResizeObserver. Several Radix UI primitives
+// (e.g. Checkbox, used inside LoginForm/CookiePreferencesModal) call it on
+// mount, so without a stub every test rendering those components crashed
+// with "ReferenceError: ResizeObserver is not defined" (see T-040).
+class ResizeObserverMock {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+(global as any).ResizeObserver = ResizeObserverMock;
+
+// jsdom does not implement the Pointer Events capture API or scrollIntoView.
+// Radix UI's Select/Dropdown/Popover primitives call these during pointer
+// interactions (e.g. selecting an option), so without stubs any test that
+// exercises those components crashes with
+// "target.hasPointerCapture is not a function" (see T-040).
+if (!Element.prototype.hasPointerCapture) {
+  Element.prototype.hasPointerCapture = () => false;
+}
+if (!Element.prototype.setPointerCapture) {
+  Element.prototype.setPointerCapture = () => {};
+}
+if (!Element.prototype.releasePointerCapture) {
+  Element.prototype.releasePointerCapture = () => {};
+}
+if (!Element.prototype.scrollIntoView) {
+  Element.prototype.scrollIntoView = () => {};
+}
+
+// NOTE on window.location (see T-040):
+//
+// jsdom's XHR/fetch implementation (used under the hood by axios) resolves
+// relative/absolute request URLs against `window.location.href` as the
+// "base URL". This project's default jsdom document has an empty base URL
+// (`about:blank`), which is not parseable as a base, so every axios request
+// in tests used to fail with `Invalid base URL: ` regardless of the
+// request's own URL — masquerading as a network error in every test that
+// exercised `apiClient`.
+//
+// The fix for that must NOT replace `window.location` with a hand-rolled
+// stub object: react-router's internals (`useRoutes`/`encodeLocation`,
+// `<Navigate>`) read `window.location.origin` and other standard `Location`
+// properties our earlier stub didn't provide, and jsdom's own XHR base-URL
+// resolution needs the real `Location` object too. A stub missing `origin`
+// caused `useRoutes` to throw outright, and in simpler cases (bare
+// `<Navigate>` without a `<Routes>` tree — exactly how
+// tests/components/layout/ProtectedRoute.test.tsx renders it) it caused an
+// actual infinite re-render/navigation loop that hung the whole worker
+// process indefinitely (reproduced consistently; see T-040 report).
+//
+// The correct fix is to give jsdom a real, valid document URL up front (via
+// `test.environmentOptions.jsdom.url` in vitest.config.ts) so the *native*
+// `window.location` already has a valid `href`/`origin`/etc., instead of
+// deleting and replacing it here.
 
 // Setup MSW server
 export const server = setupServer(...handlers);
@@ -73,6 +118,18 @@ afterEach(() => {
   server.resetHandlers();
   localStorageMock.clear();
   sessionStorageMock.clear();
+
+  // Defensive DOM reset. Radix UI portals (Select/Dialog/DropdownMenu)
+  // append nodes directly to `document.body` and toggle
+  // `document.body.style.pointerEvents` while open. RTL's cleanup()
+  // unmounts React roots but does not guarantee every such side effect
+  // unwound cleanly, especially for tests that close a Radix popover via
+  // fireEvent instead of a full pointer/keyboard interaction sequence.
+  // Left unreset, these accumulate silently across dozens of test files in
+  // the same worker and were the leading suspect for an intermittent full
+  // suite hang (see T-040) — clearing them here is a low-risk safety net.
+  document.body.innerHTML = '';
+  document.body.removeAttribute('style');
 });
 
 // Clean up after all tests

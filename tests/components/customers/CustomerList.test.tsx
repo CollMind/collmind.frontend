@@ -92,9 +92,8 @@ describe('CustomerList', () => {
   });
 
   it('should render customer list', () => {
-    render(
-      <CustomerList onEdit={mockOnEdit} onCreate={mockOnCreate} />,
-      { wrapper: customRender }
+    customRender(
+      <CustomerList onEdit={mockOnEdit} onCreate={mockOnCreate} />
     );
 
     expect(screen.getByText('Customer One')).toBeInTheDocument();
@@ -110,9 +109,8 @@ describe('CustomerList', () => {
       error: null,
     });
 
-    render(
-      <CustomerList onEdit={mockOnEdit} onCreate={mockOnCreate} />,
-      { wrapper: customRender }
+    customRender(
+      <CustomerList onEdit={mockOnEdit} onCreate={mockOnCreate} />
     );
 
     // Loading spinner should be shown
@@ -126,9 +124,8 @@ describe('CustomerList', () => {
       error: new Error('Failed to fetch'),
     });
 
-    render(
-      <CustomerList onEdit={mockOnEdit} onCreate={mockOnCreate} />,
-      { wrapper: customRender }
+    customRender(
+      <CustomerList onEdit={mockOnEdit} onCreate={mockOnCreate} />
     );
 
     expect(
@@ -143,9 +140,8 @@ describe('CustomerList', () => {
       error: null,
     });
 
-    render(
-      <CustomerList onEdit={mockOnEdit} onCreate={mockOnCreate} />,
-      { wrapper: customRender }
+    customRender(
+      <CustomerList onEdit={mockOnEdit} onCreate={mockOnCreate} />
     );
 
     expect(screen.getByText(/Müşteri bulunamadı/i)).toBeInTheDocument();
@@ -153,9 +149,8 @@ describe('CustomerList', () => {
 
   it('should call onCreate when create button is clicked', async () => {
     const user = userEvent.setup();
-    render(
-      <CustomerList onEdit={mockOnEdit} onCreate={mockOnCreate} />,
-      { wrapper: customRender }
+    customRender(
+      <CustomerList onEdit={mockOnEdit} onCreate={mockOnCreate} />
     );
 
     const createButton = screen.getByText('Yeni Müşteri');
@@ -166,36 +161,34 @@ describe('CustomerList', () => {
 
   it('should call onEdit when edit is clicked', async () => {
     const user = userEvent.setup();
-    render(
-      <CustomerList onEdit={mockOnEdit} onCreate={mockOnCreate} />,
-      { wrapper: customRender }
+    customRender(
+      <CustomerList onEdit={mockOnEdit} onCreate={mockOnCreate} />
     );
 
-    // Find and click the actions menu
-    const actionButtons = screen.getAllByRole('button');
-    const moreButton = actionButtons.find((btn) =>
-      btn.querySelector('svg')
-    );
-    
-    if (moreButton) {
-      await user.click(moreButton);
-      
-      // Wait for dropdown menu to appear
-      await waitFor(() => {
-        expect(screen.getByText('Düzenle')).toBeInTheDocument();
-      });
+    // Find and click the first row's actions menu.
+    // The original selector picked "the first <button> that contains an
+    // <svg>", which matched an unrelated button (e.g. a column sort header)
+    // before ever reaching the per-row dropdown trigger, so the dropdown
+    // never opened and the `if (moreButton)` guard silently skipped every
+    // assertion — a false-green test (see T-040). The trigger now has an
+    // accessible name ("İşlemler") so it can be targeted directly.
+    const moreButton = screen.getAllByRole('button', { name: 'İşlemler' })[0];
+    await user.click(moreButton);
 
-      const editButton = screen.getByText('Düzenle');
-      await user.click(editButton);
+    // Wait for dropdown menu to appear
+    await waitFor(() => {
+      expect(screen.getByText('Düzenle')).toBeInTheDocument();
+    });
 
-      expect(mockOnEdit).toHaveBeenCalled();
-    }
+    const editButton = screen.getByText('Düzenle');
+    await user.click(editButton);
+
+    expect(mockOnEdit).toHaveBeenCalled();
   });
 
   it('should display customer information correctly', () => {
-    render(
-      <CustomerList onEdit={mockOnEdit} onCreate={mockOnCreate} />,
-      { wrapper: customRender }
+    customRender(
+      <CustomerList onEdit={mockOnEdit} onCreate={mockOnCreate} />
     );
 
     expect(screen.getByText('CUST001')).toBeInTheDocument();
@@ -205,11 +198,15 @@ describe('CustomerList', () => {
   });
 
   it('should display VIP badge for VIP customers', () => {
-    render(
-      <CustomerList onEdit={mockOnEdit} onCreate={mockOnCreate} />,
-      { wrapper: customRender }
+    customRender(
+      <CustomerList onEdit={mockOnEdit} onCreate={mockOnCreate} />
     );
 
-    expect(screen.getByText('VIP')).toBeInTheDocument();
+    // "VIP" also matches the table's own "VIP" column header, so a plain
+    // getByText throws "found multiple elements" (see T-040). Scope to the
+    // badge specifically.
+    expect(
+      screen.getByText('VIP', { selector: 'span' })
+    ).toBeInTheDocument();
   });
 });

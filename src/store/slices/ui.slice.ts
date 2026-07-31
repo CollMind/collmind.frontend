@@ -18,6 +18,15 @@ const initialState: UiState = {
   notifications: [],
 };
 
+// Monotonic counter appended to the timestamp so two notifications created
+// within the same millisecond (e.g. two rapid-fire API errors) never
+// collide. A pure `Date.now().toString()` id let removeNotification()
+// remove every notification sharing that timestamp instead of just the
+// intended one — real bug, not just a test artifact (see T-040).
+let notificationIdCounter = 0;
+const generateNotificationId = () =>
+  `${Date.now().toString()}-${(notificationIdCounter++).toString()}`;
+
 const uiSlice = createSlice({
   name: 'ui',
   initialState,
@@ -40,7 +49,7 @@ const uiSlice = createSlice({
       }>
     ) => {
       state.notifications.push({
-        id: Date.now().toString(),
+        id: generateNotificationId(),
         ...action.payload,
         timestamp: Date.now(),
       });

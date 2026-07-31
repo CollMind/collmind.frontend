@@ -74,10 +74,14 @@ export function CustomerFilters({
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Arama */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              htmlFor="customer-filter-search"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
               Arama
             </label>
             <Input
+              id="customer-filter-search"
               placeholder="Ad, kod, email..."
               value={filters.search || ''}
               onChange={(e) => handleFilterChange('search', e.target.value)}
@@ -142,10 +146,14 @@ export function CustomerFilters({
 
           {/* Şehir */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              htmlFor="customer-filter-city"
+              className="block text-sm font-medium text-gray-700 mb-1"
+            >
               Şehir
             </label>
             <Input
+              id="customer-filter-city"
               placeholder="Şehir adı..."
               value={filters.city || ''}
               onChange={(e) => handleFilterChange('city', e.target.value)}

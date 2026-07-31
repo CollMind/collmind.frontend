@@ -79,9 +79,14 @@ describe('CustomerDetail', () => {
   });
 
   it('should render customer details', () => {
-    render(<CustomerDetail />, { wrapper: customRender });
+    customRender(<CustomerDetail />);
 
-    expect(screen.getByText('Test Customer')).toBeInTheDocument();
+    // Customer name is legitimately rendered twice: as the page <h1> and
+    // again as the "Ad" field in the "Genel Bilgiler" card. Assert on the
+    // heading specifically instead of an ambiguous text match (see T-040).
+    expect(
+      screen.getByRole('heading', { name: 'Test Customer' })
+    ).toBeInTheDocument();
     expect(screen.getByText('Kod: CUST001')).toBeInTheDocument();
   });
 
@@ -92,7 +97,7 @@ describe('CustomerDetail', () => {
       error: null,
     });
 
-    render(<CustomerDetail />, { wrapper: customRender });
+    customRender(<CustomerDetail />);
 
     // Loading spinner should be shown
     expect(screen.queryByText('Test Customer')).not.toBeInTheDocument();
@@ -105,7 +110,7 @@ describe('CustomerDetail', () => {
       error: new Error('Customer not found'),
     });
 
-    render(<CustomerDetail />, { wrapper: customRender });
+    customRender(<CustomerDetail />);
 
     expect(
       screen.getByText(/Müşteri bulunamadı/i)
@@ -113,14 +118,14 @@ describe('CustomerDetail', () => {
   });
 
   it('should display customer statistics', () => {
-    render(<CustomerDetail />, { wrapper: customRender });
+    customRender(<CustomerDetail />);
 
     expect(screen.getByText('100')).toBeInTheDocument(); // totalOrders
     expect(screen.getByText(/50.000/i)).toBeInTheDocument(); // totalRevenue
   });
 
   it('should display customer contact information', () => {
-    render(<CustomerDetail />, { wrapper: customRender });
+    customRender(<CustomerDetail />);
 
     expect(screen.getByText('John Doe')).toBeInTheDocument();
     expect(screen.getByText('contact@example.com')).toBeInTheDocument();
@@ -128,19 +133,19 @@ describe('CustomerDetail', () => {
   });
 
   it('should display customer address information', () => {
-    render(<CustomerDetail />, { wrapper: customRender });
+    customRender(<CustomerDetail />);
 
     expect(screen.getByText(/Kadıköy, İstanbul, Marmara/i)).toBeInTheDocument();
   });
 
   it('should display number of branches', () => {
-    render(<CustomerDetail />, { wrapper: customRender });
+    customRender(<CustomerDetail />);
 
     expect(screen.getByText('5')).toBeInTheDocument();
   });
 
   it('should show edit and delete buttons', () => {
-    render(<CustomerDetail />, { wrapper: customRender });
+    customRender(<CustomerDetail />);
 
     expect(screen.getByText('Düzenle')).toBeInTheDocument();
     expect(screen.getByText('Sil')).toBeInTheDocument();
@@ -148,7 +153,7 @@ describe('CustomerDetail', () => {
 
   it('should show delete confirmation dialog', async () => {
     const user = userEvent.setup();
-    render(<CustomerDetail />, { wrapper: customRender });
+    customRender(<CustomerDetail />);
 
     const deleteButton = screen.getByText('Sil');
     await user.click(deleteButton);
