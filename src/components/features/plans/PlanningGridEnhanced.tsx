@@ -47,6 +47,12 @@ import {
   RAGCell,
 } from './grid-cells';
 import { toNumber, toNumberOrNull } from '@/utils/numberUtils';
+import {
+  startCellEditMeasurement,
+  recordCellEditMeasurement,
+  extractRecalcHeaders,
+  afterPaint,
+} from '@/utils/performanceMonitor';
 
 interface PlanningGridProps {
   plan: Plan;
@@ -759,6 +765,19 @@ export function PlanningGridEnhanced({ plan, canEdit }: PlanningGridProps) {
   // it never resubmits the user's edit (see useVersionConflict.ts).
   const versionConflict = useVersionConflict([['plan', plan.id]]);
 
+  // T-046d (ADR 0003 metriği, docs/analysis/0007 §4-T3): tek anda yalnızca
+  // bir hücre düzenlenebilir (`editingCell` state'i zaten bunu garanti
+  // ediyor — bkz. handleCellEdit), o yüzden tek bir "bekleyen ölçüm" yeterli.
+  // Ölçüm, `handleCellSave`'de mutate() çağrılmadan HEMEN ÖNCE başlar
+  // (kullanıcının değeri commit ettiği an) ve ilgili mutation'ın onSuccess'i
+  // içinde, invalidateQueries + afterPaint() (çift-rAF) tamamlandıktan SONRA
+  // biter — yani "ekranda göründü" anına kadar, "fetch tamamlandı" anına
+  // değil (bkz. performanceMonitor.ts dosya başı notu).
+  const pendingMeasurementRef = useRef<{
+    label: string;
+    startTimestamp: number;
+  } | null>(null);
+
   // Fetch applicable mechanics for this plan context
   const { data: applicableMechanics = [] } = useQuery({
     queryKey: ['mechanics', 'applicable', plan.channelId, plan.categoryId],
@@ -953,12 +972,30 @@ export function PlanningGridEnhanced({ plan, canEdit }: PlanningGridProps) {
       const data: any = { version };
       if (field === 'BASE_VOL') data.baseVolume = value;
       if (field === 'PLAN_VOL') data.plannedVolume = value;
-      await planEndpoints.updateSkuVolume(planId, fuId, skuId, data);
+      // Ölçüm için yanıtın (ve dolayısıyla T-046b'nin X-Recalc-Ms/
+      // X-Recalc-Sku-Count başlıklarının) tamamı gerekiyor — sadece body
+      // değil.
+      return planEndpoints.updateSkuVolume(planId, fuId, skuId, data);
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['plan', plan.id] });
+    onSuccess: async (response) => {
+      const { backendMs, skuCount } = extractRecalcHeaders(
+        response.headers
+      );
+      await queryClient.invalidateQueries({ queryKey: ['plan', plan.id] });
+      const pending = pendingMeasurementRef.current;
+      if (pending) {
+        await afterPaint();
+        recordCellEditMeasurement({
+          label: pending.label,
+          startTimestamp: pending.startTimestamp,
+          backendMs,
+          skuCount,
+        });
+        pendingMeasurementRef.current = null;
+      }
     },
     onError: (error: any) => {
+      pendingMeasurementRef.current = null;
       if (versionConflict.handleError(error)) return;
       toast.error(
         error?.response?.data?.message || 'Değer güncellenirken hata oluştu'
@@ -980,16 +1017,31 @@ export function PlanningGridEnhanced({ plan, canEdit }: PlanningGridProps) {
       value: number;
       version: number;
     }) => {
-      await planEndpoints.updateFuTactic(planId, fuId, {
+      return planEndpoints.updateFuTactic(planId, fuId, {
         tactics: { [mechanicCode]: value },
         version,
       });
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['plan', plan.id] });
+    onSuccess: async (response) => {
+      const { backendMs, skuCount } = extractRecalcHeaders(
+        response.headers
+      );
+      await queryClient.invalidateQueries({ queryKey: ['plan', plan.id] });
       toast.success('Tactic güncellendi');
+      const pending = pendingMeasurementRef.current;
+      if (pending) {
+        await afterPaint();
+        recordCellEditMeasurement({
+          label: pending.label,
+          startTimestamp: pending.startTimestamp,
+          backendMs,
+          skuCount,
+        });
+        pendingMeasurementRef.current = null;
+      }
     },
     onError: (error: any) => {
+      pendingMeasurementRef.current = null;
       if (versionConflict.handleError(error)) return;
       toast.error(
         error?.response?.data?.message || 'Tactic güncellenirken hata oluştu'
@@ -1069,7 +1121,13 @@ export function PlanningGridEnhanced({ plan, canEdit }: PlanningGridProps) {
       value: number
     ) => {
       if (planSku) {
-        // SKU level edit (volume)
+        // SKU level edit (volume). T-046d: KPI_Details.docx benchmark'ı
+        // "SKU volume update" ve "FU tactic update"i ayrı ayrı hedefliyor
+        // (0007 §3.4) — etiketler bu ikisini kırılımda ayırt edilebilir tutar.
+        pendingMeasurementRef.current = {
+          label: 'sku-volume-update',
+          startTimestamp: startCellEditMeasurement(),
+        };
         updateVolumeMutation.mutate({
           planId: plan.id,
           fuId: planFu.fuId,
@@ -1080,6 +1138,10 @@ export function PlanningGridEnhanced({ plan, canEdit }: PlanningGridProps) {
         });
       } else {
         // FU level edit (tactic)
+        pendingMeasurementRef.current = {
+          label: 'fu-tactic-update',
+          startTimestamp: startCellEditMeasurement(),
+        };
         updateTacticMutation.mutate({
           planId: plan.id,
           fuId: planFu.fuId,
