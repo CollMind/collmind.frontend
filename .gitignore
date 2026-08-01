@@ -27,3 +27,9 @@ dist-ssr
 .env
 .env.local
 .env.production
+
+# Playwright (T-016)
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/

@@ -1,4 +1,4 @@
-import { defineConfig } from 'vitest/config';
+import { configDefaults, defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 
@@ -7,6 +7,12 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'jsdom',
+    // T-016: tests/e2e/**/*.spec.ts are Playwright specs (import `test`/
+    // `expect` from '@playwright/test', run via `npm run test:e2e`, not
+    // Vitest). Vitest's default include glob (`**/*.spec.ts`) would
+    // otherwise sweep them into this unit suite too and fail immediately
+    // on the incompatible `test`/`expect` globals.
+    exclude: [...configDefaults.exclude, 'tests/e2e/**'],
     // jsdom's default document URL is 'about:blank' (empty href, no
     // origin). axios resolves request URLs against window.location.href as
     // a base, and react-router's <Navigate>/useRoutes read
