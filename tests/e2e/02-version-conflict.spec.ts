@@ -70,12 +70,10 @@ test.describe('409 version conflict dialog (T-016 scenario 2)', () => {
     const otherUserWrite = await patchSkuVolume(admin, fixture, 999, 1);
     expect(otherUserWrite.ok()).toBe(true);
 
-    // Now the planner edits the same cell in the UI. See support/grid.ts
-    // for why this isn't a plain header-index -> td.nth() lookup (T-016
-    // found the grid body is currently misaligned from its header by a
-    // constant 2-column offset — a real defect, reported separately, not
-    // fixed here; dataCell() compensates so this test can still exercise
-    // the version-conflict behaviour it's actually targeting).
+    // Now the planner edits the same cell in the UI. See support/grid.ts —
+    // dataCell() resolves the `<td>` matching a header's index (T-049 fixed
+    // the header/body column-alignment defect that used to require an
+    // offset here).
     const cell = await dataCell(page, skuRow, 'Planned Volume (pcs)');
     await cell.click();
     const input = cell.locator('input[type="number"]');

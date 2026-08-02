@@ -72,10 +72,9 @@ test.describe('Grid cell edit -> KPI update (T-016 scenario 4)', () => {
     const skuRow = page.locator('tbody tr', { hasText: fixture.skuCode });
     await expect(skuRow).toBeVisible();
 
-    // See support/grid.ts — the grid body is currently misaligned from its
-    // header by a real (reported, not-fixed-here) 2-column offset defect;
-    // dataCell() compensates so this test exercises the KPI-wiring
-    // behaviour it's actually targeting.
+    // See support/grid.ts — dataCell() resolves the `<td>` matching a
+    // header's index (T-049 fixed the header/body column-alignment defect
+    // that used to require an offset here).
     const cell = await dataCell(page, skuRow, 'Planned Volume (pcs)');
     await cell.click();
     const input = cell.locator('input[type="number"]');

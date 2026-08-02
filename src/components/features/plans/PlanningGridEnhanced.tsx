@@ -928,6 +928,19 @@ export function PlanningGridEnhanced({ plan, canEdit }: PlanningGridProps) {
     [visibleColumns]
   );
 
+  // T-049: single source of truth for the columns rendered as data cells
+  // (header row + FU row + SKU row). ITEM_NAME/ITEM_CODE are rendered
+  // separately as sticky-left TableCells in every row, so they must be
+  // excluded here exactly once — deriving this in more than one place is
+  // what caused the header/body column misalignment (T-049).
+  const gridColumns = useMemo(
+    () =>
+      visibleColumns.filter(
+        (c) => c.code !== 'ITEM_NAME' && c.code !== 'ITEM_CODE'
+      ),
+    [visibleColumns]
+  );
+
   const addFuMutation = useMutation({
     mutationFn: async (fuIds: string[]) => {
       // T-034f: addFu bumps plans.version by exactly +1 per call (backend
@@ -978,9 +991,7 @@ export function PlanningGridEnhanced({ plan, canEdit }: PlanningGridProps) {
       return planEndpoints.updateSkuVolume(planId, fuId, skuId, data);
     },
     onSuccess: async (response) => {
-      const { backendMs, skuCount } = extractRecalcHeaders(
-        response.headers
-      );
+      const { backendMs, skuCount } = extractRecalcHeaders(response.headers);
       await queryClient.invalidateQueries({ queryKey: ['plan', plan.id] });
       const pending = pendingMeasurementRef.current;
       if (pending) {
@@ -1023,9 +1034,7 @@ export function PlanningGridEnhanced({ plan, canEdit }: PlanningGridProps) {
       });
     },
     onSuccess: async (response) => {
-      const { backendMs, skuCount } = extractRecalcHeaders(
-        response.headers
-      );
+      const { backendMs, skuCount } = extractRecalcHeaders(response.headers);
       await queryClient.invalidateQueries({ queryKey: ['plan', plan.id] });
       toast.success('Tactic güncellendi');
       const pending = pendingMeasurementRef.current;
@@ -1281,32 +1290,28 @@ export function PlanningGridEnhanced({ plan, canEdit }: PlanningGridProps) {
                 >
                   Item Code
                 </TableHead>
-                {visibleColumns
-                  .filter(
-                    (c) => c.code !== 'ITEM_NAME' && c.code !== 'ITEM_CODE'
-                  )
-                  .map((col) => (
-                    <TableHead
-                      key={col.code}
-                      className={`text-right whitespace-nowrap text-xs font-medium ${
-                        col.sticky === 'left'
-                          ? 'sticky left-0 bg-white z-10 border-r'
-                          : ''
-                      } ${
-                        col.sticky === 'right'
-                          ? 'sticky right-0 bg-white z-10 border-l'
-                          : ''
-                      }`}
-                      style={{
-                        width: `${col.width}px`,
-                        backgroundColor: col.backgroundColor || '#FFFFFF',
-                        minWidth: `${col.width}px`,
-                        maxWidth: `${col.width}px`,
-                      }}
-                    >
-                      {col.name}
-                    </TableHead>
-                  ))}
+                {gridColumns.map((col) => (
+                  <TableHead
+                    key={col.code}
+                    className={`text-right whitespace-nowrap text-xs font-medium ${
+                      col.sticky === 'left'
+                        ? 'sticky left-0 bg-white z-10 border-r'
+                        : ''
+                    } ${
+                      col.sticky === 'right'
+                        ? 'sticky right-0 bg-white z-10 border-l'
+                        : ''
+                    }`}
+                    style={{
+                      width: `${col.width}px`,
+                      backgroundColor: col.backgroundColor || '#FFFFFF',
+                      minWidth: `${col.width}px`,
+                      maxWidth: `${col.width}px`,
+                    }}
+                  >
+                    {col.name}
+                  </TableHead>
+                ))}
                 <TableHead
                   className="text-center text-xs sticky right-0 bg-white z-10"
                   style={{ width: '130px' }}
@@ -1326,7 +1331,7 @@ export function PlanningGridEnhanced({ plan, canEdit }: PlanningGridProps) {
                       planFu={planFu}
                       plan={plan}
                       isExpanded={isExpanded}
-                      columns={visibleColumns}
+                      columns={gridColumns}
                       canEdit={canEdit}
                       editingCell={editingCell}
                       editInputRef={editInputRef}
@@ -1345,7 +1350,7 @@ export function PlanningGridEnhanced({ plan, canEdit }: PlanningGridProps) {
               ) : (
                 <TableRow>
                   <TableCell
-                    colSpan={visibleColumns.length + 3}
+                    colSpan={gridColumns.length + 3}
                     className="text-center py-8 text-gray-500"
                   >
                     Henüz FU eklenmemiş.
