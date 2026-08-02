@@ -1,4 +1,5 @@
 import { APIRequestContext, request as pwRequest } from '@playwright/test';
+import { hardDeletePlanFixture } from './db-cleanup';
 
 /**
  * T-016 — direct backend API helpers for Playwright fixture setup/teardown.
@@ -190,15 +191,35 @@ export async function createDraftPlanWithSingleSkuFu(
   };
 }
 
-/** Best-effort DRAFT plan delete (fetches current version first). Safe to call even if already deleted. */
+/**
+ * Deletes a DRAFT plan fixture created by this suite.
+ *
+ * Two steps, both required (see T-051 for why one alone isn't enough):
+ *  1. The real `DELETE /plans/:id` endpoint (if the plan still exists) —
+ *     this is the only path that runs the app's state-machine/audit-trail/
+ *     budget-release logic. It is a SOFT delete (BRD: DRAFT plans keep
+ *     their row for audit), so the row stays physically present afterwards.
+ *  2. `hardDeletePlanFixture` — physically removes that exact row (and its
+ *     children), scoped by id, and verifies it's gone. Without this step
+ *     the row survives indefinitely (soft-delete never expires) and
+ *     inflates main.plans for whoever runs the backend e2e T-047 row-count
+ *     invariant next — that inflation, not a request dropped at webServer
+ *     shutdown, was the measured cause of T-051's flake.
+ *
+ * Step 2 runs unconditionally (even when the plan was already gone / step 1
+ * was skipped) so cleanup never depends on the API call succeeding — this
+ * is what makes it deterministic rather than best-effort.
+ */
 export async function deleteDraftPlan(planner: Session, planId: string): Promise<void> {
   const getRes = await planner.ctx.get(`/plans/${planId}`, { headers: authHeaders(planner) });
-  if (!getRes.ok()) return; // already gone
-  const plan = await getRes.json();
-  await planner.ctx.delete(`/plans/${planId}`, {
-    headers: authHeaders(planner),
-    data: { version: plan.version },
-  });
+  if (getRes.ok()) {
+    const plan = await getRes.json();
+    await planner.ctx.delete(`/plans/${planId}`, {
+      headers: authHeaders(planner),
+      data: { version: plan.version },
+    });
+  }
+  await hardDeletePlanFixture(planId);
 }
 
 /**
