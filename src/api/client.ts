@@ -26,6 +26,31 @@ export const apiClient = axios.create({
   timeout: 30000, // 30 saniye timeout
 });
 
+// Authentication endpoints whose own 401 means "credentials are wrong",
+// not "session expired" — they must NOT go through the refresh flow.
+// - /auth/login: a failed login already returns 401 for bad credentials.
+//   Treating it as an expired-session token would silently swallow the
+//   real error behind a misleading "No refresh token" message (T-050).
+// - /auth/refresh: exempting only /auth/login isn't enough — if a refresh
+//   call itself is ever routed through this interceptor (e.g. via
+//   authEndpoints.refresh() called through apiClient) and returns 401, the
+//   interceptor would try to refresh a refresh call, risking recursion.
+// Matched by pathname (not substring) so a baseURL change or an unrelated
+// route that merely contains "/auth/login" can't false-positive here.
+const AUTH_EXEMPT_PATHS = new Set(['/auth/login', '/auth/refresh']);
+
+function isAuthExemptRequest(url: string | undefined): boolean {
+  if (!url) return false;
+  try {
+    // Handles both relative ('/auth/login') and absolute URLs by resolving
+    // against the configured API base — we only ever compare the pathname.
+    const parsed = new URL(url, API_BASE_URL);
+    return AUTH_EXEMPT_PATHS.has(parsed.pathname);
+  } catch {
+    return false;
+  }
+}
+
 // Token refresh queue mekanizması - Concurrent refresh isteklerini önlemek için
 let isRefreshing = false;
 let failedQueue: Array<{
@@ -112,7 +137,8 @@ apiClient.interceptors.response.use(
     if (
       error.response?.status === 401 &&
       originalRequest &&
-      !originalRequest._retry
+      !originalRequest._retry &&
+      !isAuthExemptRequest(originalRequest.url)
     ) {
       if (isRefreshing) {
         // Eğer zaten refresh işlemi devam ediyorsa, isteği queue'ya ekle

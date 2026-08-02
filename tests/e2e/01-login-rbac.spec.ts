@@ -23,16 +23,26 @@ test.describe('Login + role-based UI (T-016 scenario 1)', () => {
     await page.getByPlaceholder('Enter your password').fill('WrongPassword999!');
     await page.getByRole('button', { name: 'Sign In' }).click();
 
-    // DEFECT found by this test (not fixed here — see T-016 QA report):
-    // the shown message is NOT "Invalid email or password". src/api/client.ts's
-    // global 401 interceptor treats the login endpoint's own 401 like any
-    // protected-route 401: it attempts a token refresh, finds no refresh
-    // token (never having logged in), and overwrites the real login error
-    // with "No refresh token" before LoginForm ever sees it. Asserting only
-    // "an error alert appeared and the user stayed on /login" here — the
-    // exact wording is the defect, tracked separately, not re-asserted as
-    // if it were correct.
-    await expect(page.getByRole('alert').last()).toBeVisible();
+    // T-050 fix: src/api/client.ts's global 401 interceptor used to treat
+    // the login endpoint's own 401 like any protected-route 401 — it
+    // attempted a token refresh, found no refresh token (never having
+    // logged in), and overwrote the real login error with "No refresh
+    // token" before LoginForm ever saw it. /auth/login (and /auth/refresh)
+    // are now exempt from the refresh flow, so the backend's actual
+    // rejection reaches useLogin's onError untouched.
+    //
+    // Note: the real message is the backend's own 401 body
+    // (UnauthorizedException('Invalid credentials'), see
+    // collmind.backend/src/modules/user/user.service.ts) — NOT the
+    // "Invalid email or password" string in LoginForm.tsx, which is only a
+    // fallback for the (rarer) case where the error has no response body
+    // at all (e.g. a network failure). Asserting the exact backend message
+    // here is the whole point: it proves the interceptor no longer
+    // clobbers it with "No refresh token".
+    const alert = page.getByRole('alert').last();
+    await expect(alert).toBeVisible();
+    await expect(alert).toContainText('Invalid credentials');
+    await expect(alert).not.toContainText('No refresh token');
     await expect(page).toHaveURL(/\/login/);
   });
 

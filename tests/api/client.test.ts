@@ -215,6 +215,95 @@ describe('API Client Interceptors', () => {
     });
   });
 
+  describe('Response Interceptor - Auth endpoint 401 exemption (T-050)', () => {
+    it('should NOT attempt token refresh on /auth/login 401 and should preserve the original error', async () => {
+      // Regression for T-050: a failed login's own 401 was being treated
+      // like an expired-session 401, so the interceptor tried to refresh
+      // using whatever (stale/absent) refreshToken was in the store and
+      // threw "No refresh token" — stomping the real "Invalid email or
+      // password" error the login endpoint returned.
+      let loginCallCount = 0;
+      let refreshCallCount = 0;
+
+      // No credentials in the store — mirrors an unauthenticated user on
+      // the login screen (no accessToken/refreshToken yet).
+      server.use(
+        http.post(`${API_BASE_URL}/auth/login`, () => {
+          loginCallCount++;
+          return HttpResponse.json(
+            { message: 'Invalid email or password' },
+            { status: 401 }
+          );
+        }),
+        http.post(`${API_BASE_URL}/auth/refresh`, () => {
+          refreshCallCount++;
+          return HttpResponse.json(
+            { message: 'Invalid refresh token' },
+            { status: 401 }
+          );
+        })
+      );
+
+      await expect(
+        apiClient.post('/auth/login', {
+          email: 'user@example.com',
+          password: 'wrong-password',
+        })
+      ).rejects.toMatchObject({
+        response: {
+          status: 401,
+          data: { message: 'Invalid email or password' },
+        },
+      });
+
+      // The login request itself happened exactly once — no silent retry.
+      expect(loginCallCount).toBe(1);
+      // Crucially, the refresh endpoint was never called at all.
+      expect(refreshCallCount).toBe(0);
+
+      // The interceptor must not have logged the user out or mutated auth
+      // state — there was no session to expire in the first place.
+      const authState = store.getState().auth;
+      expect(authState.isAuthenticated).toBe(false);
+    });
+
+    it('should NOT attempt to refresh a /auth/refresh call that itself returns 401', async () => {
+      // Guards against the recursion/infinite-loop trap: exempting only
+      // /auth/login is not enough. If /auth/refresh is ever invoked through
+      // apiClient (interceptors attached) and the refresh token itself is
+      // rejected with 401, the interceptor must not try to "refresh the
+      // refresh call" using the same (invalid) refreshToken.
+      let refreshCallCount = 0;
+
+      store.dispatch(
+        setCredentials({
+          user: mockUser,
+          accessToken: 'expired-token',
+          refreshToken: 'invalid-refresh-token',
+        })
+      );
+
+      server.use(
+        http.post(`${API_BASE_URL}/auth/refresh`, () => {
+          refreshCallCount++;
+          return HttpResponse.json(
+            { message: 'Invalid refresh token' },
+            { status: 401 }
+          );
+        })
+      );
+
+      await expect(
+        apiClient.post('/auth/refresh', { refreshToken: 'invalid-refresh-token' })
+      ).rejects.toMatchObject({
+        response: { status: 401 },
+      });
+
+      // Exactly one call — no self-recursive refresh attempt.
+      expect(refreshCallCount).toBe(1);
+    });
+  });
+
   describe('Response Interceptor - Error Handling', () => {
     it('should handle 403 Forbidden errors', async () => {
       store.dispatch(
