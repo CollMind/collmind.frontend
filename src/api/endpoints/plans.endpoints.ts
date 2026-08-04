@@ -126,7 +126,17 @@ export interface UpdatePlanDto extends Partial<CreatePlanDto> {
 
 export interface AddFuDto {
   fuId: string;
-  tactics?: Record<string, number>;
+  // T-079: `tactics` removed. The backend no longer accepts it here, and
+  // because the API runs with `forbidNonWhitelisted`, sending it now produces a
+  // 400 rather than being ignored. Keeping the field in this type would let a
+  // caller write code that type-checks and then fails at runtime.
+  //
+  // A new FU is created with no tactics; they are entered through
+  // `updateFuTactic`, the one write path with scale validation (F2/C3).
+  //
+  // `//` and not `/** */` on purpose: a JSDoc block that documents no member is
+  // collected differently by typedoc/api-extractor than by tsc, and the backend
+  // counterpart in add-fu.dto.ts uses `//` too.
   /** T-034f: expected current `plans.version` (adding an FU is structural). */
   planVersion?: number;
 }
