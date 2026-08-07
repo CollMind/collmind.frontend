@@ -43,8 +43,15 @@ export interface ValidationResponseDto {
     thisUpload: number;
     after: number | null;
     status: 'GREEN' | 'AMBER' | 'RED' | null;
-    dataStatus: 'ok' | 'unavailable';
+    // Optional on purpose: rows persisted before T-098 have no dataStatus, and an
+    // absent one must read as "unknown", never as 'ok'. Treating missing as ok
+    // would print those rows' `current: 0` as a real balance — the disguise this
+    // task removed, restored by the read path.
+    dataStatus?: 'ok' | 'unavailable';
   }>;
+  // T-098: envelopes whose figures could not be computed. Counted separately from
+  // criticalEnvelopesCount — an unreadable envelope is not a finding.
+  unreadableEnvelopesCount?: number;
   errors: Array<{
     rowNumber: number;
     field?: string;
