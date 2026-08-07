@@ -43,14 +43,17 @@ export interface ValidationResponseDto {
     thisUpload: number;
     after: number | null;
     status: 'GREEN' | 'AMBER' | 'RED' | null;
-    // Optional on purpose: rows persisted before T-098 have no dataStatus, and an
-    // absent one must read as "unknown", never as 'ok'. Treating missing as ok
-    // would print those rows' `current: 0` as a real balance — the disguise this
-    // task removed, restored by the read path.
+    // Optional on purpose: rows persisted before T-098 have no dataStatus.
+    // `isUnreadable` below is what makes an absent one read as unknown rather
+    // than as 'ok' — this type only records that it can be absent.
     dataStatus?: 'ok' | 'unavailable';
   }>;
   // T-098: envelopes whose figures could not be computed. Counted separately from
   // criticalEnvelopesCount — an unreadable envelope is not a finding.
+  //
+  // The UI does NOT render this number; it counts with `isUnreadable` so the count
+  // and the rows come from one predicate. A count from here and cells from there
+  // could disagree, and the disagreement would be invisible.
   unreadableEnvelopesCount?: number;
   errors: Array<{
     rowNumber: number;
@@ -239,3 +242,29 @@ export const onInvoiceEndpoints = {
     return response.data.count;
   },
 };
+
+/**
+ * T-098: the single question "can this row's figures be trusted?".
+ *
+ * Exported and separate because it has three callers in the page — the two value
+ * cells, the RAG colour, and the summary banner's count — and a second derivation
+ * anywhere would let the banner disagree with the rows it summarises.
+ *
+ * A MISSING `dataStatus` counts as unreadable. Rows persisted before T-098 carry
+ * `current: 0` with no dataStatus, and that zero has three possible origins: a
+ * real zero balance, an unreadable envelope (the old catch wrote 0), or a missing
+ * envelope (that branch writes 0 too). Since the three cannot be told apart, the
+ * honest reading is "unknown" — printing ₺0,00 would assert a figure the data
+ * cannot support.
+ */
+export function isUnreadable(impact: {
+  dataStatus?: 'ok' | 'unavailable';
+  current: number | null;
+  after: number | null;
+}): boolean {
+  return (
+    impact.dataStatus !== 'ok' ||
+    impact.current === null ||
+    impact.after === null
+  );
+}

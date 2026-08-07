@@ -1,6 +1,9 @@
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { onInvoiceEndpoints } from '@/api/endpoints/on-invoice.endpoints';
+import {
+  onInvoiceEndpoints,
+  isUnreadable,
+} from '@/api/endpoints/on-invoice.endpoints';
 import {
   UploadFileResponse,
   ValidationResponseDto,
@@ -497,6 +500,12 @@ function ValidationStep({
   isProcessing: boolean;
   onCancel: () => void;
 }) {
+  // T-098: counted from the same predicate the rows use, not from the response's
+  // `unreadableEnvelopesCount`. That field exists for API consumers; here, taking
+  // the number from one place and the cells from another is how a summary starts
+  // contradicting the table underneath it.
+  const unreadableCount = result.budgetImpact.filter(isUnreadable).length;
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('tr-TR', {
       style: 'currency',
@@ -642,60 +651,54 @@ function ValidationStep({
               </thead>
               <tbody>
                 {result.budgetImpact.map((impact, idx) => {
-                  // T-098: ONE derivation, used by every cell. The backend
-                  // declares `dataStatus` as the discriminator and nulls the
-                  // figures alongside it; reading only the derived null let the
-                  // two drift, and reading only dataStatus would miss rows
-                  // persisted before it existed. Either signal is enough, and
-                  // deriving it once means no cell can disagree with another.
-                  const unreadable =
-                    impact.dataStatus === 'unavailable' ||
-                    impact.current === null ||
-                    impact.after === null;
+                  // T-098: one predicate (`isUnreadable`), shared with the
+                  // summary banner below. Deriving it twice would let the count
+                  // disagree with the rows it summarises, invisibly.
+                  const unreadable = isUnreadable(impact);
                   return (
-                  <tr key={idx} className="border-b">
-                    <td className="py-2 px-3">{impact.envelopeCode}</td>
-                    {/*
+                    <tr key={idx} className="border-b">
+                      <td className="py-2 px-3">{impact.envelopeCode}</td>
+                      {/*
                       T-098: an unreadable envelope says so. It must not be
                       formatted — formatCurrency(null) renders ₺0,00, and zero is
                       a valid budget figure, so the failure would look like a
                       result. The row stays visible on purpose: an envelope
                       missing from this table reads as "not affected".
                     */}
-                    <td className="py-2 px-3 text-right">
-                      {unreadable || impact.current === null ? (
-                        <span className="text-gray-500 italic">
-                          hesaplanamadı
-                        </span>
-                      ) : (
-                        formatCurrency(impact.current)
-                      )}
-                    </td>
-                    <td
-                      className={`py-2 px-3 text-right ${impact.thisUpload < 0 ? 'text-blue-600' : ''}`}
-                    >
-                      {formatCurrency(impact.thisUpload)}
-                    </td>
-                    <td
-                      className={`py-2 px-3 text-right ${
-                        unreadable
-                          ? 'text-gray-500'
-                          : impact.status === 'RED'
-                          ? 'text-red-600'
-                          : impact.status === 'AMBER'
-                            ? 'text-yellow-600'
-                            : impact.status === 'GREEN'
-                              ? 'text-green-600'
-                              : 'text-gray-500'
-                      }`}
-                    >
-                      {unreadable || impact.after === null ? (
-                        <span className="italic">hesaplanamadı</span>
-                      ) : (
-                        formatCurrency(impact.after)
-                      )}
-                    </td>
-                  </tr>
+                      <td className="py-2 px-3 text-right">
+                        {unreadable || impact.current === null ? (
+                          <span className="text-gray-500 italic">
+                            hesaplanamadı
+                          </span>
+                        ) : (
+                          formatCurrency(impact.current)
+                        )}
+                      </td>
+                      <td
+                        className={`py-2 px-3 text-right ${impact.thisUpload < 0 ? 'text-blue-600' : ''}`}
+                      >
+                        {formatCurrency(impact.thisUpload)}
+                      </td>
+                      <td
+                        className={`py-2 px-3 text-right ${
+                          unreadable
+                            ? 'text-gray-500'
+                            : impact.status === 'RED'
+                              ? 'text-red-600'
+                              : impact.status === 'AMBER'
+                                ? 'text-yellow-600'
+                                : impact.status === 'GREEN'
+                                  ? 'text-green-600'
+                                  : 'text-gray-500'
+                        }`}
+                      >
+                        {unreadable || impact.after === null ? (
+                          <span className="italic">hesaplanamadı</span>
+                        ) : (
+                          formatCurrency(impact.after)
+                        )}
+                      </td>
+                    </tr>
                   );
                 })}
               </tbody>
@@ -716,10 +719,10 @@ function ValidationStep({
             summary-level signal they have; without it the fix would have traded a
             wrong number for a missing one.
           */}
-          {(result.unreadableEnvelopesCount ?? 0) > 0 && (
+          {unreadableCount > 0 && (
             <div className="mt-4 bg-amber-50 border border-amber-200 rounded p-3">
               <p className="text-sm text-amber-900">
-                {result.unreadableEnvelopesCount} envelope için bütçe etkisi{' '}
+                {unreadableCount} envelope için bütçe etkisi{' '}
                 <strong>hesaplanamadı</strong>. Bu, etkilenmedikleri anlamına
                 gelmez — rakamlar okunamadı.
               </p>
