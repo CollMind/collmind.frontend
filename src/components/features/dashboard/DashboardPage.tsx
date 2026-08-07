@@ -171,6 +171,22 @@ export function DashboardPage() {
           />
         )}
 
+      {/*
+        T-098: the panel used to just disappear when the figures could not be
+        read, because the backend reported the failure as `budgetUtilization:
+        null` and null was indistinguishable from "no budget data". A silently
+        missing panel reads as "nothing to report" — so the failure now says so.
+        It is not an empty-period case: the backend returns zeros for that.
+      */}
+      {summary?.budgetUtilizationStatus === 'unavailable' &&
+        (persona === 'admin' || persona === 'finance') && (
+          <div className="rounded-xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-900">
+            Bütçe kullanımı <strong>hesaplanamadı</strong>. Bu, bütçe verisinin
+            boş olduğu anlamına gelmez — rakamlar okunamadı. Sorun sürerse
+            destek ile görüşün.
+          </div>
+        )}
+
       {/* Hizli erisim linkleri */}
       <div className="rounded-xl border border-black/10 bg-white px-5 py-4">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">

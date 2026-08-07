@@ -644,8 +644,21 @@ function ValidationStep({
                 {result.budgetImpact.map((impact, idx) => (
                   <tr key={idx} className="border-b">
                     <td className="py-2 px-3">{impact.envelopeCode}</td>
+                    {/*
+                      T-098: an unreadable envelope says so. It must not be
+                      formatted — formatCurrency(null) renders ₺0,00, and zero is
+                      a valid budget figure, so the failure would look like a
+                      result. The row stays visible on purpose: an envelope
+                      missing from this table reads as "not affected".
+                    */}
                     <td className="py-2 px-3 text-right">
-                      {formatCurrency(impact.current)}
+                      {impact.current === null ? (
+                        <span className="text-gray-500 italic">
+                          hesaplanamadı
+                        </span>
+                      ) : (
+                        formatCurrency(impact.current)
+                      )}
                     </td>
                     <td
                       className={`py-2 px-3 text-right ${impact.thisUpload < 0 ? 'text-blue-600' : ''}`}
@@ -658,10 +671,16 @@ function ValidationStep({
                           ? 'text-red-600'
                           : impact.status === 'AMBER'
                             ? 'text-yellow-600'
-                            : 'text-green-600'
+                            : impact.status === 'GREEN'
+                              ? 'text-green-600'
+                              : 'text-gray-500'
                       }`}
                     >
-                      {formatCurrency(impact.after)}
+                      {impact.after === null ? (
+                        <span className="italic">hesaplanamadı</span>
+                      ) : (
+                        formatCurrency(impact.after)
+                      )}
                     </td>
                   </tr>
                 ))}

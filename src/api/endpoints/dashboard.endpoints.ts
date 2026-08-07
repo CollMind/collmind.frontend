@@ -24,6 +24,10 @@ export interface DashboardSummaryDto {
   pendingApprovalCount: number;
   openTaskCount: number;
   budgetUtilization: DashboardBudgetUtilization | null;
+  // T-098: why budgetUtilization is null. It was never null for an empty period —
+  // the backend reports zeros for that — so a null here always meant a failure
+  // that was being displayed as "no data".
+  budgetUtilizationStatus: 'ok' | 'unavailable';
 }
 
 // DTO: GET /dashboard/pending-tasks?period=YYYY-MM&includePast=false

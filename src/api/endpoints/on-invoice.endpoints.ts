@@ -34,12 +34,16 @@ export interface ValidationResponseDto {
     ltaOnInvoice?: { amount: number; percentage: number };
     promoDiscount?: { amount: number; percentage: number };
   };
+  // T-098: null when the envelope's figures could not be read. NOT zero —
+  // formatCurrency(null) renders ₺0,00, which is exactly the disguise the backend
+  // change removed, so these must be branched on before being formatted.
   budgetImpact: Array<{
     envelopeCode: string;
-    current: number;
+    current: number | null;
     thisUpload: number;
-    after: number;
-    status: 'GREEN' | 'AMBER' | 'RED';
+    after: number | null;
+    status: 'GREEN' | 'AMBER' | 'RED' | null;
+    dataStatus: 'ok' | 'unavailable';
   }>;
   errors: Array<{
     rowNumber: number;
