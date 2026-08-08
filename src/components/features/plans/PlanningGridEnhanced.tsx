@@ -46,7 +46,11 @@ import {
   InheritedCell,
   RAGCell,
 } from './grid-cells';
-import { toNumberOrNull, toNumberOrZero } from '@/utils/numberUtils';
+import {
+  toNumberOrNull,
+  toNumberOrZero,
+  decideCellCommit,
+} from '@/utils/numberUtils';
 import {
   startCellEditMeasurement,
   recordCellEditMeasurement,
@@ -1122,6 +1126,39 @@ export function PlanningGridEnhanced({ plan, canEdit }: PlanningGridProps) {
     [canEdit]
   );
 
+  /**
+   * T-112: commit an edited cell, or leave edit mode WITHOUT writing.
+   *
+   * The two inline editors used to read `parseFloat(value)` and call the mutation
+   * only `if (!isNaN(...))` — with no `else` and with `setEditingCell(null)` living
+   * inside the save path. So an unreadable entry was discarded silently AND left
+   * the cell stuck in edit mode: no value, no message, no way out. Combined with
+   * Escape (which used to write), the user had no exit at all — Escape tried to
+   * save the same unreadable text and failed too.
+   *
+   * §2.5's "an `if` without an `else`", in the one place a planner types numbers.
+   *
+   * A toast rather than inline error UI is deliberate: T-109 deletes these editors
+   * in favour of `EditableCell`, which already renders the reason next to the
+   * field. Writing that UI here would be writing code to delete.
+   */
+  const onCellCommit = useCallback(
+    (raw: string, save: (value: number) => void) => {
+      const decision = decideCellCommit(raw);
+      if (decision.kind === 'save') {
+        save(decision.value);
+        return;
+      }
+      if (decision.kind === 'reject') {
+        toast.error(decision.message);
+      }
+      setEditingCell(null);
+    },
+    [toast]
+  );
+
+  const onCellCancel = useCallback(() => setEditingCell(null), []);
+
   const handleCellSave = useCallback(
     (
       planFu: PlanFu,
@@ -1338,6 +1375,8 @@ export function PlanningGridEnhanced({ plan, canEdit }: PlanningGridProps) {
                       onToggle={() => toggleFu(planFu.id)}
                       onCellEdit={handleCellEdit}
                       onCellSave={handleCellSave}
+                      onCellCommit={onCellCommit}
+                      onCellCancel={onCellCancel}
                       getSkuCellValue={getSkuCellValue}
                       getFuCellValue={getFuCellValue}
                       onRemoveFu={handleRemoveFu}
@@ -1379,7 +1418,12 @@ export function PlanningGridEnhanced({ plan, canEdit }: PlanningGridProps) {
 }
 
 // Enhanced FU Row Component
-function FuRowEnhanced({
+// T-112: exported for test. The row is where Escape and blur are handled, and the
+// property that matters — "a cancel does not write" — can only be asserted by
+// driving the real handlers with a mock `onCellSave`. Testing the parent would
+// need the whole query/router context; testing a copy of the logic would prove
+// nothing (CLAUDE.md §2.7 #8).
+export function FuRowEnhanced({
   planFu,
   plan,
   isExpanded,
@@ -1390,6 +1434,8 @@ function FuRowEnhanced({
   onToggle,
   onCellEdit,
   onCellSave,
+  onCellCommit,
+  onCellCancel,
   getSkuCellValue,
   getFuCellValue,
   onRemoveFu,
@@ -1416,6 +1462,10 @@ function FuRowEnhanced({
     field: string,
     value: number
   ) => void;
+  // T-112: parse-and-commit, or leave edit mode without writing. The row cannot
+  // own this: `setEditingCell` lives in the parent, and a cancel has to clear it.
+  onCellCommit: (raw: string, save: (value: number) => void) => void;
+  onCellCancel: () => void;
   getSkuCellValue: (
     planSku: PlanSku,
     colCode: string,
@@ -1495,22 +1545,25 @@ function FuRowEnhanced({
                   defaultValue={currentValue}
                   className="h-7 text-right text-sm w-full border rounded px-2"
                   onBlur={(e) => {
-                    const numValue = parseFloat(e.target.value);
-                    if (!isNaN(numValue)) {
-                      onCellSave(planFu, undefined, col.code, numValue);
-                    }
+                    onCellCommit(e.target.value, (v) =>
+                      onCellSave(planFu, undefined, col.code, v)
+                    );
                   }}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') {
-                      const numValue = parseFloat(
-                        (e.target as HTMLInputElement).value
+                      onCellCommit((e.target as HTMLInputElement).value, (v) =>
+                        onCellSave(planFu, undefined, col.code, v)
                       );
-                      if (!isNaN(numValue)) {
-                        onCellSave(planFu, undefined, col.code, numValue);
-                      }
                     }
                     if (e.key === 'Escape') {
-                      onCellSave(planFu, undefined, col.code, currentValue);
+                      // T-112: a cancel WRITES NOTHING. This used to call
+                      // `onCellSave(..., currentValue)`, which fired a real PATCH:
+                      // it bumped `version` — so another user's open edit got a 409
+                      // — wrote an immutable audit row, and started a
+                      // `fu-tactic-update` measurement, all for a keystroke that
+                      // means "discard". Optimistic locking exists to catch REAL
+                      // conflicts; a cancel was manufacturing fake ones.
+                      onCellCancel();
                     }
                   }}
                 />
@@ -1625,22 +1678,21 @@ function FuRowEnhanced({
                       defaultValue={currentValue}
                       className="h-7 text-right text-sm w-full border rounded px-2"
                       onBlur={(e) => {
-                        const numValue = parseFloat(e.target.value);
-                        if (!isNaN(numValue)) {
-                          onCellSave(planFu, planSku, col.code, numValue);
-                        }
+                        onCellCommit(e.target.value, (v) =>
+                          onCellSave(planFu, planSku, col.code, v)
+                        );
                       }}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') {
-                          const numValue = parseFloat(
-                            (e.target as HTMLInputElement).value
+                          onCellCommit(
+                            (e.target as HTMLInputElement).value,
+                            (v) => onCellSave(planFu, planSku, col.code, v)
                           );
-                          if (!isNaN(numValue)) {
-                            onCellSave(planFu, planSku, col.code, numValue);
-                          }
                         }
                         if (e.key === 'Escape') {
-                          onCellSave(planFu, planSku, col.code, currentValue);
+                          // T-112 — see the FU editor above for why a cancel must
+                          // not write.
+                          onCellCancel();
                         }
                       }}
                     />

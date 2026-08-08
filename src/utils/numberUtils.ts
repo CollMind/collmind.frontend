@@ -239,3 +239,29 @@ export function formatForEdit(value: number | null | undefined): string {
     useGrouping: false,
   }).format(value);
 }
+
+/**
+ * T-112: what a grid cell should do with the text in it, as a value rather than a
+ * side effect.
+ *
+ * Extracted so it can be tested against the REAL decision instead of a mock. The
+ * first version of this lived inside the grid component as a closure; the test had
+ * to stub it, which meant the test was exercising a copy of the control and a
+ * mutation to the real one stayed green (CLAUDE.md §2.7 #8).
+ *
+ * `cancel` and `reject` are separate on purpose: an empty box is a cancel and says
+ * nothing, while unreadable text owes the user a reason. Both leave the value
+ * unwritten — which is the property that matters, and the one the old code got
+ * wrong in both directions (it wrote on Escape and it stayed silent on garbage).
+ */
+export type CellCommit =
+  | { kind: 'save'; value: number }
+  | { kind: 'cancel' }
+  | { kind: 'reject'; message: string };
+
+export function decideCellCommit(raw: string): CellCommit {
+  const parsed = parseUserNumber(raw);
+  if (parsed.ok) return { kind: 'save', value: parsed.value };
+  if (parsed.reason === 'EMPTY') return { kind: 'cancel' };
+  return { kind: 'reject', message: describeNumericInputFailure(parsed) };
+}

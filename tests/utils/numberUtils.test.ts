@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
+  decideCellCommit,
   parseUserNumber,
   toNumber,
   toNumberOrZero,
@@ -196,5 +197,45 @@ describe('formatForEdit — the round trip that was broken', () => {
   it('renders an absent value as an empty box, not as zero', () => {
     expect(formatForEdit(null)).toBe('');
     expect(formatForEdit(undefined)).toBe('');
+  });
+});
+
+describe('decideCellCommit — the grid cell decision, as a value (T-112)', () => {
+  // The property that matters is NEGATIVE: neither branch below may produce a
+  // save. The old grid wrote in both of these situations — on Escape it saved the
+  // unchanged value (a real PATCH, a version bump, an audit row), and on garbage
+  // it wrote nothing but also cleared nothing, leaving the cell stuck.
+  it('an empty box cancels, silently', () => {
+    expect(decideCellCommit('')).toEqual({ kind: 'cancel' });
+    expect(decideCellCommit('   ')).toEqual({ kind: 'cancel' });
+  });
+
+  it('unreadable text is rejected WITH a reason, and carries no value', () => {
+    const d = decideCellCommit('abc');
+    expect(d.kind).toBe('reject');
+    expect((d as { message: string }).message).toContain('Geçersiz');
+    expect(d).not.toHaveProperty('value');
+  });
+
+  // Ambiguity is a rejection too, and its message must name both readings —
+  // otherwise the user is told "no" without being told what to type.
+  it('ambiguous text is rejected and the message names both readings', () => {
+    const d = decideCellCommit('1.234');
+    expect(d.kind).toBe('reject');
+    expect((d as { message: string }).message).toContain('Belirsiz');
+  });
+
+  it.each([
+    ['1234,56', 1234.56],
+    ['1.234,56', 1234.56],
+    ['42', 42],
+  ])('readable %s saves %s', (raw, value) => {
+    expect(decideCellCommit(raw)).toEqual({ kind: 'save', value });
+  });
+
+  // Without this, every assertion above passes on a function that never saves —
+  // which would look like a fix and be a dead grid.
+  it('is not simply refusing everything', () => {
+    expect(decideCellCommit('7250.00').kind).toBe('save');
   });
 });
