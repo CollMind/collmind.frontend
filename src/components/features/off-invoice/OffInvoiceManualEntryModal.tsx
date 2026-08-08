@@ -1,3 +1,4 @@
+import { NumericInput } from '@/components/common/NumericInput';
 import { useState, useEffect, useMemo } from 'react';
 import { offInvoiceEndpoints } from '@/api/endpoints/off-invoice.endpoints';
 import { agreementEndpoints } from '@/api/endpoints/agreements.endpoints';
@@ -22,7 +23,7 @@ import {
   Save,
   Check,
 } from 'lucide-react';
-import { toNumber, toNumberOrZero } from '@/utils/numberUtils';
+import { toNumberOrZero } from '@/utils/numberUtils';
 
 interface OffInvoiceManualEntryModalProps {
   isOpen: boolean;
@@ -526,19 +527,12 @@ export function OffInvoiceManualEntryModal({
                       <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500">
                         ₺
                       </span>
-                      <input
-                        type="number"
-                        step="0.01"
-                        min="0.01"
+                      <NumericInput
                         value={formData.amount}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            amount: parseFloat(e.target.value) || 0,
-                          })
+                        onChange={(v) =>
+                          setFormData({ ...formData, amount: v ?? 0 })
                         }
                         className="w-full pl-8 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="0.00"
                       />
                     </div>
                   </div>

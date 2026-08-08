@@ -21,7 +21,7 @@ import {
   Layers,
 } from 'lucide-react';
 import { userEndpoints } from '@/api/endpoints/users.endpoints';
-import { toNumber, toNumberOrZero } from '@/utils/numberUtils';
+import { toNumberOrZero } from '@/utils/numberUtils';
 
 interface PlanApprovalDetailModalProps {
   plan: Plan;

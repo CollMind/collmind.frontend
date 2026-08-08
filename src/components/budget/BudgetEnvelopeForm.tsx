@@ -8,6 +8,7 @@ import { CustomerChannel } from '@/types/customer.types';
 import { categoryEndpoints } from '@/api/endpoints/master-data.endpoints';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { NumericInput } from '@/components/common/NumericInput';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -254,13 +255,10 @@ export function BudgetEnvelopeForm({
 
       <div>
         <Label htmlFor="allocatedAmount">Tahsis Tutarı *</Label>
-        <Input
+        <NumericInput
           id="allocatedAmount"
-          type="number"
-          step="0.01"
-          min="0.01"
           value={allocatedAmount}
-          onChange={(e) => setAllocatedAmount(parseFloat(e.target.value) || 0)}
+          onChange={(v) => setAllocatedAmount(v ?? 0)}
           required
         />
         {errors.allocatedAmount && (

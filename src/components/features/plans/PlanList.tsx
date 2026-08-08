@@ -1,7 +1,7 @@
 import { Plan } from '@/api/endpoints/plans.endpoints';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { toNumber, toNumberOrZero } from '@/utils/numberUtils';
+import { toNumberOrZero } from '@/utils/numberUtils';
 import {
   Table,
   TableBody,

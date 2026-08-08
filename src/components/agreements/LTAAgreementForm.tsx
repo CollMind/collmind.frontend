@@ -6,6 +6,7 @@ import {
 } from '@/types/agreement.types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { NumericInput } from '@/components/common/NumericInput';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import {
@@ -907,20 +908,13 @@ export function LTAAgreementForm({
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500">
                     ₺
                   </span>
-                  <Input
-                    id="capTotalAmount"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={formData.capTotalAmount || ''}
-                    onChange={(e) =>
-                      setFormData({
-                        ...formData,
-                        capTotalAmount: parseFloat(e.target.value) || 0,
-                      })
+                  <NumericInput
+                    value={toNumber(formData.capTotalAmount)}
+                    onChange={(v) =>
+                      setFormData({ ...formData, capTotalAmount: v ?? 0 })
                     }
+                    id="capTotalAmount"
                     className={`pl-8 ${errors.capTotalAmount ? 'border-red-500' : ''}`}
-                    placeholder="0.00"
                   />
                 </div>
                 {errors.capTotalAmount && (

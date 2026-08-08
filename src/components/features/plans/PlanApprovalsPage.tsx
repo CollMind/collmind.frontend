@@ -24,7 +24,7 @@ import { PlanApprovalDetailModal } from './PlanApprovalDetailModal';
 import { BudgetApprovalModal } from './BudgetApprovalModal';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { userEndpoints } from '@/api/endpoints/users.endpoints';
-import { toNumber, toNumberOrZero } from '@/utils/numberUtils';
+import { toNumberOrZero } from '@/utils/numberUtils';
 
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('tr-TR', {

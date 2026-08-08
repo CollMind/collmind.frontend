@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { AgreementStatusBadge } from './AgreementStatusBadge';
 import { AgreementActions } from './AgreementActions';
 import { ArrowLeft, Edit } from 'lucide-react';
-import { toNumber, toNumberOrZero } from '@/utils/numberUtils';
+import { toNumberOrZero } from '@/utils/numberUtils';
 
 const formatCurrency = (amount: number, currency: string = 'TRY') => {
   return new Intl.NumberFormat('tr-TR', {

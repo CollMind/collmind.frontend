@@ -10,6 +10,7 @@ import {
 import { CustomerChannel } from '@/types/customer.types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { NumericInput } from '@/components/common/NumericInput';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import {
@@ -602,18 +603,12 @@ export function AgreementForm({
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="capTotalAmount">Bütçe Tavanı *</Label>
-                <Input
-                  id="capTotalAmount"
-                  type="number"
-                  step="0.01"
-                  min="0.01"
-                  value={formData.capTotalAmount}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      capTotalAmount: parseFloat(e.target.value) || 0,
-                    })
+                <NumericInput
+                  value={toNumber(formData.capTotalAmount)}
+                  onChange={(v) =>
+                    setFormData({ ...formData, capTotalAmount: v ?? 0 })
                   }
+                  id="capTotalAmount"
                   required
                 />
                 {toNumberOrZero(formData.capTotalAmount) > 0 && (

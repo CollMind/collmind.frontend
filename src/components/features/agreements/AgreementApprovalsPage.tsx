@@ -24,7 +24,7 @@ import { useToast } from '@/hooks/useToast';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { userEndpoints } from '@/api/endpoints/users.endpoints';
 import { useNavigate } from 'react-router-dom';
-import { toNumber, toNumberOrZero } from '@/utils/numberUtils';
+import { toNumberOrZero } from '@/utils/numberUtils';
 import { useMe } from '@/services/users.service';
 import { UserRole } from '@/types/user.types';
 

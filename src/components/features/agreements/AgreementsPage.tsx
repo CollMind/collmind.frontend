@@ -36,7 +36,7 @@ import {
   useSubmitAgreement,
 } from '@/services/agreements.service';
 import { FileText, Plus, Download, ChevronDown } from 'lucide-react';
-import { toNumber, toNumberOrZero } from '@/utils/numberUtils';
+import { toNumberOrZero } from '@/utils/numberUtils';
 
 const formatCurrency = (amount: number, currency: string = 'TRY') => {
   return new Intl.NumberFormat('tr-TR', {

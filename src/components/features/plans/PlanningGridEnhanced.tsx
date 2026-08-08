@@ -46,7 +46,7 @@ import {
   InheritedCell,
   RAGCell,
 } from './grid-cells';
-import { toNumber, toNumberOrNull, toNumberOrZero } from '@/utils/numberUtils';
+import { toNumberOrNull, toNumberOrZero } from '@/utils/numberUtils';
 import {
   startCellEditMeasurement,
   recordCellEditMeasurement,
