@@ -1,6 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import {
+  parseUserNumber,
+  describeNumericInputFailure,
+  formatForEdit,
+} from '@/utils/numberUtils';
+import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
@@ -41,6 +46,9 @@ export function EditableCell({
   warning,
 }: EditableCellProps) {
   const [isEditing, setIsEditing] = useState(false);
+  // T-106: the reason the value was refused, shown next to the box while the
+  // user is still typing — the immediate feedback the backend cannot give.
+  const [inputError, setInputError] = useState<string | null>(null);
   const [editValue, setEditValue] = useState<string>('');
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -73,20 +81,40 @@ export function EditableCell({
   const handleClick = () => {
     if (disabled) return;
     setIsEditing(true);
-    setEditValue(value?.toString() || '');
+    // T-106: the box opens in the SAME format the cell displays. It used to open
+    // with `value.toString()` — `1234.56` — beside a cell reading `1.234,56`, so
+    // the user was shown two formats for one number with no way to know which the
+    // field wanted. Typing back the one they had just been shown lost three digits
+    // silently.
+    setEditValue(formatForEdit(value));
   };
 
   const handleBlur = () => {
-    const numValue = parseFloat(editValue);
-    if (!isNaN(numValue)) {
-      let finalValue = numValue;
+    // T-106: `parseUserNumber`, not `parseFloat`. parseFloat does not fail on bad
+    // input — it TRUNCATES: "1.234.567,89" came back as 1.234 with no error, a
+    // million-fold loss that looked like a number. The shared grammar refuses what
+    // it cannot read and refuses what is ambiguous.
+    const parsed = parseUserNumber(editValue);
+    if (parsed.ok) {
+      let finalValue = parsed.value;
       if (min !== undefined && finalValue < min) finalValue = min;
       if (max !== undefined && finalValue > max) finalValue = max;
+      setInputError(null);
       onSave(finalValue);
-    } else if (onCancel) {
-      onCancel();
+      setIsEditing(false);
+      return;
     }
-    setIsEditing(false);
+
+    // An empty box is a cancel, as before. Anything else is a value the user
+    // typed and we could not read: keep the box open with the reason, rather than
+    // discarding their input silently.
+    if (parsed.reason === 'EMPTY') {
+      setInputError(null);
+      if (onCancel) onCancel();
+      setIsEditing(false);
+      return;
+    }
+    setInputError(describeNumericInputFailure(parsed));
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -100,17 +128,42 @@ export function EditableCell({
 
   if (isEditing) {
     return (
-      <Input
-        ref={inputRef}
-        type="number"
-        value={editValue}
-        onChange={(e) => setEditValue(e.target.value)}
-        onBlur={handleBlur}
-        onKeyDown={handleKeyDown}
-        className={`h-7 text-right text-sm w-full ${className}`}
-        min={min}
-        max={max}
-      />
+      <div className="w-full">
+        {/*
+          T-106: `type="text"`, not `type="number"`. A number input cannot HOLD a
+          tr-TR value — the browser sanitises anything it cannot parse as a plain
+          decimal, so opening the box with `1.234,56` would have shown an empty
+          field. `inputMode="decimal"` keeps the numeric keypad on mobile.
+
+          `min`/`max` also move off the element: they are enforced in `handleBlur`
+          against the PARSED value, which is the only place they can mean anything
+          once the text is locale-formatted.
+        */}
+        <Input
+          ref={inputRef}
+          type="text"
+          inputMode="decimal"
+          value={editValue}
+          onChange={(e) => {
+            setEditValue(e.target.value);
+            if (inputError) setInputError(null);
+          }}
+          onBlur={handleBlur}
+          onKeyDown={handleKeyDown}
+          className={`h-7 text-right text-sm w-full ${
+            inputError ? 'border-red-500' : ''
+          } ${className}`}
+          aria-invalid={inputError ? true : undefined}
+        />
+        {/*
+          The reason has to reach the screen. Setting it and not rendering it is
+          how a "fix" ends up changing nothing a user can see — three times over in
+          this codebase already.
+        */}
+        {inputError && (
+          <p className="mt-1 text-xs text-red-600 text-right">{inputError}</p>
+        )}
+      </div>
     );
   }
 

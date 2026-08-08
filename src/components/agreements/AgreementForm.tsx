@@ -21,7 +21,7 @@ import {
 } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
 import { ChevronRight, ChevronLeft, Check } from 'lucide-react';
-import { toNumber } from '@/utils/numberUtils';
+import { toNumber, toNumberOrZero } from '@/utils/numberUtils';
 
 interface AgreementFormProps {
   onSubmit: (data: CreateAgreementDto) => Promise<void>;
@@ -616,9 +616,9 @@ export function AgreementForm({
                   }
                   required
                 />
-                {toNumber(formData.capTotalAmount) > 0 && (
+                {toNumberOrZero(formData.capTotalAmount) > 0 && (
                   <p className="text-xs text-gray-500 mt-1">
-                    {formatCurrency(toNumber(formData.capTotalAmount))}
+                    {formatCurrency(toNumberOrZero(formData.capTotalAmount))}
                   </p>
                 )}
                 {errors.capTotalAmount && (

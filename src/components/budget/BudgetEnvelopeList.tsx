@@ -1,3 +1,4 @@
+import { toNumberOrZero } from '@/utils/numberUtils';
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BudgetEnvelope, BudgetEnvelopeStatus } from '@/types/budget.types';
@@ -73,17 +74,10 @@ export function BudgetEnvelopeList({
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [ragFilter, setRagFilter] = useState<string>('all');
 
-  // Helper function to safely convert decimal values to number
-  const safeNumber = (value: any): number => {
-    if (value == null) return 0;
-    if (typeof value === 'string') {
-      const cleaned = value.replace(/,/g, '');
-      const parsed = parseFloat(cleaned);
-      return isNaN(parsed) ? 0 : parsed;
-    }
-    const num = Number(value);
-    return isNaN(num) ? 0 : num;
-  };
+  // T-106: one parser, shared with every other reader. This was a local copy
+  // of `replace(/,/g,'') + parseFloat` — the pair that truncates "1.234.567,89"
+  // to 1.234 instead of failing. `toNumberOrZero` names the zero it falls back to.
+  const safeNumber = toNumberOrZero;
 
   // Özet hesaplamaları - Backend'den gelen decimal değerleri güvenli şekilde number'a dönüştür
   const summary = useMemo(() => {

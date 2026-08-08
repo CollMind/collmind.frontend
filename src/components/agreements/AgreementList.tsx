@@ -18,7 +18,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { AgreementStatusBadge } from './AgreementStatusBadge';
 import { Search, Eye, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
-import { toNumber } from '@/utils/numberUtils';
+import { toNumber, toNumberOrZero } from '@/utils/numberUtils';
 
 interface AgreementListProps {
   agreements: Agreement[];
@@ -381,11 +381,11 @@ export function AgreementList({ agreements, isLoading }: AgreementListProps) {
                                 )}{' '}
                                 /{' '}
                                 {formatCurrency(
-                                  toNumber(agreement.capTotalAmount),
+                                  toNumberOrZero(agreement.capTotalAmount),
                                   agreement.currency
                                 )}
                               </div>
-                              {toNumber(agreement.capTotalAmount) > 0 && (
+                              {toNumberOrZero(agreement.capTotalAmount) > 0 && (
                                 <div className="relative h-2 w-full overflow-hidden rounded-full bg-gray-200">
                                   <div
                                     className={`h-full transition-all duration-300 ${getProgressColor(usagePercent)}`}

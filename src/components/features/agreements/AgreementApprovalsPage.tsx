@@ -24,7 +24,7 @@ import { useToast } from '@/hooks/useToast';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { userEndpoints } from '@/api/endpoints/users.endpoints';
 import { useNavigate } from 'react-router-dom';
-import { toNumber } from '@/utils/numberUtils';
+import { toNumber, toNumberOrZero } from '@/utils/numberUtils';
 import { useMe } from '@/services/users.service';
 import { UserRole } from '@/types/user.types';
 
@@ -144,7 +144,7 @@ export function AgreementApprovalsPage() {
       ? agreements.reduce((sum, a) => {
           let cap = 0;
           if (a.capTotalAmount != null) {
-            cap = toNumber(a.capTotalAmount);
+            cap = toNumberOrZero(a.capTotalAmount);
           }
           return sum + cap;
         }, 0) / agreements.length
@@ -152,15 +152,8 @@ export function AgreementApprovalsPage() {
 
   const highSpendCount =
     agreements?.filter((a) => {
-      let cap = 0;
-      if (a.capTotalAmount != null) {
-        const capValue =
-          typeof a.capTotalAmount === 'string'
-            ? parseFloat(a.capTotalAmount.replace(/,/g, ''))
-            : Number(a.capTotalAmount);
-        cap = isNaN(capValue) ? 0 : capValue;
-      }
-      return cap > 100000;
+      // T-106: one parser. This was a local `replace(/,/g,'') + parseFloat`.
+      return toNumberOrZero(a.capTotalAmount) > 100000;
     }).length || 0;
 
   if (isLoading) return <LoadingSpinner />;
@@ -388,7 +381,7 @@ function AgreementApprovalCard({
   // Backend'den gelen decimal değeri number'a dönüştür
   let totalSpend = 0;
   if (agreement.capTotalAmount != null) {
-    totalSpend = toNumber(agreement.capTotalAmount);
+    totalSpend = toNumberOrZero(agreement.capTotalAmount);
   }
   const isHighSpend = totalSpend > 100000;
   const agreementType = agreement.agreementType || 'N/A';

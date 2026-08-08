@@ -1,3 +1,4 @@
+import { toNumberOrZero } from '@/utils/numberUtils';
 import { useState, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -89,12 +90,9 @@ export function PlansPage() {
     const totalSpend = plansArray.reduce((sum, p) => {
       let spend = 0;
       if (p.totalSpend != null) {
-        // String veya number olabilir, her iki durumu da handle et
-        const spendValue =
-          typeof p.totalSpend === 'string'
-            ? parseFloat(p.totalSpend.replace(/,/g, ''))
-            : Number(p.totalSpend);
-        spend = isNaN(spendValue) ? 0 : spendValue;
+        // T-106: one parser. This used to strip commas and parseFloat — the
+        // shape that read "1.234.567,89" as 1.234 by stopping at the second dot.
+        spend = toNumberOrZero(p.totalSpend);
       }
       return sum + spend;
     }, 0);
@@ -103,11 +101,7 @@ export function PlansPage() {
       let volume = 0;
       if (p.totalPlannedVolume != null) {
         // String veya number olabilir, her iki durumu da handle et
-        const volumeValue =
-          typeof p.totalPlannedVolume === 'string'
-            ? parseFloat(p.totalPlannedVolume.replace(/,/g, ''))
-            : Number(p.totalPlannedVolume);
-        volume = isNaN(volumeValue) ? 0 : volumeValue;
+        volume = toNumberOrZero(p.totalPlannedVolume);
       }
       return sum + volume;
     }, 0);

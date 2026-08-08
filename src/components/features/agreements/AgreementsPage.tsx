@@ -36,7 +36,7 @@ import {
   useSubmitAgreement,
 } from '@/services/agreements.service';
 import { FileText, Plus, Download, ChevronDown } from 'lucide-react';
-import { toNumber } from '@/utils/numberUtils';
+import { toNumber, toNumberOrZero } from '@/utils/numberUtils';
 
 const formatCurrency = (amount: number, currency: string = 'TRY') => {
   return new Intl.NumberFormat('tr-TR', {
@@ -94,7 +94,7 @@ export function AgreementsPage() {
     const totalCap = agreementsArray.reduce((sum, a) => {
       let cap = 0;
       if (a.capTotalAmount != null) {
-        cap = toNumber(a.capTotalAmount);
+        cap = toNumberOrZero(a.capTotalAmount);
       }
       return sum + cap;
     }, 0);

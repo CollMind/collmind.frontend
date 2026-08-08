@@ -33,7 +33,7 @@ import { budgetEndpoints } from '@/api/endpoints/budget.endpoints';
 import { agreementEndpoints } from '@/api/endpoints/agreements.endpoints';
 import { CustomerChannel } from '@/types/customer.types';
 import { CplListItem } from '@/types/customer.types';
-import { toNumber } from '@/utils/numberUtils';
+import { toNumber, toNumberOrZero } from '@/utils/numberUtils';
 import { ChannelSelect } from '@/components/common/ChannelSelect';
 import { CategorySelect } from '@/components/common/CategorySelect';
 import { CplSelect } from '@/components/common/CplSelect';
@@ -784,7 +784,9 @@ export function STAAgreementForm({
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-600">Planlanan (Bu STA)</span>
                       <span className="font-medium">
-                        {formatCurrency(toNumber(updatedBudgetStatus.planned))}
+                        {formatCurrency(
+                          toNumberOrZero(updatedBudgetStatus.planned)
+                        )}
                       </span>
                     </div>
                   </div>
@@ -1067,7 +1069,7 @@ export function STAAgreementForm({
                 <div className="flex justify-between">
                   <span className="text-gray-600">Toplam Cap:</span>
                   <span className="font-medium">
-                    {formatCurrency(toNumber(formData.capTotalAmount))}
+                    {formatCurrency(toNumberOrZero(formData.capTotalAmount))}
                   </span>
                 </div>
                 <div className="flex justify-between">

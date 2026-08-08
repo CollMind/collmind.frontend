@@ -1,3 +1,4 @@
+import { toNumberOrZero } from '@/utils/numberUtils';
 import React from 'react';
 import { useBudgetEnvelopes } from '@/services/budget.service';
 import { BudgetEnvelope } from '@/types/budget.types';
@@ -19,17 +20,10 @@ export function BudgetDashboard({ onCreateEnvelope }: BudgetDashboardProps) {
 
   const envelopesArray = Array.isArray(envelopes) ? envelopes : [];
 
-  // Helper function to safely convert decimal values to number
-  const safeNumber = (value: any): number => {
-    if (value == null) return 0;
-    if (typeof value === 'string') {
-      const cleaned = value.replace(/,/g, '');
-      const parsed = parseFloat(cleaned);
-      return isNaN(parsed) ? 0 : parsed;
-    }
-    const num = Number(value);
-    return isNaN(num) ? 0 : num;
-  };
+  // T-106: one parser, shared with every other reader. This was a local copy
+  // of `replace(/,/g,'') + parseFloat` — the pair that truncates "1.234.567,89"
+  // to 1.234 instead of failing. `toNumberOrZero` names the zero it falls back to.
+  const safeNumber = toNumberOrZero;
 
   // Özet hesaplamaları - Backend'den gelen decimal değerleri güvenli şekilde number'a dönüştür
   const totalAllocated = envelopesArray.reduce(

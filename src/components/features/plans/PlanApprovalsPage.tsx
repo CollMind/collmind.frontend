@@ -24,7 +24,7 @@ import { PlanApprovalDetailModal } from './PlanApprovalDetailModal';
 import { BudgetApprovalModal } from './BudgetApprovalModal';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { userEndpoints } from '@/api/endpoints/users.endpoints';
-import { toNumber } from '@/utils/numberUtils';
+import { toNumber, toNumberOrZero } from '@/utils/numberUtils';
 
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('tr-TR', {
@@ -363,7 +363,7 @@ function PlanApprovalCard({
         (fu.planSkus?.reduce((s, sku) => s + (sku.baseVolume || 0), 0) || 0),
       0
     ) || 0;
-  const plannedVolume = toNumber(plan.totalPlannedVolume);
+  const plannedVolume = toNumberOrZero(plan.totalPlannedVolume);
   const incremental = plannedVolume - baseVolume;
   const upliftPercent = baseVolume > 0 ? (incremental / baseVolume) * 100 : 0;
   const fuCount = plan.planFus?.length || 0;
@@ -414,7 +414,7 @@ function PlanApprovalCard({
           <div>
             <div className="text-xs text-gray-500 mb-1">TOTAL SPEND</div>
             <div className="text-sm font-semibold text-gray-900">
-              {formatCurrency(toNumber(plan.totalSpend))}
+              {formatCurrency(toNumberOrZero(plan.totalSpend))}
             </div>
           </div>
           <div>

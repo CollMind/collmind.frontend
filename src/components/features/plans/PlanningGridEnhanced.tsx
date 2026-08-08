@@ -46,7 +46,7 @@ import {
   InheritedCell,
   RAGCell,
 } from './grid-cells';
-import { toNumber, toNumberOrNull } from '@/utils/numberUtils';
+import { toNumber, toNumberOrNull, toNumberOrZero } from '@/utils/numberUtils';
 import {
   startCellEditMeasurement,
   recordCellEditMeasurement,
@@ -389,13 +389,13 @@ function getFuCellValue(planFu: PlanFu, colCode: string): number | null {
       return toNumberOrNull(planFu.totalPlannedVolume);
     case 'INCR_VOL': {
       const baseVol = skus.reduce((sum, sku) => sum + (sku.baseVolume ?? 0), 0);
-      const plannedVol = toNumber(planFu.totalPlannedVolume);
+      const plannedVol = toNumberOrZero(planFu.totalPlannedVolume);
       return plannedVol - baseVol;
     }
     case 'VOL_UPLIFT_PCT': {
       const baseVol = skus.reduce((sum, sku) => sum + (sku.baseVolume ?? 0), 0);
       if (!baseVol) return null;
-      const plannedVol = toNumber(planFu.totalPlannedVolume);
+      const plannedVol = toNumberOrZero(planFu.totalPlannedVolume);
       return ((plannedVol - baseVol) / baseVol) * 100;
     }
 
@@ -528,7 +528,7 @@ function getFuCellValue(planFu: PlanFu, colCode: string): number | null {
           (sku.baseLtaOffInvoiceSpend ?? 0)
         );
       }, 0);
-      const plannedTotal = toNumber(planFu.totalSpend);
+      const plannedTotal = toNumberOrZero(planFu.totalSpend);
       return plannedTotal - baseTotal;
     }
 
@@ -719,7 +719,7 @@ function getFuCellValue(planFu: PlanFu, colCode: string): number | null {
           (sku.baseLtaOffInvoiceSpend ?? 0)
         );
       }, 0);
-      const plannedTotal = toNumber(planFu.totalSpend);
+      const plannedTotal = toNumberOrZero(planFu.totalSpend);
       const incrSpend = plannedTotal - baseTotal;
       if (!incrSpend || incrSpend <= 0) return null;
       const baseTo = skus.reduce((sum, sku) => {

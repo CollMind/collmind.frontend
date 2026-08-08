@@ -27,7 +27,7 @@ import {
   ChevronRight,
   Trash2,
 } from 'lucide-react';
-import { toNumber } from '@/utils/numberUtils';
+import { toNumber, toNumberOrZero } from '@/utils/numberUtils';
 import { ChannelSelect } from '@/components/common/ChannelSelect';
 import { CategorySelect } from '@/components/common/CategorySelect';
 import { CplSelect } from '@/components/common/CplSelect';
@@ -1095,7 +1095,7 @@ export function LTAAgreementForm({
             <div className="pt-4 border-t">
               <Label className="text-xs text-gray-500">Toplam Cap</Label>
               <p className="text-2xl font-bold text-purple-600 mt-1">
-                {formatCurrency(toNumber(formData.capTotalAmount))}
+                {formatCurrency(toNumberOrZero(formData.capTotalAmount))}
               </p>
             </div>
           </CardContent>

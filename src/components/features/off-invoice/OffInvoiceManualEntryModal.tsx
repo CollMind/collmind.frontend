@@ -22,7 +22,7 @@ import {
   Save,
   Check,
 } from 'lucide-react';
-import { toNumber } from '@/utils/numberUtils';
+import { toNumber, toNumberOrZero } from '@/utils/numberUtils';
 
 interface OffInvoiceManualEntryModalProps {
   isOpen: boolean;
@@ -144,9 +144,9 @@ export function OffInvoiceManualEntryModal({
   const getRemainingCap = async (agreement: Agreement): Promise<number> => {
     try {
       const total = await offInvoiceEndpoints.getTotalByAgreement(agreement.id);
-      return toNumber(agreement.capTotalAmount) - total;
+      return toNumberOrZero(agreement.capTotalAmount) - total;
     } catch {
-      return toNumber(agreement.capTotalAmount);
+      return toNumberOrZero(agreement.capTotalAmount);
     }
   };
 
@@ -213,7 +213,7 @@ export function OffInvoiceManualEntryModal({
       return null;
     }
     const currentRemaining =
-      toNumber(selectedAgreement.capTotalAmount) - (agreementTotal || 0);
+      toNumberOrZero(selectedAgreement.capTotalAmount) - (agreementTotal || 0);
     const afterTransaction = currentRemaining - formData.amount;
     return {
       currentRemaining,
@@ -759,7 +759,7 @@ function AgreementCard({
 
   useEffect(() => {
     if (total !== undefined && agreement.capTotalAmount) {
-      setRemainingCap(toNumber(agreement.capTotalAmount) - total);
+      setRemainingCap(toNumberOrZero(agreement.capTotalAmount) - total);
     }
   }, [total, agreement.capTotalAmount]);
 
@@ -806,7 +806,7 @@ function AgreementCard({
           <div className="font-semibold text-blue-600">
             {remainingCap !== null
               ? formatCurrency(remainingCap)
-              : formatCurrency(toNumber(agreement.capTotalAmount))}
+              : formatCurrency(toNumberOrZero(agreement.capTotalAmount))}
           </div>
         </div>
       </div>
