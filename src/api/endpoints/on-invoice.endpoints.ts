@@ -61,6 +61,11 @@ export interface ValidationResponseDto {
     message: string;
   }>;
   criticalEnvelopesCount: number;
+  // T-101: where the RAG thresholds behind `status` came from. When this is not
+  // 'config', every row's `status` is null — RED means "breaches YOUR threshold"
+  // and that is not something we can say about a default nobody chose.
+  thresholdSource?: 'config' | 'default' | 'unavailable';
+  thresholdReason?: string;
 }
 
 export interface CompletionResponseDto {

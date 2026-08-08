@@ -719,6 +719,23 @@ function ValidationStep({
             summary-level signal they have; without it the fix would have traded a
             wrong number for a missing one.
           */}
+          {/*
+            T-101: the RAG column is blank when the thresholds are not the
+            tenant's own. Without this note a reader sees grey cells and no reason
+            — the backend withholds the verdict honestly and the screen would have
+            swallowed the honesty.
+          */}
+          {result.thresholdSource !== undefined &&
+            result.thresholdSource !== 'config' && (
+              <div className="mt-4 bg-slate-50 border border-slate-200 rounded p-3">
+                <p className="text-sm text-slate-700">
+                  Bütçe durumu (RAG) renkleri <strong>gösterilmiyor</strong>:
+                  eşikler bu tenant için yapılandırılmamış, ürün varsayılanları
+                  kullanıldı. Rakamlar doğru; yalnız kırmızı/sarı/yeşil kararı
+                  verilemedi.
+                </p>
+              </div>
+            )}
           {unreadableCount > 0 && (
             <div className="mt-4 bg-amber-50 border border-amber-200 rounded p-3">
               <p className="text-sm text-amber-900">
