@@ -18,10 +18,20 @@ import { columnHeaderIndex } from './support/grid';
  * used to iterate the FULL (unfiltered) column list while the header row
  * filtered out the ITEM_NAME/ITEM_CODE definitions — so every data `<td>`
  * rendered 2 columns to the right of its `<th>`, for the ENTIRE grid, for
- * every plan. `SKU-E2E-COGS-FIXTURE` (seeded onto FU-WELLA-HC-500ML, see
- * collmind.backend agreement.seed.ts) has known, distinct master-data
- * values — unitPrice=100, cogs=60 — which is exactly what let this defect
- * be visually confirmed in the first place ("List Price" showed blank,
+ * every plan. The rendered row is `SKU-E2E-GRID-SINGLE-SKU` (seeded onto
+ * FU-E2E-GRID-SINGLE-SKU, see collmind.backend agreement.seed.ts), which has
+ * known master-data values — unitPrice=100, cogs=60 — and the seed says out
+ * loud that those two numbers are load-bearing for THIS spec.
+ *
+ * T-113 note: this used to read `SKU-E2E-COGS-FIXTURE` on the shared
+ * FU-WELLA-HC-500ML. When the helper moved to its own FU, the assertions below
+ * kept passing only because the new SKU happens to carry the same 100/60 — the
+ * test never noticed it had changed rows. `SKU-E2E-COGS-FIXTURE` is still live,
+ * but for the BACKEND suite now (`role-journey.e2e-spec.ts:2644,2726`); editing
+ * its price would not move this file.
+ *
+ * Those values are what let the defect be visually confirmed in the first place
+ * ("List Price" showed blank,
  * ₺100 rendered under "Base Volume (pcs)" instead). This test asserts the
  * header text and its underlying `<td>` value agree, by index, for both of
  * those columns, and that they are NOT sitting under an unrelated volume
@@ -36,7 +46,11 @@ test.describe('Grid header/body column alignment (T-049)', () => {
   test.beforeAll(async () => {
     planner = await apiLogin(SEED_USERS.PLANNER);
     admin = await apiLogin(SEED_USERS.ADMIN);
-    fixture = await createDraftPlanWithSingleSkuFu(planner, admin, 'T049-ALIGN');
+    fixture = await createDraftPlanWithSingleSkuFu(
+      planner,
+      admin,
+      'T049-ALIGN'
+    );
   });
 
   test.afterAll(async () => {
@@ -56,15 +70,26 @@ test.describe('Grid header/body column alignment (T-049)', () => {
     const skuRow = page.locator('tbody tr', { hasText: fixture.skuCode });
     await expect(skuRow).toBeVisible();
 
-    const listPriceIndex = await columnHeaderIndex(page, 'List Price per Piece');
+    const listPriceIndex = await columnHeaderIndex(
+      page,
+      'List Price per Piece'
+    );
     const cogsIndex = await columnHeaderIndex(page, 'COGS per Piece');
     const baseVolumeIndex = await columnHeaderIndex(page, 'Base Volume (pcs)');
-    const plannedVolumeIndex = await columnHeaderIndex(page, 'Planned Volume (pcs)');
+    const plannedVolumeIndex = await columnHeaderIndex(
+      page,
+      'Planned Volume (pcs)'
+    );
 
     // Sanity: these are four genuinely distinct columns — if the header
     // ever collapses/reorders them onto the same index the assertions
     // below would trivially pass for the wrong reason.
-    const indices = [listPriceIndex, cogsIndex, baseVolumeIndex, plannedVolumeIndex];
+    const indices = [
+      listPriceIndex,
+      cogsIndex,
+      baseVolumeIndex,
+      plannedVolumeIndex,
+    ];
     expect(new Set(indices).size).toBe(indices.length);
 
     // The cell directly under "List Price per Piece" (by index) must show

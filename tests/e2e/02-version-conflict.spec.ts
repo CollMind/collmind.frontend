@@ -64,7 +64,7 @@ test.describe('409 version conflict dialog (T-016 scenario 2)', () => {
     await expect(page.getByRole('button', { name: 'Tümünü Aç' })).toBeVisible();
     await page.getByRole('button', { name: 'Tümünü Aç' }).click();
 
-    // Exactly one SKU row (FU-WELLA-HC-500ML) — locate it by its unique
+    // Exactly one SKU row (FU-E2E-GRID-SINGLE-SKU) — locate it by its unique
     // code. Deliberately a plain CSS/text locator, not getByRole('row'):
     // Radix's <Dialog> (VersionConflictDialog) sets aria-hidden="true" on
     // the rest of the page while open, which would make a role-based query
