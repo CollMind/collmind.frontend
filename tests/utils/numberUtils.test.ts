@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import {
   commitCellEdit,
+  decideCellAbandonment,
   decideCellCommit,
   parseUserNumber,
   toNumber,
@@ -292,5 +293,36 @@ describe('commitCellEdit — the effects, not just the decision (T-112 review S2
     expect(f.notify.mock.calls[0][0]).toContain('Belirsiz');
     expect(f.close).toHaveBeenCalledTimes(1);
     expect(f.save).not.toHaveBeenCalled();
+  });
+});
+
+describe('decideCellAbandonment — T-109 step 2, the coordinator-eviction decision', () => {
+  // The one case that must notify: the coordinator (not the cell itself) closed a
+  // cell that still held text the grammar could not read. Silence here would be
+  // the exact defect T-106 closed, reopened by the coordinator's own eviction path.
+  it('coordinator-closed WITH an input error notifies, naming the reason', () => {
+    const d = decideCellAbandonment(true, 'Geçersiz sayı: \'abc\'.');
+    expect(d).toEqual({
+      kind: 'notify',
+      message: 'Girilen değer okunamadı, kaydedilmedi.',
+    });
+  });
+
+  // The other three combinations are all silent — only the (true, non-null) pair
+  // notifies. A fixture that shared a value across two of the four cells could not
+  // tell "notify" apart from "silent" (CLAUDE.md: fixture must differ on both
+  // sides of the distinction under test).
+  it('coordinator-closed with NO input error is silent (a clean save/cancel)', () => {
+    expect(decideCellAbandonment(true, null)).toEqual({ kind: 'silent' });
+  });
+
+  it('self-closed WITH an input error is silent (T-106 already handled it)', () => {
+    expect(decideCellAbandonment(false, 'Geçersiz sayı: \'abc\'.')).toEqual({
+      kind: 'silent',
+    });
+  });
+
+  it('self-closed with no input error is silent (the ordinary case)', () => {
+    expect(decideCellAbandonment(false, null)).toEqual({ kind: 'silent' });
   });
 });

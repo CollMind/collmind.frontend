@@ -1121,7 +1121,23 @@ export function PlanningGridEnhanced({ plan, canEdit }: PlanningGridProps) {
   const handleCellEdit = useCallback(
     (fuId: string | undefined, skuId: string | undefined, field: string) => {
       if (!canEdit) return;
-      setEditingCell({ fuId, skuId, field });
+      // Identity-stable: re-selecting the cell that is ALREADY open must not
+      // produce a new object, or React cannot bail out and the row re-renders
+      // for nothing. This matters because the TableCell's `onClick` covers the
+      // whole cell (including, after T-109 step 2b, the area the open editor
+      // sits in), so every click inside an open box would otherwise re-render
+      // the row.
+      //
+      // It does NOT reduce the focus timers: the `setTimeout` below sits outside
+      // the setter and runs unconditionally, so a click that reaches both this
+      // handler and `onOpen` still arms two. Re-render count is what this guard
+      // changes, and claiming more than that was a wrong inference from a right
+      // measurement.
+      setEditingCell((prev) =>
+        prev?.fuId === fuId && prev?.skuId === skuId && prev?.field === field
+          ? prev
+          : { fuId, skuId, field }
+      );
       setTimeout(() => editInputRef.current?.focus(), 50);
     },
     [canEdit]
@@ -1606,6 +1622,22 @@ export function FuRowEnhanced({
                 minWidth: `${col.width}px`,
                 maxWidth: `${col.width}px`,
               }}
+              // T-109 step 2 review: this `onClick` was removed and put back.
+              // Measured (real Chromium, a live editable cell, before vs.
+              // after removal): the TD's own padding is NOT covered by
+              // `EditableCell`'s inner div (the div sizes to its own
+              // `px-2 py-1`, not the TD's `p-4`, and the TD vertically
+              // centers it — see `ui/table.tsx`'s `TableCell`). Removing
+              // this handler left only the inner div clickable and measured
+              // 26.6% of the cell's area still openable — 73.4% went dead.
+              // Restoring it duplicates the open call on a click inside the
+              // div (bubbles to both this `onClick` and `EditableCell`'s own
+              // `onOpen`), which is safe to duplicate: `onCellEdit` only
+              // calls `setEditingCell` (a fresh object of the same shape —
+              // idempotent) and schedules a 50ms focus `setTimeout` whose
+              // body (`editInputRef.current?.focus()`) is itself idempotent
+              // — read at `handleCellEdit` above. No mutation, no network
+              // call sits behind this handler.
               onClick={
                 isEditable
                   ? () => onCellEdit(planFu.id, undefined, col.code)
@@ -1632,6 +1664,21 @@ export function FuRowEnhanced({
                   prefix={col.prefix}
                   onSave={(val) => onCellSave(planFu, undefined, col.code, val)}
                   disabled={!isEditable}
+                  // T-109 step 2: the coordinator is still `editingCell` —
+                  // the SAME state the inline editor above reads. Today that
+                  // means `isOpen` is always false where this is reached:
+                  // whenever `editingCell` matches this cell, the branch
+                  // above (`if (isEditing)`) returns first and this
+                  // `EditableCell` is not even rendered. That branch is
+                  // deleted in T-109's next step; wiring the real
+                  // coordinator here now means that deletion needs no
+                  // further change to this component.
+                  // The SAME predicate the branch above reads. Written out
+                  // twice it can be edited in one place and not the other —
+                  // the control's second copy, in one file.
+                  isOpen={isEditing}
+                  onOpen={() => onCellEdit(planFu.id, undefined, col.code)}
+                  onCancel={onCellCancel}
                 />
               )}
             </TableCell>
@@ -1737,6 +1784,9 @@ export function FuRowEnhanced({
                     minWidth: `${col.width}px`,
                     maxWidth: `${col.width}px`,
                   }}
+                  // T-109 step 2 review: see the FU cell above for the
+                  // measurement — removing this handler dropped the click
+                  // target to the inner div's own box (26.6% of the cell).
                   onClick={
                     isEditable
                       ? () => onCellEdit(undefined, planSku.id, col.code)
@@ -1773,6 +1823,10 @@ export function FuRowEnhanced({
                         onCellSave(planFu, planSku, col.code, val)
                       }
                       disabled={!isEditable}
+                      // See the FU cell above: one predicate, one place.
+                      isOpen={isEditing}
+                      onOpen={() => onCellEdit(undefined, planSku.id, col.code)}
+                      onCancel={onCellCancel}
                     />
                   )}
                 </TableCell>

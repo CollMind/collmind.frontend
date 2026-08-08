@@ -107,4 +107,113 @@ test.describe('Grid cell edit -> KPI update (T-016 scenario 4)', () => {
     const incrementalValue = kpiCardValue(page, 'INCREMENTAL');
     await expect(incrementalValue).toHaveText('400');
   });
+
+  /**
+   * T-109 step 2 review — the wrapping `<TableCell>`'s OWN `onClick`.
+   *
+   * Added to THIS file rather than a new spec: it exercises the same
+   * `dataCell(page, skuRow, 'Planned Volume (pcs)')` cell as the test
+   * above, in the same real grid, so it reuses `fixture` instead of paying
+   * for a second plan create/teardown cycle — and it belongs next to the
+   * other "grid cell" scenario, not off on its own.
+   *
+   * What this catches that NO other test in the repo can: a regression
+   * that happened and was reverted this same task turn — removing the
+   * TableCell's own `onClick` (the reasoning at the time: "EditableCell
+   * already opens itself via `onOpen`, this is a duplicate call"). That
+   * reasoning was correct about the call being a duplicate and wrong about
+   * the duplicate being redundant: measured (real Chromium), `EditableCell`'s
+   * inner clickable div sizes to its own `px-2 py-1`, not the wrapping
+   * TableCell's `p-4` — so removing the TD's own handler dropped the
+   * openable area to 26.6% of the cell; the other 73.4%, all TD padding,
+   * went dead silently (no error, cell just stops responding there).
+   *
+   * Proven NOT to be catchable any other way this task: reverting the real
+   * `onClick={... onCellEdit(...) }` on both TableCells in
+   * `PlanningGridEnhanced.tsx` and running the FULL vitest suite
+   * (`npm test -- --run`) left it green — `editingCell` matching a cell also
+   * satisfies the row's OLDER `isEditing` check above the `EditableCell`
+   * branch, so nothing in the unit suite reaches the real
+   * `<TableCell onClick>` yet (it renders, but every unit-level route to it
+   * opens the cell some other way first). Only a real, laid-out DOM — this
+   * suite — can click 3px inside a `<td>`'s edge and land in dead padding
+   * rather than the inner div; jsdom (no layout engine) cannot.
+   */
+  test('hücrenin dört köşesi de (TableCell padding, iç div değil) editörü açar', async ({
+    page,
+  }) => {
+    await loginViaUi(page, SEED_USERS.PLANNER);
+    await page.goto(`/plans/${fixture.planId}`);
+    await page.getByRole('button', { name: 'Tümünü Aç' }).click();
+    const skuRow = page.locator('tbody tr', { hasText: fixture.skuCode });
+    await expect(skuRow).toBeVisible();
+
+    const cell = await dataCell(page, skuRow, 'Planned Volume (pcs)');
+
+    // Baseline FIRST: prove the cell genuinely opens on an ordinary click
+    // (dead center, well inside the inner div). Without this, a corner
+    // failure below would have a second, cheaper explanation — "this cell
+    // was never editable to begin with" — and the test would not be
+    // pinning what it claims to.
+    await cell.click();
+    let input = cell.locator('input[type="text"]');
+    await expect(input).toBeVisible();
+    // input.press, NOT page.keyboard.press: the parent establishes focus on
+    // the box asynchronously (a 50ms setTimeout). `page.keyboard.press`
+    // sent right after the click can reach `document.body` before that
+    // timeout fires — never the input's own `onKeyDown` — and reads as
+    // "Escape does not close the cell", a measurement artefact, not a
+    // defect (measured, this task). `Locator.press` focuses its target
+    // before sending the key, which sidesteps the race entirely.
+    await input.press('Escape');
+    await expect(input).toBeHidden();
+
+    const box = await cell.boundingBox();
+    if (!box) {
+      throw new Error(
+        'Planned Volume (pcs) cell has no bounding box — is it scrolled out of view?'
+      );
+    }
+    // 3px inside each edge: comfortably inside the TableCell's `p-4`
+    // (16px) padding, comfortably outside the inner div's own `px-2 py-1`
+    // box, which starts flush with the TD's padding edge — this is exactly
+    // the band that went dead when the TD's `onClick` was removed.
+    const inset = 3;
+    const corners: Array<{ label: string; x: number; y: number }> = [
+      { label: 'top-left', x: box.x + inset, y: box.y + inset },
+      { label: 'top-right', x: box.x + box.width - inset, y: box.y + inset },
+      { label: 'bottom-left', x: box.x + inset, y: box.y + box.height - inset },
+      {
+        label: 'bottom-right',
+        x: box.x + box.width - inset,
+        y: box.y + box.height - inset,
+      },
+    ];
+
+    for (const corner of corners) {
+      await page.mouse.click(corner.x, corner.y);
+      input = cell.locator('input[type="text"]');
+      // Fails here, at the ${corner.label} corner specifically, is the
+      // signal that TableCell's own onClick (not EditableCell's inner div)
+      // is missing or broken.
+      await expect(input).toBeVisible();
+      // Not just "an editor appeared" — it must hold a value, not a blank box.
+      //
+      // ⚠️ Be precise about what this proves TODAY, because it is less than it
+      // looks: the box rendered here is still the LEGACY inline editor
+      // (`PlanningGridEnhanced`'s `if (isEditing)` branch returns before
+      // `EditableCell` is reached), and its value comes from that editor's
+      // `defaultValue={formatForEdit(currentValue)}`. Deleting EditableCell's
+      // open-transition formatting entirely would leave this assertion GREEN.
+      //
+      // So this line guards the legacy path's value today, and becomes a guard
+      // on EditableCell's open-transition formatting the moment T-109 step 2b
+      // deletes the inline branch. The corner-click assertion above is the part
+      // that discriminates right now (measured: removing TableCell's onClick
+      // turns exactly this test red, all others green).
+      await expect(input).not.toHaveValue('');
+      await input.press('Escape');
+      await expect(input).toBeHidden();
+    }
+  });
 });

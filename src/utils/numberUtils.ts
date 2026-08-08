@@ -313,3 +313,38 @@ export function commitCellEdit(raw: string, fx: CellCommitEffects): void {
   // trap the cell: the value was refused and the box stayed open with no way out.
   fx.close();
 }
+
+/**
+ * T-109 step 2 (coordinator, KARAR (b)): what to do when a cell is closed by
+ * something OTHER than its own save/cancel — i.e. the coordinator opened a
+ * DIFFERENT cell and evicted this one.
+ *
+ * T-106 decided an unreadable value keeps the box open so the user can fix it.
+ * That decision was made when only one cell could ever be open. A coordinator
+ * makes a second kind of close possible: the user clicks away before fixing
+ * it. Discarding the text at that point would be the exact silent drop T-106
+ * rejected — so an eviction with unread text still in the box closes AND says
+ * why, instead of closing silently.
+ *
+ * `closedByCoordinator` distinguishes the two closes structurally rather than
+ * by inspecting anything about WHY: a cell's own save/cancel/Escape path sets
+ * `closingSelfRef` to `true` before it acts, so this argument arrives `false`;
+ * a close nothing in the cell asked for leaves the ref `false` and this
+ * argument arrives `true`.
+ */
+export type CellAbandonment =
+  | { readonly kind: 'silent' }
+  | { readonly kind: 'notify'; readonly message: string };
+
+export function decideCellAbandonment(
+  closedByCoordinator: boolean,
+  inputError: string | null
+): CellAbandonment {
+  if (closedByCoordinator && inputError) {
+    return {
+      kind: 'notify',
+      message: 'Girilen değer okunamadı, kaydedilmedi.',
+    };
+  }
+  return { kind: 'silent' };
+}
