@@ -1,5 +1,6 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import {
+  commitCellEdit,
   decideCellCommit,
   parseUserNumber,
   toNumber,
@@ -89,6 +90,10 @@ describe('parseUserNumber — twin of the backend grammar', () => {
       ['1,2', '1.2'],
       ['1234.567', '1234.567'],
       ['12345.678', '12345.678'],
+      // T-110: a leading group never starts with 0.
+      ['0.125', '0.125'],
+      ['-0.125', '-0.125'],
+      ['0,125', '0.125'],
     ])('%s is NOT ambiguous -> %s', (input, expected) => {
       expect(ok(input)).toBe(expected);
     });
@@ -175,16 +180,21 @@ describe('toNumber — API values, canonical only', () => {
 describe('formatForEdit — the round trip that was broken', () => {
   // The defect: the cell displayed `1.234,56` while the edit box opened with
   // `1234.56`. A user retyping what the cell had shown lost three digits.
-  it.each([1234.56, 1000, 999999.99, 0, -1234.5])(
-    'format(%s) parses back to the same number',
-    (value) => {
-      const text = formatForEdit(value);
-      const parsed = parseUserNumber(text);
+  // T-110: the fixture deliberately reaches past four decimals. The previous set
+  // was [1234.56, 1000, 999999.99, 0, -1234.5] — all <=2 decimals — and every one
+  // of them passed with `maximumFractionDigits` set to anything from 2 to 20. The
+  // test could not see the parameter it was supposed to constrain (CLAUDE.md:
+  // a fixture must differ on the two sides of the distinction it tests).
+  it.each([
+    1234.56, 1000, 999999.99, 0, -1234.5, 1.23456, 3.14159265358979, 0.00001,
+    12345.6789, -0.125,
+  ])('format(%s) parses back to the same number', (value) => {
+    const text = formatForEdit(value);
+    const parsed = parseUserNumber(text);
 
-      expect(parsed.ok).toBe(true);
-      expect((parsed as { value: number }).value).toBe(value);
-    }
-  );
+    expect(parsed.ok).toBe(true);
+    expect((parsed as { value: number }).value).toBe(value);
+  });
 
   // tr-TR decimal comma, and deliberately NO thousands grouping: with grouping,
   // `formatForEdit(1000)` is `1.000`, which this module's own grammar refuses as
@@ -237,5 +247,50 @@ describe('decideCellCommit — the grid cell decision, as a value (T-112)', () =
   // which would look like a fix and be a dead grid.
   it('is not simply refusing everything', () => {
     expect(decideCellCommit('7250.00').kind).toBe('save');
+  });
+});
+
+describe('commitCellEdit — the effects, not just the decision (T-112 review S2)', () => {
+  const fx = () => ({ save: vi.fn(), notify: vi.fn(), close: vi.fn() });
+
+  it('a readable value saves and does NOT close via the cancel path', () => {
+    const f = fx();
+    commitCellEdit('1.234,56', f);
+
+    expect(f.save).toHaveBeenCalledWith(1234.56);
+    expect(f.notify).not.toHaveBeenCalled();
+    expect(f.close).not.toHaveBeenCalled();
+  });
+
+  // The guard the previous round was missing: removing `setEditingCell(null)` from
+  // the parent left every test green, so "the cell is no longer trapped" was an
+  // unmeasured claim.
+  it('an empty box closes the cell and says nothing', () => {
+    const f = fx();
+    commitCellEdit('', f);
+
+    expect(f.close).toHaveBeenCalledTimes(1);
+    expect(f.notify).not.toHaveBeenCalled();
+    expect(f.save).not.toHaveBeenCalled();
+  });
+
+  // And the other missing guard: removing `toast.error(...)` was also invisible.
+  it('an unreadable value notifies AND closes, without saving', () => {
+    const f = fx();
+    commitCellEdit('abc', f);
+
+    expect(f.notify).toHaveBeenCalledTimes(1);
+    expect(f.notify.mock.calls[0][0]).toContain('Geçersiz');
+    expect(f.close).toHaveBeenCalledTimes(1);
+    expect(f.save).not.toHaveBeenCalled();
+  });
+
+  it('an ambiguous value notifies with both readings, and closes', () => {
+    const f = fx();
+    commitCellEdit('1.234', f);
+
+    expect(f.notify.mock.calls[0][0]).toContain('Belirsiz');
+    expect(f.close).toHaveBeenCalledTimes(1);
+    expect(f.save).not.toHaveBeenCalled();
   });
 });

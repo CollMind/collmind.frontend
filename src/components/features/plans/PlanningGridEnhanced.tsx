@@ -49,7 +49,8 @@ import {
 import {
   toNumberOrNull,
   toNumberOrZero,
-  decideCellCommit,
+  commitCellEdit,
+  formatForEdit,
 } from '@/utils/numberUtils';
 import {
   startCellEditMeasurement,
@@ -1144,15 +1145,11 @@ export function PlanningGridEnhanced({ plan, canEdit }: PlanningGridProps) {
    */
   const onCellCommit = useCallback(
     (raw: string, save: (value: number) => void) => {
-      const decision = decideCellCommit(raw);
-      if (decision.kind === 'save') {
-        save(decision.value);
-        return;
-      }
-      if (decision.kind === 'reject') {
-        toast.error(decision.message);
-      }
-      setEditingCell(null);
+      commitCellEdit(raw, {
+        save,
+        notify: (m) => toast.error(m),
+        close: () => setEditingCell(null),
+      });
     },
     [toast]
   );
@@ -1541,8 +1538,24 @@ export function FuRowEnhanced({
               >
                 <input
                   ref={editInputRef as any}
-                  type="number"
-                  defaultValue={currentValue}
+                  // T-109 (adım 1) / T-112 review S1: `type="number"` DESTROYS the
+                  // one character the grammar needs. Measured, real Chromium at
+                  // tr-TR: typing `0,125` leaves `el.value === "0.125"` — the
+                  // browser rewrites the decimal comma as a dot before any of our
+                  // code runs, and the grammar then rightly calls that ambiguous
+                  // and refuses a value that used to save correctly.
+                  //
+                  // It cannot be fixed by parsing differently: `250.000` typed by a
+                  // user arrives as `"250.000"` too, and at that point the thousands
+                  // separator is indistinguishable from a decimal point. The
+                  // information is gone at the DOM boundary.
+                  type="text"
+                  inputMode="decimal"
+                  // Opened in the SAME shape the cell displays, so retyping what you
+                  // were shown round-trips. `formatForEdit` carries full precision —
+                  // see T-110: rounding here silently rewrote the stored value when
+                  // a user opened a cell and blurred without typing.
+                  defaultValue={formatForEdit(currentValue)}
                   className="h-7 text-right text-sm w-full border rounded px-2"
                   onBlur={(e) => {
                     onCellCommit(e.target.value, (v) =>
@@ -1674,8 +1687,10 @@ export function FuRowEnhanced({
                   >
                     <input
                       ref={editInputRef as any}
-                      type="number"
-                      defaultValue={currentValue}
+                      // T-109 (adım 1) — see the FU editor above for the measurement.
+                      type="text"
+                      inputMode="decimal"
+                      defaultValue={formatForEdit(currentValue)}
                       className="h-7 text-right text-sm w-full border rounded px-2"
                       onBlur={(e) => {
                         onCellCommit(e.target.value, (v) =>

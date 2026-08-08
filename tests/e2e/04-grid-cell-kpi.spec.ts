@@ -1,3 +1,8 @@
+// T-109 (adım 1): the grid's edit box is `type="text"`. A number input cannot
+// hold a tr-TR value — measured: typing `0,125` leaves `el.value` as `"0.125"`,
+// with the decimal comma rewritten before our code sees it. This selector is the
+// proof that the handover happened; if it goes back to `number`, the locale defect
+// is back with it.
 import { test, expect, Page } from '@playwright/test';
 import {
   apiLogin,
@@ -46,7 +51,11 @@ test.describe('Grid cell edit -> KPI update (T-016 scenario 4)', () => {
   test.beforeAll(async () => {
     planner = await apiLogin(SEED_USERS.PLANNER);
     admin = await apiLogin(SEED_USERS.ADMIN);
-    fixture = await createDraftPlanWithSingleSkuFu(planner, admin, 'T016-GRIDKPI');
+    fixture = await createDraftPlanWithSingleSkuFu(
+      planner,
+      admin,
+      'T016-GRIDKPI'
+    );
   });
 
   test.afterAll(async () => {
@@ -77,7 +86,7 @@ test.describe('Grid cell edit -> KPI update (T-016 scenario 4)', () => {
     // that used to require an offset here).
     const cell = await dataCell(page, skuRow, 'Planned Volume (pcs)');
     await cell.click();
-    const input = cell.locator('input[type="number"]');
+    const input = cell.locator('input[type="text"]');
     await expect(input).toBeVisible();
     await input.fill('400');
     await input.press('Enter');

@@ -1,3 +1,8 @@
+// T-109 (adım 1): the grid's edit box is `type="text"`. A number input cannot
+// hold a tr-TR value — measured: typing `0,125` leaves `el.value` as `"0.125"`,
+// with the decimal comma rewritten before our code sees it. This selector is the
+// proof that the handover happened; if it goes back to `number`, the locale defect
+// is back with it.
 import { test, expect } from '@playwright/test';
 import {
   apiLogin,
@@ -38,7 +43,11 @@ test.describe('409 version conflict dialog (T-016 scenario 2)', () => {
   test.beforeAll(async () => {
     planner = await apiLogin(SEED_USERS.PLANNER);
     admin = await apiLogin(SEED_USERS.ADMIN);
-    fixture = await createDraftPlanWithSingleSkuFu(planner, admin, 'T016-CONFLICT');
+    fixture = await createDraftPlanWithSingleSkuFu(
+      planner,
+      admin,
+      'T016-CONFLICT'
+    );
   });
 
   test.afterAll(async () => {
@@ -76,7 +85,7 @@ test.describe('409 version conflict dialog (T-016 scenario 2)', () => {
     // offset here).
     const cell = await dataCell(page, skuRow, 'Planned Volume (pcs)');
     await cell.click();
-    const input = cell.locator('input[type="number"]');
+    const input = cell.locator('input[type="text"]');
     await expect(input).toBeVisible();
     await input.fill('750');
     await input.press('Enter');
@@ -84,9 +93,13 @@ test.describe('409 version conflict dialog (T-016 scenario 2)', () => {
     // The mutation is sent with the STALE version=1 the page loaded with
     // -> backend responds 409 STALE_VERSION -> VersionConflictDialog opens.
     await expect(
-      page.getByRole('heading', { name: 'Kayıt Başka Biri Tarafından Değiştirildi' })
+      page.getByRole('heading', {
+        name: 'Kayıt Başka Biri Tarafından Değiştirildi',
+      })
     ).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Yeniden Yükle' })).toBeVisible();
+    await expect(
+      page.getByRole('button', { name: 'Yeniden Yükle' })
+    ).toBeVisible();
 
     // The critical negative assertion: no auto-retry happened. If the
     // mutation had been silently resubmitted with a fresh version, the
@@ -99,7 +112,9 @@ test.describe('409 version conflict dialog (T-016 scenario 2)', () => {
     // Dismissing the dialog must not resubmit anything either.
     await page.getByRole('button', { name: 'Kapat' }).click();
     await expect(
-      page.getByRole('heading', { name: 'Kayıt Başka Biri Tarafından Değiştirildi' })
+      page.getByRole('heading', {
+        name: 'Kayıt Başka Biri Tarafından Değiştirildi',
+      })
     ).toHaveCount(0);
     await expect(cell).not.toContainText('750');
 
@@ -107,16 +122,20 @@ test.describe('409 version conflict dialog (T-016 scenario 2)', () => {
     // MUST refetch (showing the other user's real value, 999) rather than
     // resubmitting the planner's 750.
     await cell.click();
-    const input2 = cell.locator('input[type="number"]');
+    const input2 = cell.locator('input[type="text"]');
     await input2.fill('750');
     await input2.press('Enter');
     await expect(
-      page.getByRole('heading', { name: 'Kayıt Başka Biri Tarafından Değiştirildi' })
+      page.getByRole('heading', {
+        name: 'Kayıt Başka Biri Tarafından Değiştirildi',
+      })
     ).toBeVisible();
     await page.getByRole('button', { name: 'Yeniden Yükle' }).click();
 
     await expect(
-      page.getByRole('heading', { name: 'Kayıt Başka Biri Tarafından Değiştirildi' })
+      page.getByRole('heading', {
+        name: 'Kayıt Başka Biri Tarafından Değiştirildi',
+      })
     ).toHaveCount(0);
     await expect(cell).toContainText('999');
     await expect(cell).not.toContainText('750');

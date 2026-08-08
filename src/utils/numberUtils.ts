@@ -139,7 +139,11 @@ export function parseUserNumber(input: unknown): NumericInputResult {
 
   // Ambiguous only when BOTH sides fit a thousands grouping. `1234.567` does not
   // — `1234` is not a legal leading group — so it can only be a decimal.
-  if (frac.length === 3 && /^\d{1,3}$/.test(whole)) {
+  // A leading thousands group never starts with 0: 125 is written `125`, never
+  // `0,125`. So `0,125` and `-0,125` can only be decimals — and `formatForEdit`
+  // emits exactly that shape, which the previous test fixture (all <=2 decimals)
+  // could not reveal. The formatter was producing text its own parser refused.
+  if (frac.length === 3 && /^[1-9]\d{0,2}$/.test(whole)) {
     return { ok: false, reason: 'AMBIGUOUS_SEPARATOR', input: raw };
   }
 
@@ -233,9 +237,21 @@ export function formatForEdit(value: number | null | undefined): string {
   // construction. What mattered was never the grouping dots — it was the DECIMAL
   // COMMA, and that is kept. A user who does type `1.234,56` is still accepted;
   // they are simply not handed a value they would have to fix.
+  // NO ROUNDING. `maximumFractionDigits: 4` was silently lossy, and T-109 makes
+  // that reachable: opening a cell and blurring WITHOUT TYPING would format the
+  // value, parse the formatted text back, and save the rounded result. Measured
+  // before this changed:
+  //
+  //     1.23456     -> "1,2346"  -> 1.2346     the stored value changed
+  //     0.00001     -> "0"       -> 0          by doing nothing
+  //
+  // The property this function has to keep is that `parse(format(x)) === x` for
+  // every x a cell can hold, and a maximum below the value's own precision breaks
+  // it by construction. 20 is the ceiling `Intl.NumberFormat` accepts and is above
+  // any precision a `numeric` column can deliver.
   return new Intl.NumberFormat('tr-TR', {
     minimumFractionDigits: 0,
-    maximumFractionDigits: 4,
+    maximumFractionDigits: 20,
     useGrouping: false,
   }).format(value);
 }
@@ -264,4 +280,36 @@ export function decideCellCommit(raw: string): CellCommit {
   if (parsed.ok) return { kind: 'save', value: parsed.value };
   if (parsed.reason === 'EMPTY') return { kind: 'cancel' };
   return { kind: 'reject', message: describeNumericInputFailure(parsed) };
+}
+
+/**
+ * T-112 review S2: the DECISION and its EFFECTS, in one testable place.
+ *
+ * `decideCellCommit` alone was not enough. The row test still had to stub the
+ * parent's mapping — "save on save, toast on reject, close otherwise" — and that
+ * stub only implemented the save branch. Measured: reverting `setEditingCell(null)`
+ * or `toast.error(...)` in the parent left the whole suite GREEN, so the two
+ * behaviours the task exists to guarantee had no guard at all (CLAUDE.md §4.2).
+ *
+ * §2.7 #8 was half-closed: the decision had become real, the effects were still a
+ * copy. Taking the callbacks makes the mapping itself the thing under test.
+ */
+export interface CellCommitEffects {
+  save: (value: number) => void;
+  notify: (message: string) => void;
+  close: () => void;
+}
+
+export function commitCellEdit(raw: string, fx: CellCommitEffects): void {
+  const decision = decideCellCommit(raw);
+  if (decision.kind === 'save') {
+    fx.save(decision.value);
+    return;
+  }
+  if (decision.kind === 'reject') {
+    fx.notify(decision.message);
+  }
+  // Both `cancel` and `reject` leave edit mode. Not closing here is what used to
+  // trap the cell: the value was refused and the box stayed open with no way out.
+  fx.close();
 }
