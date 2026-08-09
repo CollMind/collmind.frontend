@@ -1,0 +1,55 @@
+# EXACTNESS PRIMITIVES — frontend (T-111, ADR 0007 errata E15/E16 pattern)
+#
+# `money-float` does not fire inside these files, for the same reason as the
+# backend's `src/common/numeric/*` exemption: the guard looks for `Number(`,
+# `parseFloat`, `parseInt`, `toFixed` and `Math.round` because those are the
+# patterns by which exactness is LOST, and in the module that BUILDS exactness
+# the same patterns produce it.
+#
+# `src/utils/numberUtils.ts` is the frontend's canonical number grammar (T-106,
+# explicitly the "behavioural twin" of the backend's `numeric-text.ts` — see
+# that file's own header). Its three `Number(...)` calls
+# (`finish`, `toNumber` twice) all run AFTER the input has already been
+# validated against `-?\d+(\.\d+)?` by the file's own grammar — calling
+# `Number()` on an already-proven-canonical digit string is how the exact
+# value is obtained, not a lapse. This is NOT muafiyet because the frontend's
+# membership test (parses/aggregates/compares — see money-float-domain-a.txt)
+# does not apply cleanly here either: `numberUtils.ts` doesn't parse A money
+# value, it defines what parsing a money value MEANS for every other file in
+# this list, exactly as `money.ts` does on the backend.
+#
+# ⚠️ WHY THIS FILE NEEDED NO BACKEND-STYLE justification the other direction
+# (i.e. why the backend's `numeric-text.ts` needed NO exactness-primitives
+# entry at all): that module returns a `string` (`canonical`), never touching
+# a float boundary internally. This module's twin, `parseUserNumber`, ALSO
+# returns `{ value: number, canonical: string }` — `value` is a `number`
+# because every caller in this codebase (`toNumber`, `toNumberOrZero`, and
+# every grid cell built on `parseUserNumber().value`) needs a JS number to put
+# in state and arithmetic, not a string. `Number(canonical)` at that single
+# conversion point is therefore correct and load-bearing, not the bug T-106
+# fixed (`replace(/,/g,'') + parseFloat` on the RAW, unvalidated string) — the
+# distinction is WHEN the grammar runs relative to the `Number()` call, not
+# whether `Number()` appears.
+#
+# WHAT REPLACES THE DETECTOR HERE
+# `tests/utils/numberUtils.test.ts` — the file whose stated purpose is to
+# mirror the backend's `numeric-text.spec.ts` measurement matrix case for
+# case, so a divergence between the two grammars goes red. This module's
+# `Number()` calls are not unprotected; they are protected by a test suite
+# built for exactly this purpose, not by this scan.
+#
+# PER-FILE, NOT PER-DIRECTORY (E16, T-086) — see money-float.sh
+# apply_primitive_filter() and its self-test for why a directory-level rule
+# cannot be trusted: it cannot distinguish a repaid finding from one merely
+# relocated into the exempt path. Listing the file here makes the assertion
+# ("this file is a primitive, and is tested like one") explicit and reviewable.
+#
+# BEFORE ADDING A LINE, ask whether the file is genuinely a primitive: does it
+# construct or convert exact values from an already-validated string, and is
+# that specific conversion covered by a test built to catch grammar drift? If
+# it holds business logic (parses a form field, sums a budget total), it
+# belongs in its module, where the detector fires.
+#
+# FORMAT: one repo-relative FILE path per line. `#` comments and blanks ignored.
+# `*.test.ts(x)`/`*.spec.ts` files are already outside the scan and need no entry.
+src/utils/numberUtils.ts

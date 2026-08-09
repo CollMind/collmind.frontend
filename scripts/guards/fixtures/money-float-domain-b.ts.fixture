@@ -1,0 +1,6 @@
+// Fixture — one float entry point, deliberately placed OUTSIDE the temp
+// domain-a list self-test.sh builds. Proves the scope boundary: a file the
+// domain list does not name must never be counted, no matter what it contains.
+export function formatUtilization(value: number): string {
+  return `${value.toFixed(1)}%`;
+}

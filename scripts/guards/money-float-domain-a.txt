@@ -1,0 +1,172 @@
+# Domain A membership list — frontend money-float guard (T-111, ported from
+# collmind.backend/scripts/guards/money-float-domain-a.txt, ADR 0007 Karar 1/3b)
+#
+# WHY AN EXPLICIT LIST, NOT A PATH REGEX
+# Same reasoning as backend: membership must be a reviewable diff, not an
+# implicit regex nobody reads.
+#
+# MEMBERSHIP RULE — module-scoped, not file-scoped, WITH A DOCUMENTED EXCEPTION
+# Every `.ts`/`.tsx` file under a listed directory is Domain A (`.spec.ts`/
+# `.test.ts`/`.test.tsx` excluded — test code, not production money paths).
+# Two entries below are FILES, not directories — see "FILE-LEVEL ENTRIES" for
+# why frontend needed that escape hatch that backend's list did not.
+#
+# ADAPTED MEMBERSHIP TEST (T-111 — backend's test does not transfer as-is)
+# Backend: "a module is Domain A if it PRODUCES money, PERSISTS money, or
+# COMPARES money against a threshold" (ADR 0007 errata E10). Frontend does
+# none of those — it never writes to a database and the backend recomputes
+# every KPI. Measured instead (T-111): frontend money paths PARSE a money
+# value the user typed/uploaded, AGGREGATE money fields client-side (sum,
+# multiply — several of the files below do this for on-screen totals before
+# the user submits), or COMPARE a money field against a threshold for
+# display gating (e.g. AgreementApprovalsPage's `> 100000` high-spend flag).
+# A file that only FORMATS an already-final, already-computed number for
+# display is not in this list — see "DELIBERATELY ABSENT" below.
+#
+# HOW MEMBERSHIP WAS DECIDED (not guessed — T-111 measured each directory)
+# For every directory below, the API endpoint each file calls was traced to
+# confirm it corresponds to a backend Domain A module (money-float-domain-a.txt
+# in collmind.backend). This is not an independent frontend policy choice; it
+# is the SAME ADR 0007 Karar 1 boundary applied consistently across the stack.
+#
+#   src/components/agreements            → POST/PATCH /agreements            (actuals-first/agreement)
+#   src/components/budget                → /budget/envelopes, /budget/reserve (shared/budget)
+#   src/components/features/plans        → /plans (planning-first/plan — E10: totalSpend, epsilon gate)
+#   src/components/features/agreements   → /agreements (same module as above; approvals list
+#                                           compares `capTotalAmount` against a 100000 threshold —
+#                                           E10 test #2, "compares money against a threshold")
+#   src/components/features/off-invoice  → /off-invoice, agreement-transaction (actuals-first)
+#   src/components/features/on-invoice   → /on-invoice (actuals-first/on-invoice)
+#
+# WHAT IS DELIBERATELY ABSENT — and why this is not an ajan assumption
+# `src/components/finance/**` and `src/components/features/dashboard/**` are
+# NOT declared. Traced (T-111): every one of their API calls goes to
+# `/finance-reporting/*` or `/dashboard/*` — backend's `finance-reporting`,
+# `kpi-engine`, `dashboard` modules, which ADR 0007 Karar 1 names Domain B
+# ("raporlama türevleri, RAG, ROI — float is legitimate there"), including the
+# exact same client-side re-aggregation pattern this guard would otherwise
+# flag (`finance-reporting.service.ts:154-159`, `totalOnInvoiceAllocated +=
+# Number(...)`) — deliberately excluded there too. Excluding the frontend
+# renderers of that same data is applying an EXISTING product decision
+# consistently, not inventing a new one. `src/utils/export.ts` IS INCLUDED,
+# and it is the one place where "renders Domain B data" stops being the right
+# question (ADR 0007 **E18**, product owner, 2026-08-09).
+#
+# The Domain A/B criterion is not where a value COMES FROM but where it GOES.
+# Domain B was defined as analytics that are neither persisted nor compared
+# against a threshold, so float tolerance is acceptable — that reasoning holds
+# for a number on a screen. `export.ts` writes a CSV: a file the user downloads,
+# opens in Excel, and may well upload into another system. An output artefact,
+# not a derived display value. T-105 was the same chain from the other end (a
+# CSV the USER prepared, parsed wrongly); leaving the CSV this product PRODUCES
+# on Domain B tolerance would leave that chain open at our end.
+#
+# ⚠️ What its baseline actually contains, measured 2026-08-09: all 16 findings
+# are `toFixed()` on RATIOS (utilizationPercent, avgRoi, gpRoi, riskPercentage,
+# variancePercent, efficiencyScore). NOT ONE is a money amount — the money
+# fields (`allocated`, `utilized`, `available`, `Amount`) reach the CSV without
+# passing through any float primitive. So this baseline holds ratio debt, and
+# nobody should read it as money debt. That is what a ratchet is for: it holds
+# what exists and blocks the 17th — which, in this file, would most likely be
+# on one of those money fields.
+#
+# ⚠️ This mapping (Domain B = renders `/finance-reporting` or `/dashboard`)
+# is T-111's inference from tracing existing ADR 0007 boundaries across the
+# stack, not a new ADR. If product ownership disagrees that "renders a
+# Domain-B endpoint's output" is sufficient to exempt a frontend file, this
+# list is the place to revisit — flagged here for that review rather than
+# decided silently.
+#
+# ALSO ABSENT — measured, not money at all (no money field routes through them)
+# `src/components/common/MasterDataManagementPage.tsx`'s generic `number` field
+# type is currently wired to zero money entities (Region/Tactic/Brand — all
+# `text`/`checkbox`/`select` fields only); `ChannelManagementPage.tsx`
+# (`sortOrder`), `ForecastingUnitManagementPage.tsx` (SKU **volume**, not
+# currency — Grid rule: SKU carries Planned Volume, not price),
+# `src/components/customers/*`
+# (file size, import success %), `src/components/forms/CustomerForm.tsx` /
+# `TenantForm.tsx` (payment-term days, tenant seat/storage quotas) — all
+# measured via direct read of the field each parseInt/parseFloat feeds.
+#
+# ⚠️ CORRECTED — `KpiManagementPage.tsx` WAS excluded here, and the reason it
+# gave was wrong by omission (product owner, 2026-08-09).
+#
+# The rationale enumerated three fields (`calculationOrder`, `decimalPlaces`,
+# `columnOrder` — all `parseInt`, all counters) and concluded "not a money
+# amount". The file has FIVE float entry points. The two it never mentioned are
+# `ragGreenThreshold` and `ragAmberThreshold`, both `parseFloat`, and they are
+# the WRITE END of the RAG thresholds — the configuration CLAUDE.md §2.3 requires
+# those thresholds to come from ("hardcoded threshold YASAK, sadece KPI
+# konfigürasyonundan"). T-101 hardened the reading side of the same thresholds;
+# this is the other side.
+#
+# Measured 2026-08-09: only one KPI carries thresholds today (`GP_ROI_PCT`,
+# display_format `percentage`), and 21 currency-format KPIs carry none. So the
+# exclusion was accurate about TODAY — and that is exactly why it was the wrong
+# question. The schema puts no restriction on which KPI may have a threshold;
+# an admin setting one on any of those 21 through this very page makes that
+# `parseFloat` parse a money amount, and nobody would revisit a guard list.
+#
+# The criterion is not what the field holds today but WHAT CAN COME THROUGH IT.
+#
+# This is the same shape as T-106's scope error: there, "the browser will not
+# let `1.234,56` be typed into type=number" was unmeasured and left five money
+# inputs out of a fix. Here, a three-field enumeration read as exhaustive and
+# left two out. A scope decision drawn from an incomplete enumeration is a
+# guess wearing a list's clothes.
+#
+# FILE-LEVEL ENTRIES (the frontend-specific exception to module scope)
+# Backend rejected file-level declaration outright: its Domain A modules are
+# each single-purpose. Frontend's directories are not always single-purpose —
+# `src/components/features/admin/` hosts Sku/Channel/ForecastingUnit/Kpi
+# management pages side by side, and only one of them touches money. Declaring
+# the whole directory would pull three non-money admin pages into Domain A on
+# no evidence; declaring nothing would miss the one that matters. So:
+#
+#   src/components/features/admin/SkuManagementPage.tsx   — parses `unitPrice`/`cogs`,
+#     the frontend counterpart of backend's `product.seed.ts` (which is why
+#     `src/database` — seeds included — is Domain A on the backend).
+#
+#   src/utils/numberUtils.ts   — the canonical parser itself (T-106). Declared
+#     here only so the exactness-primitives exemption (see that file) has a
+#     Domain A member to exempt from; see money-float.sh EXACTNESS_PRIMITIVES.
+#
+# ALSO ABSENT, measured — recorded so the next editor does not have to re-derive
+# it:
+#
+#   src/components/features/budget/   — one file (`BudgetPage.tsx`), no float
+#     primitive and no money field; it composes the envelope dialogs from
+#     `src/components/budget`, which IS Domain A. A directory named `budget`
+#     sitting outside the list is a trap without this line.
+#
+#   src/utils/performanceMonitor.ts   — has float primitives, all of them
+#     millisecond durations (`duration.toFixed(2)ms`). Not money.
+#
+# And E18 ("written into a user artefact") was applied to the other artefact
+# producers, not just to export.ts: `CustomerImportPage.tsx` downloads a CSV
+# Blob, but its content is a static customer template with no numbers in it. So
+# E18 pulls exactly one file in today. Measured — if a second exporter appears,
+# it is Domain A by that criterion.
+#
+# KNOWN NOISE — read before adding an allowlist entry
+# `src/components/features/plans/PlanningGrid.tsx` is dead code (T-118, not
+# imported from anywhere) and sits inside the declared `features/plans`
+# directory, so its findings enter the baseline (see the baseline file for the count — a number here would go stale on the next edit to that file). This is accepted, not
+# overlooked: deleting the file (T-118) prints a GONE line (measured — not
+# "improved", which is the word for a count that dropped while the file still
+# exists), and the guard asks for the baseline line to be dropped in the same
+# commit. That is the correct signal — the debt really did leave. A per-file
+# carve-out to hide it would misrepresent a dead file as clean.
+#
+# Format: one directory OR one file per line, repo-relative. `#` / blank ok.
+
+src/components/agreements
+src/components/budget
+src/components/features/plans
+src/components/features/agreements
+src/components/features/off-invoice
+src/components/features/on-invoice
+src/components/features/admin/SkuManagementPage.tsx
+src/utils/numberUtils.ts
+src/utils/export.ts
+src/components/features/admin/KpiManagementPage.tsx

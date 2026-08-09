@@ -1,0 +1,6 @@
+// Fixture — one float entry point, INSIDE the temp domain-a list but declared
+// (by absolute path, whole-line, E16) in the temp primitives list. Proves the
+// exactness-primitives exemption is actually applied, not just documented.
+export function toExactMinorUnits(canonical: string): number {
+  return Number(canonical);
+}

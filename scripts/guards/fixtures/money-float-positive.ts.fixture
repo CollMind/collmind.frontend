@@ -1,0 +1,22 @@
+// Fixture — one line per float entry point the detector knows, so the self-test
+// can tell that EVERY pattern is still alive.
+//
+// It used to carry only `parseFloat` and `Math.round`. Measured on that version:
+// deleting the `toFixed` line from the detector, or the `Number(` line, left the
+// self-test at 5/5 and `--ratchet` at exit 0 — the loss even printed as
+// "improved: PlanningGrid 12 -> 2", i.e. a dead detector read as debt repaid.
+// That is ADR 0007 E15's exact class, inside the guard written to prevent it.
+//
+// ONE PRIMITIVE PER LINE, and the count below is what pins them: `counts_by_file`
+// counts LINES with a hit, not occurrences, so putting two on one line would
+// silently drop the expected total by one.
+//
+// Expected findings: 5 — parseFloat, parseInt, Number, toFixed, Math.round.
+// If you add a detector pattern, add a line here and raise the expectation.
+export function computeSpend(raw: string, other: string): string {
+  const a = parseFloat(raw);
+  const b = parseInt(other, 10);
+  const c = Number(raw);
+  const d = Math.round(a * 100) / 100;
+  return (a + b + c + d).toFixed(2);
+}

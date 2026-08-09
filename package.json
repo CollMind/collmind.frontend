@@ -14,7 +14,9 @@
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "format": "bash scripts/changed-files.sh | xargs -r prettier --write",
     "type-check": "tsc --noEmit",
-    "format:all": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css,md}\""
+    "format:all": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css,md}\"",
+    "guards": "npm run guard:money-float",
+    "guard:money-float": "bash scripts/guards/self-test.sh && bash scripts/guards/money-float.sh --ratchet"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.0",
