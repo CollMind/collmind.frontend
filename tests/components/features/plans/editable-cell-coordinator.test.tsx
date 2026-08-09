@@ -253,18 +253,20 @@ describe('EditableCell coordinator — negative controls (must NOT toast)', () =
  * different click surfaces on purpose.
  *
  * ⚠️ COVERAGE GAP, measured, not assumed: this does NOT reach
- * `PlanningGridEnhanced.tsx`'s own `<TableCell onClick={...}>` for the FU/SKU
- * columns. Measured: reverting that `onClick` to `undefined` there and
- * running the FULL suite (`npm test -- --run`) leaves it green — every test
- * file, `FuRowEnhanced` included. The reason is structural, not a missing
- * test: `editingCell` matching a cell ALSO satisfies the row's own
- * `isEditing` check above the `EditableCell` branch, and that branch
- * `return`s its own raw `<input>` first — the coordinator-wired
- * `EditableCell` (and the `TableCell.onClick` that opens it) is not reached
- * by anything yet. Closing this requires the T-109 "next step" (deleting the
- * old inline editor) plus a test built on `FuRowEnhanced`/`SkuRowEnhanced`
- * once that branch is gone — this harness only pins the WIRING PATTERN
- * `PlanningGridEnhanced` is meant to use.
+ * `PlanningGridEnhanced.tsx`'s own `<TableCell onClick={...}>`. Reverting that
+ * `onClick` to `undefined` and running the FULL suite leaves it green.
+ *
+ * The REASON changed with T-109 step 2b and the old one is no longer true: it
+ * used to be structural (the inline `<input>` branch returned before
+ * `EditableCell` was reached — that branch is now deleted). Today it is simply
+ * that no unit test clicks a real `TableCell`: the row tests drive the cell
+ * through the `editingCell` prop, and `onCellEdit` is an unasserted `vi.fn()`.
+ *
+ * What discriminates that handler is the e2e corner test in
+ * `tests/e2e/04-grid-cell-kpi.spec.ts` — it clicks the TD's padding, which only
+ * that handler can serve (measured: removing the `onClick` turns exactly that
+ * test red and leaves the other 8 green). This harness pins the WIRING PATTERN;
+ * the e2e pins the component.
  */
 function TdWrappedCell({ value = 1234.56 }: { value?: number }) {
   const [open, setOpen] = useState(false);

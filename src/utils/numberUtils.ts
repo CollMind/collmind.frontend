@@ -256,63 +256,6 @@ export function formatForEdit(value: number | null | undefined): string {
   }).format(value);
 }
 
-/**
- * T-112: what a grid cell should do with the text in it, as a value rather than a
- * side effect.
- *
- * Extracted so it can be tested against the REAL decision instead of a mock. The
- * first version of this lived inside the grid component as a closure; the test had
- * to stub it, which meant the test was exercising a copy of the control and a
- * mutation to the real one stayed green (CLAUDE.md §2.7 #8).
- *
- * `cancel` and `reject` are separate on purpose: an empty box is a cancel and says
- * nothing, while unreadable text owes the user a reason. Both leave the value
- * unwritten — which is the property that matters, and the one the old code got
- * wrong in both directions (it wrote on Escape and it stayed silent on garbage).
- */
-export type CellCommit =
-  | { kind: 'save'; value: number }
-  | { kind: 'cancel' }
-  | { kind: 'reject'; message: string };
-
-export function decideCellCommit(raw: string): CellCommit {
-  const parsed = parseUserNumber(raw);
-  if (parsed.ok) return { kind: 'save', value: parsed.value };
-  if (parsed.reason === 'EMPTY') return { kind: 'cancel' };
-  return { kind: 'reject', message: describeNumericInputFailure(parsed) };
-}
-
-/**
- * T-112 review S2: the DECISION and its EFFECTS, in one testable place.
- *
- * `decideCellCommit` alone was not enough. The row test still had to stub the
- * parent's mapping — "save on save, toast on reject, close otherwise" — and that
- * stub only implemented the save branch. Measured: reverting `setEditingCell(null)`
- * or `toast.error(...)` in the parent left the whole suite GREEN, so the two
- * behaviours the task exists to guarantee had no guard at all (CLAUDE.md §4.2).
- *
- * §2.7 #8 was half-closed: the decision had become real, the effects were still a
- * copy. Taking the callbacks makes the mapping itself the thing under test.
- */
-export interface CellCommitEffects {
-  save: (value: number) => void;
-  notify: (message: string) => void;
-  close: () => void;
-}
-
-export function commitCellEdit(raw: string, fx: CellCommitEffects): void {
-  const decision = decideCellCommit(raw);
-  if (decision.kind === 'save') {
-    fx.save(decision.value);
-    return;
-  }
-  if (decision.kind === 'reject') {
-    fx.notify(decision.message);
-  }
-  // Both `cancel` and `reject` leave edit mode. Not closing here is what used to
-  // trap the cell: the value was refused and the box stayed open with no way out.
-  fx.close();
-}
 
 /**
  * T-109 step 2 (coordinator, KARAR (b)): what to do when a cell is closed by

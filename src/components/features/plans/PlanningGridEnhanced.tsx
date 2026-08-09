@@ -46,12 +46,7 @@ import {
   InheritedCell,
   RAGCell,
 } from './grid-cells';
-import {
-  toNumberOrNull,
-  toNumberOrZero,
-  commitCellEdit,
-  formatForEdit,
-} from '@/utils/numberUtils';
+import { toNumberOrNull, toNumberOrZero } from '@/utils/numberUtils';
 import {
   startCellEditMeasurement,
   recordCellEditMeasurement,
@@ -751,18 +746,39 @@ function getFuCellValue(planFu: PlanFu, colCode: string): number | null {
   }
 }
 
+/**
+ * T-109 step 2b review S1: which cell is open, as a shape that CANNOT describe
+ * two cells at once.
+ *
+ * It used to be `{ fuId?: string; skuId?: string; field: string }`. Every call
+ * site left one of the two `undefined`, but nothing enforced that, and the FU
+ * predicate never asked about `skuId` (nor the SKU one about `fuId`). Measured
+ * with both fields set: TWO editors open, and the second one's focus blurred the
+ * first into a REAL mutation of an unchanged value — a version bump, an audit
+ * row and a 409 for anyone else holding that plan. That is exactly the defect
+ * T-112 closed, re-entering through the coordinator's type.
+ *
+ * A convention that four call sites happen to follow is not an invariant. This
+ * one is checked by the compiler.
+ */
+export type EditingCell =
+  | { level: 'FU'; fuId: string; field: string }
+  | { level: 'SKU'; skuId: string; field: string };
+
+function sameCell(a: EditingCell | null, b: EditingCell): boolean {
+  if (!a || a.level !== b.level || a.field !== b.field) return false;
+  return a.level === 'FU'
+    ? a.fuId === (b as { fuId: string }).fuId
+    : a.skuId === (b as { skuId: string }).skuId;
+}
+
 export function PlanningGridEnhanced({ plan, canEdit }: PlanningGridProps) {
   const [expandedFus, setExpandedFus] = useState<Set<string>>(new Set());
   const [isAddFuDialogOpen, setIsAddFuDialogOpen] = useState(false);
-  const [editingCell, setEditingCell] = useState<{
-    fuId?: string;
-    skuId?: string;
-    field: string;
-  } | null>(null);
+  const [editingCell, setEditingCell] = useState<EditingCell | null>(null);
   const [columnPreferences, setColumnPreferences] = useState<
     Record<string, boolean>
   >({});
-  const editInputRef = useRef<HTMLInputElement>(null);
   const toast = useToast();
   const queryClient = useQueryClient();
   // T-034f: shared 409 STALE_VERSION/MISSING_VERSION UX for every
@@ -1118,56 +1134,24 @@ export function PlanningGridEnhanced({ plan, canEdit }: PlanningGridProps) {
     setExpandedFus(new Set(plan.planFus?.map((fu) => fu.id) || []));
   const collapseAll = () => setExpandedFus(new Set());
 
+  // T-109 step 2b: this used to also arm a 50ms `setTimeout` that focused a
+  // ref shared by the two (now deleted) inline `<input>` editors. Focus is
+  // no longer this component's job — `EditableCell`'s own open-transition
+  // effect (`grid-cells.tsx`) calls `.focus()`/`.select()` the moment its
+  // `isOpen` prop flips true, which is exactly the edge this handler
+  // produces via `setEditingCell`.
   const handleCellEdit = useCallback(
-    (fuId: string | undefined, skuId: string | undefined, field: string) => {
+    (target: EditingCell) => {
       if (!canEdit) return;
       // Identity-stable: re-selecting the cell that is ALREADY open must not
       // produce a new object, or React cannot bail out and the row re-renders
-      // for nothing. This matters because the TableCell's `onClick` covers the
-      // whole cell (including, after T-109 step 2b, the area the open editor
-      // sits in), so every click inside an open box would otherwise re-render
-      // the row.
-      //
-      // It does NOT reduce the focus timers: the `setTimeout` below sits outside
-      // the setter and runs unconditionally, so a click that reaches both this
-      // handler and `onOpen` still arms two. Re-render count is what this guard
-      // changes, and claiming more than that was a wrong inference from a right
-      // measurement.
-      setEditingCell((prev) =>
-        prev?.fuId === fuId && prev?.skuId === skuId && prev?.field === field
-          ? prev
-          : { fuId, skuId, field }
-      );
-      setTimeout(() => editInputRef.current?.focus(), 50);
+      // for nothing. This matters because the TableCell's own `onClick` and
+      // `EditableCell`'s `onOpen` both call this on the same click (T-109
+      // step 2 review) — without the guard that would be two `setEditingCell`
+      // calls, each producing a fresh object, for one click.
+      setEditingCell((prev) => (sameCell(prev, target) ? prev : target));
     },
     [canEdit]
-  );
-
-  /**
-   * T-112: commit an edited cell, or leave edit mode WITHOUT writing.
-   *
-   * The two inline editors used to read `parseFloat(value)` and call the mutation
-   * only `if (!isNaN(...))` — with no `else` and with `setEditingCell(null)` living
-   * inside the save path. So an unreadable entry was discarded silently AND left
-   * the cell stuck in edit mode: no value, no message, no way out. Combined with
-   * Escape (which used to write), the user had no exit at all — Escape tried to
-   * save the same unreadable text and failed too.
-   *
-   * §2.5's "an `if` without an `else`", in the one place a planner types numbers.
-   *
-   * A toast rather than inline error UI is deliberate: T-109 deletes these editors
-   * in favour of `EditableCell`, which already renders the reason next to the
-   * field. Writing that UI here would be writing code to delete.
-   */
-  const onCellCommit = useCallback(
-    (raw: string, save: (value: number) => void) => {
-      commitCellEdit(raw, {
-        save,
-        notify: (m) => toast.error(m),
-        close: () => setEditingCell(null),
-      });
-    },
-    [toast]
   );
 
   const onCellCancel = useCallback(() => setEditingCell(null), []);
@@ -1384,11 +1368,9 @@ export function PlanningGridEnhanced({ plan, canEdit }: PlanningGridProps) {
                       columns={gridColumns}
                       canEdit={canEdit}
                       editingCell={editingCell}
-                      editInputRef={editInputRef}
                       onToggle={() => toggleFu(planFu.id)}
                       onCellEdit={handleCellEdit}
                       onCellSave={handleCellSave}
-                      onCellCommit={onCellCommit}
                       onCellCancel={onCellCancel}
                       getSkuCellValue={getSkuCellValue}
                       getFuCellValue={getFuCellValue}
@@ -1443,11 +1425,9 @@ export function FuRowEnhanced({
   columns,
   canEdit,
   editingCell,
-  editInputRef,
   onToggle,
   onCellEdit,
   onCellSave,
-  onCellCommit,
   onCellCancel,
   getSkuCellValue,
   getFuCellValue,
@@ -1461,23 +1441,19 @@ export function FuRowEnhanced({
   isExpanded: boolean;
   columns: ColumnDefinition[];
   canEdit: boolean;
-  editingCell: { fuId?: string; skuId?: string; field: string } | null;
-  editInputRef: React.RefObject<HTMLInputElement>;
+  editingCell: EditingCell | null;
   onToggle: () => void;
-  onCellEdit: (
-    fuId: string | undefined,
-    skuId: string | undefined,
-    field: string
-  ) => void;
+  onCellEdit: (target: EditingCell) => void;
   onCellSave: (
     planFu: PlanFu,
     planSku: PlanSku | undefined,
     field: string,
     value: number
   ) => void;
-  // T-112: parse-and-commit, or leave edit mode without writing. The row cannot
-  // own this: `setEditingCell` lives in the parent, and a cancel has to clear it.
-  onCellCommit: (raw: string, save: (value: number) => void) => void;
+  // T-109 step 2b: `onCellCommit` (parse-and-commit for the old inline
+  // `<input>`s) is gone — `EditableCell` parses its own blur/Enter/Escape
+  // via `parseUserNumber` (grid-cells.tsx) and reaches the mutation only
+  // through `onSave`/`onCancel` below.
   onCellCancel: () => void;
   getSkuCellValue: (
     planSku: PlanSku,
@@ -1537,68 +1513,11 @@ export function FuRowEnhanced({
         </TableCell>
         {columns.map((col) => {
           const isEditing =
-            editingCell?.fuId === planFu.id && editingCell?.field === col.code;
+            editingCell?.level === 'FU' &&
+            editingCell.fuId === planFu.id &&
+            editingCell.field === col.code;
           const isEditable = col.editable && canEdit && col.editableAt === 'FU';
           const value = getFuCellValue(planFu, col.code);
-
-          if (isEditing) {
-            const currentValue = value ?? 0;
-            return (
-              <TableCell
-                key={col.code}
-                className="text-right p-1"
-                style={{
-                  backgroundColor: col.backgroundColor || '#FFFFFF',
-                  width: `${col.width}px`,
-                }}
-              >
-                <input
-                  ref={editInputRef as any}
-                  // T-109 (adım 1) / T-112 review S1: `type="number"` DESTROYS the
-                  // one character the grammar needs. Measured, real Chromium at
-                  // tr-TR: typing `0,125` leaves `el.value === "0.125"` — the
-                  // browser rewrites the decimal comma as a dot before any of our
-                  // code runs, and the grammar then rightly calls that ambiguous
-                  // and refuses a value that used to save correctly.
-                  //
-                  // It cannot be fixed by parsing differently: `250.000` typed by a
-                  // user arrives as `"250.000"` too, and at that point the thousands
-                  // separator is indistinguishable from a decimal point. The
-                  // information is gone at the DOM boundary.
-                  type="text"
-                  inputMode="decimal"
-                  // Opened in the SAME shape the cell displays, so retyping what you
-                  // were shown round-trips. `formatForEdit` carries full precision —
-                  // see T-110: rounding here silently rewrote the stored value when
-                  // a user opened a cell and blurred without typing.
-                  defaultValue={formatForEdit(currentValue)}
-                  className="h-7 text-right text-sm w-full border rounded px-2"
-                  onBlur={(e) => {
-                    onCellCommit(e.target.value, (v) =>
-                      onCellSave(planFu, undefined, col.code, v)
-                    );
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                      onCellCommit((e.target as HTMLInputElement).value, (v) =>
-                        onCellSave(planFu, undefined, col.code, v)
-                      );
-                    }
-                    if (e.key === 'Escape') {
-                      // T-112: a cancel WRITES NOTHING. This used to call
-                      // `onCellSave(..., currentValue)`, which fired a real PATCH:
-                      // it bumped `version` — so another user's open edit got a 409
-                      // — wrote an immutable audit row, and started a
-                      // `fu-tactic-update` measurement, all for a keystroke that
-                      // means "discard". Optimistic locking exists to catch REAL
-                      // conflicts; a cancel was manufacturing fake ones.
-                      onCellCancel();
-                    }
-                  }}
-                />
-              </TableCell>
-            );
-          }
 
           return (
             <TableCell
@@ -1622,25 +1541,25 @@ export function FuRowEnhanced({
                 minWidth: `${col.width}px`,
                 maxWidth: `${col.width}px`,
               }}
-              // T-109 step 2 review: this `onClick` was removed and put back.
-              // Measured (real Chromium, a live editable cell, before vs.
-              // after removal): the TD's own padding is NOT covered by
-              // `EditableCell`'s inner div (the div sizes to its own
-              // `px-2 py-1`, not the TD's `p-4`, and the TD vertically
-              // centers it — see `ui/table.tsx`'s `TableCell`). Removing
-              // this handler left only the inner div clickable and measured
-              // 26.6% of the cell's area still openable — 73.4% went dead.
-              // Restoring it duplicates the open call on a click inside the
-              // div (bubbles to both this `onClick` and `EditableCell`'s own
-              // `onOpen`), which is safe to duplicate: `onCellEdit` only
-              // calls `setEditingCell` (a fresh object of the same shape —
-              // idempotent) and schedules a 50ms focus `setTimeout` whose
-              // body (`editInputRef.current?.focus()`) is itself idempotent
-              // — read at `handleCellEdit` above. No mutation, no network
-              // call sits behind this handler.
+              // T-109 step 2 review: measured (real Chromium, a live editable
+              // cell): the TD's own padding is NOT covered by `EditableCell`'s
+              // inner div (the div sizes to its own `px-2 py-1`, not the TD's
+              // `p-4`, and the TD vertically centers it — see
+              // `ui/table.tsx`'s `TableCell`). Without this handler only the
+              // inner div is clickable — measured 26.6% of the cell's area
+              // openable, 73.4% dead. Duplicating the open call here is safe:
+              // `onCellEdit`/`handleCellEdit` only calls `setEditingCell`
+              // with an identity-stable guard, so a click that bubbles to
+              // both this `onClick` and `EditableCell`'s own `onOpen` is a
+              // no-op the second time.
               onClick={
                 isEditable
-                  ? () => onCellEdit(planFu.id, undefined, col.code)
+                  ? () =>
+                      onCellEdit({
+                        level: 'FU',
+                        fuId: planFu.id,
+                        field: col.code,
+                      })
                   : undefined
               }
             >
@@ -1664,20 +1583,18 @@ export function FuRowEnhanced({
                   prefix={col.prefix}
                   onSave={(val) => onCellSave(planFu, undefined, col.code, val)}
                   disabled={!isEditable}
-                  // T-109 step 2: the coordinator is still `editingCell` —
-                  // the SAME state the inline editor above reads. Today that
-                  // means `isOpen` is always false where this is reached:
-                  // whenever `editingCell` matches this cell, the branch
-                  // above (`if (isEditing)`) returns first and this
-                  // `EditableCell` is not even rendered. That branch is
-                  // deleted in T-109's next step; wiring the real
-                  // coordinator here now means that deletion needs no
-                  // further change to this component.
-                  // The SAME predicate the branch above reads. Written out
-                  // twice it can be edited in one place and not the other —
-                  // the control's second copy, in one file.
+                  // T-109 step 2b: `editingCell` (the coordinator) is now the
+                  // ONLY thing deciding whether this cell is open — the old
+                  // inline `<input>` branch that used to return before this
+                  // was reached is gone.
                   isOpen={isEditing}
-                  onOpen={() => onCellEdit(planFu.id, undefined, col.code)}
+                  onOpen={() =>
+                    onCellEdit({
+                      level: 'FU',
+                      fuId: planFu.id,
+                      field: col.code,
+                    })
+                  }
                   onCancel={onCellCancel}
                 />
               )}
@@ -1711,8 +1628,9 @@ export function FuRowEnhanced({
             </TableCell>
             {columns.map((col) => {
               const isEditing =
-                editingCell?.skuId === planSku.id &&
-                editingCell?.field === col.code;
+                editingCell?.level === 'SKU' &&
+                editingCell.skuId === planSku.id &&
+                editingCell.field === col.code;
               const isEditable =
                 col.editable && canEdit && col.editableAt === 'SKU';
               const value = getSkuCellValue(planSku, col.code, planFu);
@@ -1720,47 +1638,6 @@ export function FuRowEnhanced({
                 col.editableAt === 'FU'
                   ? getFuCellValue(planFu, col.code)
                   : null;
-
-              if (isEditing) {
-                const currentValue = value ?? 0;
-                return (
-                  <TableCell
-                    key={col.code}
-                    className="text-right p-1"
-                    style={{
-                      backgroundColor: col.backgroundColor || '#FFFFFF',
-                      width: `${col.width}px`,
-                    }}
-                  >
-                    <input
-                      ref={editInputRef as any}
-                      // T-109 (adım 1) — see the FU editor above for the measurement.
-                      type="text"
-                      inputMode="decimal"
-                      defaultValue={formatForEdit(currentValue)}
-                      className="h-7 text-right text-sm w-full border rounded px-2"
-                      onBlur={(e) => {
-                        onCellCommit(e.target.value, (v) =>
-                          onCellSave(planFu, planSku, col.code, v)
-                        );
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          onCellCommit(
-                            (e.target as HTMLInputElement).value,
-                            (v) => onCellSave(planFu, planSku, col.code, v)
-                          );
-                        }
-                        if (e.key === 'Escape') {
-                          // T-112 — see the FU editor above for why a cancel must
-                          // not write.
-                          onCellCancel();
-                        }
-                      }}
-                    />
-                  </TableCell>
-                );
-              }
 
               return (
                 <TableCell
@@ -1789,7 +1666,12 @@ export function FuRowEnhanced({
                   // target to the inner div's own box (26.6% of the cell).
                   onClick={
                     isEditable
-                      ? () => onCellEdit(undefined, planSku.id, col.code)
+                      ? () =>
+                          onCellEdit({
+                            level: 'SKU',
+                            skuId: planSku.id,
+                            field: col.code,
+                          })
                       : undefined
                   }
                 >
@@ -1823,9 +1705,17 @@ export function FuRowEnhanced({
                         onCellSave(planFu, planSku, col.code, val)
                       }
                       disabled={!isEditable}
-                      // See the FU cell above: one predicate, one place.
+                      // T-109 step 2b: see the FU cell above — one predicate,
+                      // one place, and `editingCell` is now the only source
+                      // of truth for whether this cell is open.
                       isOpen={isEditing}
-                      onOpen={() => onCellEdit(undefined, planSku.id, col.code)}
+                      onOpen={() =>
+                        onCellEdit({
+                          level: 'SKU',
+                          skuId: planSku.id,
+                          field: col.code,
+                        })
+                      }
                       onCancel={onCellCancel}
                     />
                   )}

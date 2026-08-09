@@ -199,18 +199,19 @@ test.describe('Grid cell edit -> KPI update (T-016 scenario 4)', () => {
       await expect(input).toBeVisible();
       // Not just "an editor appeared" — it must hold a value, not a blank box.
       //
-      // ⚠️ Be precise about what this proves TODAY, because it is less than it
-      // looks: the box rendered here is still the LEGACY inline editor
-      // (`PlanningGridEnhanced`'s `if (isEditing)` branch returns before
-      // `EditableCell` is reached), and its value comes from that editor's
-      // `defaultValue={formatForEdit(currentValue)}`. Deleting EditableCell's
-      // open-transition formatting entirely would leave this assertion GREEN.
+      // This line's MEANING changed with T-109 step 2b, and the change was
+      // measured on both sides. Deleting `EditableCell`'s open-transition
+      // formatting (`if (isOpen) setEditValue(formatForEdit(value))` in
+      // `grid-cells.tsx`) and running this spec:
       //
-      // So this line guards the legacy path's value today, and becomes a guard
-      // on EditableCell's open-transition formatting the moment T-109 step 2b
-      // deletes the inline branch. The corner-click assertion above is the part
-      // that discriminates right now (measured: removing TableCell's onClick
-      // turns exactly this test red, all others green).
+      //     before 2b : exit 0, 2 passed   — the value came from the legacy
+      //                                      inline editor's `defaultValue`,
+      //                                      so this assertion proved nothing
+      //     after  2b : exit 1, this line fails on `not.toHaveValue('')`
+      //
+      // So it now guards what it claims to: the box a user gets is filled by
+      // `EditableCell` itself. Do not delete it as "redundant" — that is the
+      // reading its own comment invited before the deletion landed.
       await expect(input).not.toHaveValue('');
       await input.press('Escape');
       await expect(input).toBeHidden();
