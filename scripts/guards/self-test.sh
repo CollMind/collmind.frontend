@@ -77,8 +77,11 @@ run_ratchet() {
 FAIL=0
 
 # --- case 1: detector alive — a known finding in a declared Domain A fixture
-# must be COUNTED. The fixture has exactly two float entry points
-# (parseFloat, Math.round) on two separate lines.
+# must be COUNTED. The fixture carries ONE LINE PER DETECTOR PATTERN — five of
+# them — because `counts_by_file` counts lines with a hit, not occurrences
+# (measured). If a pattern dies, this count drops and case 1 goes red; do not
+# "fix" that by lowering the expectation, which is the move this fixture was
+# widened to prevent.
 REPORT_OUT="$(run_report 2>&1)"
 POSITIVE_COUNT="$(printf '%s\n' "$REPORT_OUT" | grep -c "^\[money-float\] .*money-float-positive\.ts:" || true)"
 if [ "$POSITIVE_COUNT" != "5" ]; then
@@ -119,7 +122,7 @@ fi
 # edemiyorsa ratchet değildir" — backend self-test.sh'nin kendi gerekçesi).
 printf '%s 4\n' "$TMP/domainA/money-float-positive.ts" > "$TMP/baseline-under.txt"
 if run_ratchet "$TMP/baseline-under.txt" >"$TMP/ratchet-under.out" 2>&1; then
-  echo "!! self-test BAŞARISIZ [case 5: taban aşıldı]: --ratchet bir artışı (1 -> 2) kabul etti, exit 0 döndü"
+  echo "!! self-test BAŞARISIZ [case 5: taban aşıldı]: --ratchet bir artışı kabul etti, exit 0 döndü"
   cat "$TMP/ratchet-under.out"
   FAIL=1
 fi

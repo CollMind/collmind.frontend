@@ -276,9 +276,39 @@ case "${1:-}" in
     RC=0
     while read -r file count; do
       case "$file" in ''|\#*) continue ;; esac
+      # A MALFORMED COUNT IS A SETUP FAILURE, not a zero.
+      #
+      # Without this, `[ "$now" -gt "$count" ]` errors out on a non-numeric
+      # count, leaves RC untouched, and the loop carries on — so one corrupted
+      # line (a hand-edited "improved" update, a merge artefact, a paste) turns
+      # that file's ratchet off permanently and the only trace is bash noise on
+      # stderr. Measured before this check: a corrupted count plus TWO real
+      # violations in the same file exited 0.
+      case "$count" in
+        ''|*[!0-9]*)
+          echo "!! [$GUARD_NAME] SETUP FAILURE: malformed baseline line for $file (count: '$count')" >&2
+          exit 2
+          ;;
+      esac
       now="$(printf '%s\n' "$CUR" | awk -v f="$file" '$1==f {print $2}')"
       if [ ! -e "$file" ]; then
         echo "-- [$GUARD_NAME] GONE: $file (baseline $count) — deleted or renamed; drop the line in the same commit"
+        continue
+      fi
+      # A file that still EXISTS but is no longer scanned has not repaid its
+      # debt — it has left the scope. Reporting that as "improved" invites the
+      # operator to bless a shrunken scope by updating the baseline. Measured
+      # before this check: removing `src/utils/export.ts` from the domain list
+      # printed "improved: 16 -> 0" and exited 0.
+      #
+      # This is the same distinction ADR 0007 E16 drew for the primitives list
+      # ("it cannot tell a repayment from a relocation"), applied to the domain
+      # list — where it had been left to convention.
+      if ! printf '%s\n' "$FILES" | grep -qxF "$file"; then
+        echo "[$GUARD_NAME] $file"
+        echo "  OUT OF SCOPE: still on disk but no longer covered by the domain list (baseline $count)"
+        echo "  A scope removal is not a repayment. Restore it, or remove the baseline line in the same commit with a reason."
+        RC=1
         continue
       fi
       now="${now:-0}"

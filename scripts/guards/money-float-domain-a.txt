@@ -139,12 +139,15 @@
 #     `src/components/budget`, which IS Domain A. A directory named `budget`
 #     sitting outside the list is a trap without this line.
 #
-#   src/utils/performanceMonitor.ts   — has float primitives, all of them
-#     millisecond durations (`duration.toFixed(2)ms`). Not money.
+#   src/utils/performanceMonitor.ts   — has float primitives and NONE of them is
+#     a money field: millisecond durations plus one SKU count. (An earlier
+#     version of this line said "all of them millisecond durations", which was
+#     the same incomplete-enumeration mistake this file records for
+#     KpiManagementPage two paragraphs down.)
 #
 # And E18 ("written into a user artefact") was applied to the other artefact
 # producers, not just to export.ts: `CustomerImportPage.tsx` downloads a CSV
-# Blob, but its content is a static customer template with no numbers in it. So
+# Blob, but its content is a static customer template with no MONEY field in it (it does carry phone numbers and customer codes — E18's criterion is money, not digits). So
 # E18 pulls exactly one file in today. Measured — if a second exporter appears,
 # it is Domain A by that criterion.
 #

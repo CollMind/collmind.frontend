@@ -1,6 +1,6 @@
 # money-float baseline (frontend) — T-111 / ADR 0007 Karar 3b ratchet reference
 # date:    2026-08-09
-# commit:  a6043f3
+# commit:  a181232
 # guard:   money-float v1 (frontend)
 # total:   68 findings in 20 files
 # format:  <file> <count>   (sorted by file; only non-zero counts)
