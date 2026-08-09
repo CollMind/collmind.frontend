@@ -12,6 +12,13 @@ import {
 } from '@/services/notifications.service';
 import { http, HttpResponse } from 'msw';
 import { server } from '../setup';
+import {
+  Notification,
+  NotificationType,
+  NotificationChannel,
+  NotificationPriority,
+  NotificationStatus,
+} from '@/types/notification.types';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -28,13 +35,22 @@ const wrapper = ({ children }: { children: React.ReactNode }) => (
   </Provider>
 );
 
-const mockNotification = {
+// T-117: eskiden anotasyonsuz object literal — `title`/`message`/`read` üretim
+// tipinde yok (gerçek alanlar `subject`/`body`/`readAt`).
+const mockNotification: Notification = {
   id: '1',
-  type: 'AGREEMENT_APPROVED',
-  title: 'Anlaşma Onaylandı',
-  message: 'Test anlaşması onaylandı',
-  read: false,
-  createdAt: new Date().toISOString(),
+  tenantId: 'tenant-1',
+  type: NotificationType.APPROVAL_GRANTED,
+  recipientId: 'user-1',
+  recipientEmail: 'user@example.com',
+  channel: NotificationChannel.IN_APP,
+  priority: NotificationPriority.MEDIUM,
+  status: NotificationStatus.SENT,
+  subject: 'Anlaşma Onaylandı',
+  body: 'Test anlaşması onaylandı',
+  readAt: undefined,
+  createdAt: new Date(),
+  updatedAt: new Date(),
 };
 
 describe('useNotifications', () => {
@@ -57,7 +73,15 @@ describe('useNotifications', () => {
       expect(result.current.isSuccess).toBe(true);
     });
 
-    expect(result.current.data).toEqual([mockNotification]);
+    // `Notification.createdAt`/`updatedAt` are typed `Date`, but the wire
+    // format is JSON — msw serializes them to ISO strings same as the real
+    // backend, and this service never parses them back (notifications.service.ts
+    // returns `res.data` unmodified). Round-trip the fixture the same way so
+    // the assertion reflects what the hook actually receives, not the
+    // fixture's compile-time shape.
+    expect(result.current.data).toEqual(
+      JSON.parse(JSON.stringify([mockNotification]))
+    );
   });
 
   it('should fetch notifications with limit', async () => {
@@ -88,7 +112,7 @@ describe('useUnreadNotifications', () => {
     server.use(
       http.get('http://localhost:3000/notifications/unread', () => {
         return HttpResponse.json([
-          { ...mockNotification, read: false },
+          { ...mockNotification, readAt: undefined },
         ]);
       })
     );
@@ -119,7 +143,7 @@ describe('useMarkNotificationAsRead', () => {
         return HttpResponse.json({
           ...mockNotification,
           id: params.id as string,
-          read: true,
+          readAt: new Date(),
         });
       })
     );

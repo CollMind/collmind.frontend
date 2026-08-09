@@ -15,8 +15,9 @@
     "format": "bash scripts/changed-files.sh | xargs -r prettier --write",
     "type-check": "tsc --noEmit",
     "format:all": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css,md}\"",
-    "guards": "npm run guard:money-float",
-    "guard:money-float": "bash scripts/guards/self-test.sh && bash scripts/guards/money-float.sh --ratchet"
+    "guards": "bash scripts/guards/run-all.sh",
+    "guard:money-float": "bash scripts/guards/self-test.sh && bash scripts/guards/money-float.sh --ratchet",
+    "guard:lint": "bash scripts/guards/lint-ratchet-self-test.sh && bash scripts/guards/lint-ratchet.sh --ratchet"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.0",

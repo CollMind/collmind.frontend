@@ -1,11 +1,18 @@
-import { expect, afterEach, beforeAll, afterAll } from 'vitest';
+import { afterEach, beforeAll, afterAll } from 'vitest';
 import { cleanup } from '@testing-library/react';
-import * as matchers from '@testing-library/jest-dom/matchers';
+// `@testing-library/jest-dom/vitest` (not `/matchers`) does two things the
+// previous `import * as matchers from '.../matchers'; expect.extend(matchers)`
+// pair only did the first of: (1) the runtime `expect.extend` call, and
+// (2) a `declare module 'vitest' { interface Assertion ... }` augmentation
+// that teaches `tsc` about `toBeInTheDocument`/`toHaveValue`/etc. Without (2),
+// every jest-dom matcher call was a type error under `tsc` — invisible while
+// `tests/` sat outside tsconfig's `include` (T-116), and the majority
+// contributor once it was added in: measured, 173 of 210 `tests/` errors
+// were exactly this (`error TS2339: Property 'toBeInTheDocument' does not
+// exist on type 'Assertion<...>'`).
+import '@testing-library/jest-dom/vitest';
 import { setupServer } from 'msw/node';
 import { handlers } from './mocks/handlers';
-
-// Extend Vitest's expect with jest-dom matchers
-expect.extend(matchers);
 
 // Mock localStorage
 const localStorageMock = (() => {

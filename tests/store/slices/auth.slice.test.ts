@@ -6,17 +6,19 @@ import authReducer, {
   setError,
   clearError,
 } from '@/store/slices/auth.slice';
-import { User } from '@/types/user.types';
+import { User, UserRole, UserStatus } from '@/types/user.types';
 
 const mockUser: User = {
   id: '1',
   email: 'test@example.com',
-  role: 'ADMIN',
+  role: UserRole.ADMIN,
+  fullName: 'Test User',
   firstName: 'Test',
   lastName: 'User',
-  status: 'ACTIVE',
-  createdAt: new Date().toISOString(),
-  updatedAt: new Date().toISOString(),
+  status: UserStatus.ACTIVE,
+  tenantId: 'tenant-1',
+  createdAt: new Date(),
+  updatedAt: new Date(),
 };
 
 describe('authSlice', () => {
@@ -55,6 +57,7 @@ describe('authSlice', () => {
       refreshToken: 'refresh-token',
       isAuthenticated: true,
       isLoading: false,
+      error: null,
     };
 
     localStorage.setItem('accessToken', 'access-token');

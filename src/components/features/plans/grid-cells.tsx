@@ -92,6 +92,10 @@ export function EditableCell({
   // close this cell did NOT ask for (the coordinator opening a different
   // cell) is exactly the case where this is still `false`.
   const closingSelfRef = useRef(false);
+  // Carries the error across the close edge: cleared from state during render
+  // (so the next box opens clean) and read here by the effect that decides the
+  // abandonment toast.
+  const abandonErrorRef = useRef<string | null>(null);
 
   // Two trackers for the same edge, and the difference between them is the
   // whole point: one is read during RENDER, the other after COMMIT.
@@ -143,7 +147,32 @@ export function EditableCell({
   // typing: while the cell stays open the condition below is false.
   if (isOpen !== prevOpen) {
     setPrevOpen(isOpen);
-    if (isOpen) setEditValue(formatForEdit(value));
+    // BOTH edges are handled here, and the clear must NOT move back into the
+    // effect below. It was there, and it produced an intermittently EMPTY box:
+    // the close effect is passive, so under load it could land AFTER a
+    // subsequent open had already filled `editValue` — wiping it, with the cell
+    // still showing its value right behind the box. Measured on the e2e corner
+    // test: 3 of 5 runs opened empty; with both edges in the render phase, 0.
+    //
+    // Filling and clearing on the same edge, in the same phase, is what removes
+    // the window.
+    setEditValue(isOpen ? formatForEdit(value) : '');
+
+    // `inputError` is cleared on the SAME edge, for the same reason — and the
+    // reason is visible, not theoretical. Measured with the passive effect
+    // deliberately delayed (two flushSync renders, then a flush): the newly
+    // opened box carried the PREVIOUS edit's message, red border and
+    // `aria-invalid` until the effect caught up.
+    //
+    // But the abandonment toast still has to read that error, and by the time
+    // the effect runs it would be gone. So the close edge hands it over here,
+    // in a ref, and the effect reads the ref instead of the state. Writing a
+    // ref during render is the pattern this file already relies on (see the
+    // note next to `inputErrorRef`), for exactly this ordering reason.
+    if (!isOpen) {
+      abandonErrorRef.current = inputError;
+      setInputError(null);
+    }
   }
 
   // T-109 step 2 review: one effect for BOTH edges of `isOpen`, gated only
@@ -178,13 +207,12 @@ export function EditableCell({
       closingSelfRef.current = false;
       const decision = decideCellAbandonment(
         closedByCoordinator,
-        inputErrorRef.current
+        abandonErrorRef.current
       );
+      abandonErrorRef.current = null;
       if (decision.kind === 'notify') {
         toastRef.current.error(decision.message);
       }
-      setInputError(null);
-      setEditValue('');
     }
   }, [isOpen]);
 

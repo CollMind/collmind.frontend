@@ -18,6 +18,7 @@ import {
 } from '@/services/budget.service';
 import { http, HttpResponse } from 'msw';
 import { server } from '../setup';
+import { BudgetEnvelope, BudgetEnvelopeStatus } from '@/types/budget.types';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -34,15 +35,20 @@ const wrapper = ({ children }: { children: React.ReactNode }) => (
   </Provider>
 );
 
-const mockEnvelope = {
+// T-117: eskiden anotasyonsuz object literal — zorunlu `fiscalYear`/`currency`/
+// `status` üretim tipinde vardı ama fixture'da yoktu.
+const mockEnvelope: BudgetEnvelope = {
   id: '1',
   code: 'ENV001',
   name: 'Test Envelope',
+  fiscalYear: '2024',
   allocatedAmount: 100000,
   consumedAmount: 50000,
   reservedAmount: 20000,
   availableAmount: 30000,
   period: '2024-Q1',
+  currency: 'TRY',
+  status: BudgetEnvelopeStatus.ACTIVE,
   tenantId: 'tenant-1',
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
@@ -127,6 +133,9 @@ describe('useCreateBudgetEnvelope', () => {
       name: 'New Envelope',
       allocatedAmount: 100000,
       period: '2024-Q1',
+      fiscalYear: '2024',
+      channel: 'NKA',
+      category: 'HAIR_CARE',
     });
 
     await waitFor(() => {
@@ -152,6 +161,9 @@ describe('useCreateBudgetEnvelope', () => {
         name: 'New Envelope',
         allocatedAmount: 100000,
         period: '2024-Q1',
+        fiscalYear: '2024',
+        channel: 'NKA',
+        category: 'HAIR_CARE',
       })
     ).rejects.toThrow();
 

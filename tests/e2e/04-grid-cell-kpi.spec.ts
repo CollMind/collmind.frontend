@@ -158,13 +158,16 @@ test.describe('Grid cell edit -> KPI update (T-016 scenario 4)', () => {
     await cell.click();
     let input = cell.locator('input[type="text"]');
     await expect(input).toBeVisible();
-    // input.press, NOT page.keyboard.press: the parent establishes focus on
-    // the box asynchronously (a 50ms setTimeout). `page.keyboard.press`
-    // sent right after the click can reach `document.body` before that
-    // timeout fires — never the input's own `onKeyDown` — and reads as
-    // "Escape does not close the cell", a measurement artefact, not a
-    // defect (measured, this task). `Locator.press` focuses its target
-    // before sending the key, which sidesteps the race entirely.
+    // input.press, NOT page.keyboard.press. `Locator.press` focuses its target
+    // before sending the key; `page.keyboard.press` sends to whatever holds
+    // focus, and a key fired right after a click can reach `document.body`
+    // instead of the input — which reads as "Escape does not close the cell",
+    // a measurement artefact rather than a defect. That happened during T-109
+    // and cost a round of chasing a bug that was not there.
+    //
+    // (The parent's 50ms focus `setTimeout` that originally made this race easy
+    // to hit is gone — T-109 step 2b deleted it along with the inline editors —
+    // but focus is still established by an effect, so the rule stands.)
     await input.press('Escape');
     await expect(input).toBeHidden();
 

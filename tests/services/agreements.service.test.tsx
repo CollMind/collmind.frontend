@@ -19,7 +19,7 @@ import {
 } from '@/services/agreements.service';
 import { http, HttpResponse } from 'msw';
 import { server } from '../setup';
-import { AgreementStatus } from '@/types/agreement.types';
+import { Agreement, AgreementStatus, AgreementType } from '@/types/agreement.types';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -36,11 +36,28 @@ const wrapper = ({ children }: { children: React.ReactNode }) => (
   </Provider>
 );
 
-const mockAgreement = {
+// T-116: `code`/`name` were not `Agreement` fields (`agreementCode`/
+// `agreementName` are) and the object was missing every other required
+// field — invisible while `tests/` sat outside tsconfig's `include`.
+// `useAgreementPermissions` (below) takes a full `Agreement`, so this fixture
+// must be one, not a partial shape MSW happens to echo back unchecked.
+const mockAgreement: Agreement = {
   id: '1',
-  code: 'AGR001',
-  name: 'Test Agreement',
+  version: 1,
+  agreementNumber: 'AGR001',
+  agreementCode: 'AGR001',
+  agreementName: 'Test Agreement',
+  agreementType: AgreementType.STA,
   status: AgreementStatus.DRAFT,
+  cplId: 'cpl-1',
+  channelId: 'channel-1',
+  fuId: 'fu-1',
+  tacticId: 'tactic-1',
+  mechanicId: 'mechanic-1',
+  capTotalAmount: 1000,
+  startDate: '2026-01-01',
+  endDate: '2026-01-31',
+  justification: 'Test justification',
   tenantId: 'tenant-1',
   createdAt: new Date().toISOString(),
   updatedAt: new Date().toISOString(),
@@ -144,8 +161,17 @@ describe('useCreateAgreement', () => {
     const { result } = renderHook(() => useCreateAgreement(), { wrapper });
 
     await result.current.mutateAsync({
-      code: 'AGR001',
-      name: 'New Agreement',
+      agreementName: 'New Agreement',
+      agreementType: AgreementType.STA,
+      cplId: 'cpl-1',
+      channelId: 'channel-1',
+      fuId: 'fu-1',
+      tacticId: 'tactic-1',
+      mechanicId: 'mechanic-1',
+      capTotalAmount: 1000,
+      startDate: '2026-01-01',
+      endDate: '2026-01-31',
+      justification: 'Test justification',
     });
 
     await waitFor(() => {
@@ -167,8 +193,17 @@ describe('useCreateAgreement', () => {
 
     await expect(
       result.current.mutateAsync({
-        code: 'AGR001',
-        name: 'New Agreement',
+        agreementName: 'New Agreement',
+        agreementType: AgreementType.STA,
+        cplId: 'cpl-1',
+        channelId: 'channel-1',
+        fuId: 'fu-1',
+        tacticId: 'tactic-1',
+        mechanicId: 'mechanic-1',
+        capTotalAmount: 1000,
+        startDate: '2026-01-01',
+        endDate: '2026-01-31',
+        justification: 'Test justification',
       })
     ).rejects.toThrow();
 
@@ -199,7 +234,7 @@ describe('useUpdateAgreement', () => {
 
     await result.current.mutateAsync({
       id: '1',
-      data: { name: 'Updated Agreement', version: 3 },
+      data: { agreementName: 'Updated Agreement', version: 3 },
     });
 
     await waitFor(() => {
@@ -230,7 +265,7 @@ describe('useUpdateAgreement', () => {
     await expect(
       result.current.mutateAsync({
         id: '1',
-        data: { name: 'Updated Agreement', version: 2 },
+        data: { agreementName: 'Updated Agreement', version: 2 },
       })
     ).rejects.toBeTruthy();
 

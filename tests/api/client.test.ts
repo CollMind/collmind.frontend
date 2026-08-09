@@ -4,19 +4,19 @@ import { server } from '../setup';
 import { store } from '@/store';
 import apiClient from '@/api/client';
 import { setCredentials } from '@/store/slices/auth.slice';
-import { User } from '@/types/user.types';
+import { User, UserRole, UserStatus } from '@/types/user.types';
 
 const API_BASE_URL = 'http://localhost:3000';
 
 const mockUser: User = {
   id: '1',
   email: 'test@example.com',
-  role: 'ADMIN',
+  role: UserRole.ADMIN,
   fullName: 'Test User',
-  status: 'ACTIVE',
+  status: UserStatus.ACTIVE,
   tenantId: 'tenant-1',
-  createdAt: new Date().toISOString() as any,
-  updatedAt: new Date().toISOString() as any,
+  createdAt: new Date(),
+  updatedAt: new Date(),
 };
 
 describe('API Client Interceptors', () => {

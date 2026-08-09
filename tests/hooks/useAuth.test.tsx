@@ -7,7 +7,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { store } from '@/store';
 import { setCredentials, logout } from '@/store/slices/auth.slice';
-import { User } from '@/types/user.types';
+import { User, UserRole, UserStatus } from '@/types/user.types';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -27,9 +27,9 @@ const wrapper = ({ children }: { children: React.ReactNode }) => (
 const mockUser: User = {
   id: '1',
   email: 'test@example.com',
-  role: 'ADMIN',
+  role: UserRole.ADMIN,
   fullName: 'Test User',
-  status: 'ACTIVE',
+  status: UserStatus.ACTIVE,
   tenantId: 'tenant-1',
   createdAt: new Date(),
   updatedAt: new Date(),

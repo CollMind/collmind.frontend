@@ -15,6 +15,11 @@ import {
 } from '@/services/ledger.service';
 import { http, HttpResponse } from 'msw';
 import { server } from '../setup';
+import {
+  LedgerEntry,
+  LedgerEntryDirection,
+  LedgerSpendType,
+} from '@/types/ledger.types';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -31,14 +36,27 @@ const wrapper = ({ children }: { children: React.ReactNode }) => (
   </Provider>
 );
 
-const mockLedgerEntry = {
+// T-117: eskiden anotasyonsuz object literal — `envelopeId` (gerçek:
+// `budgetEnvelopeId`) ve `type: 'RESERVATION'` (gerçek alanlar
+// `entryDirection` + `spendType`; `'RESERVATION'` ikisinin de üyesi değil)
+// gibi üretimde var olmayan alanlar `tsc`'siz sessizce geçiyordu.
+const mockLedgerEntry: LedgerEntry = {
   id: '1',
-  envelopeId: 'envelope-1',
+  sourceType: 'AGREEMENT',
+  sourceId: 'agreement-1',
   agreementId: 'agreement-1',
-  type: 'RESERVATION',
+  budgetEnvelopeId: 'envelope-1',
+  spendType: LedgerSpendType.OFF_INVOICE,
+  entryDirection: LedgerEntryDirection.DEBIT,
   amount: 10000,
+  currency: 'TRY',
+  periodMonth: '2024-01',
+  postingDate: '2024-01-15',
+  idempotencyKey: 'idem-1',
   description: 'Test entry',
+  tenantId: 'tenant-1',
   createdAt: new Date().toISOString(),
+  updatedAt: new Date().toISOString(),
 };
 
 describe('useLedgerEntries', () => {
@@ -66,15 +84,19 @@ describe('useLedgerEntries', () => {
     server.use(
       http.get('http://localhost:3000/ledger', ({ request }) => {
         const url = new URL(request.url);
-        const envelopeId = url.searchParams.get('envelopeId');
+        // T-116: `LedgerFilterDto`'nun alanı `budgetEnvelopeId` — handler
+        // eskiden `envelopeId` okuyordu ve HER ZAMAN null dönüyordu, çünkü
+        // hook o adı hiç göndermiyor. Mock ile assertion aynı yanlış adı
+        // paylaştığı için test yeşil kalıyor ve hiçbir şey ölçmüyordu.
+        const envelopeId = url.searchParams.get('budgetEnvelopeId');
         return HttpResponse.json([
-          { ...mockLedgerEntry, envelopeId: envelopeId || 'envelope-1' },
+          { ...mockLedgerEntry, budgetEnvelopeId: envelopeId || 'envelope-1' },
         ]);
       })
     );
 
     const { result } = renderHook(
-      () => useLedgerEntries({ envelopeId: 'envelope-1' }),
+      () => useLedgerEntries({ budgetEnvelopeId: 'envelope-1' }),
       { wrapper }
     );
 
@@ -159,7 +181,7 @@ describe('useConsumedByAgreement', () => {
     server.use(
       http.get('http://localhost:3000/ledger/agreement/:id/consumed', () => {
         return HttpResponse.json({
-          consumedAmount: 50000,
+          consumed: 50000,
         });
       })
     );
@@ -173,7 +195,7 @@ describe('useConsumedByAgreement', () => {
       expect(result.current.isSuccess).toBe(true);
     });
 
-    expect(result.current.data?.consumedAmount).toBe(50000);
+    expect(result.current.data?.consumed).toBe(50000);
   });
 });
 
@@ -186,7 +208,7 @@ describe('useLedgerByEnvelope', () => {
     server.use(
       http.get('http://localhost:3000/ledger/envelope/:id', ({ params }) => {
         return HttpResponse.json([
-          { ...mockLedgerEntry, envelopeId: params.id as string },
+          { ...mockLedgerEntry, budgetEnvelopeId: params.id as string },
         ]);
       })
     );
@@ -213,7 +235,7 @@ describe('useConsumedByEnvelope', () => {
     server.use(
       http.get('http://localhost:3000/ledger/envelope/:id/consumed', () => {
         return HttpResponse.json({
-          consumedAmount: 75000,
+          consumed: 75000,
         });
       })
     );
@@ -227,6 +249,6 @@ describe('useConsumedByEnvelope', () => {
       expect(result.current.isSuccess).toBe(true);
     });
 
-    expect(result.current.data?.consumedAmount).toBe(75000);
+    expect(result.current.data?.consumed).toBe(75000);
   });
 });

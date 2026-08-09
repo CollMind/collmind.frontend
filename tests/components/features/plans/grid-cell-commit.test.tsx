@@ -155,7 +155,9 @@ function renderRow(overrides: Partial<FuRowProps> = {}) {
 // acceptance criterion "in both editors" was ticked without ever being
 // measured.
 describe('T-112/T-109 step 2b — the SKU row editor, the second end of the pattern', () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
 
   const skuRow = () =>
     renderRow({
@@ -215,7 +217,9 @@ describe('T-112/T-109 step 2b — the SKU row editor, the second end of the patt
 // case a future edit weakens either predicate while the type stays intact
 // (e.g. a refactor that reads `.fuId`/`.skuId` through an `as any`).
 describe('T-109 step 2b review S1 — the coordinator cannot open two editors at once', () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
 
   it('a malformed editingCell with BOTH fuId and skuId set opens exactly one editor and fires no save', () => {
     // The `EditingCell` union type prevents constructing this shape through
@@ -257,7 +261,9 @@ describe('T-109 step 2b review S1 — the coordinator cannot open two editors at
 });
 
 describe('T-112/T-109 step 2b — the FU cell does not write on cancel', () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
 
   it('Escape does NOT call onCellSave', () => {
     const { onCellSave, onCellCancel } = renderRow();

@@ -21,13 +21,20 @@
     "noFallthroughCasesInSwitch": true,
     "noImplicitAny": false,
 
-    /* Path aliases */
+    /* Path aliases — order matters (TS tries patterns in listed order and
+       uses the first match): the more specific "@/tests/*" must precede
+       "@/*", exactly like vite.config.ts's resolve.alias array, or every
+       "@/tests/..." import resolves against "@/*" (-> src/tests/...)
+       instead — the same failure mode T-040 documented for the Vite alias
+       (measured, T-116: 6 "Cannot find module '@/tests/utils/test-utils'"
+       tsc errors before this entry existed). */
     "baseUrl": ".",
     "paths": {
+      "@/tests/*": ["./tests/*"],
       "@/*": ["./src/*"]
     }
   },
-  "include": ["src"],
+  "include": ["src", "tests"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }
 

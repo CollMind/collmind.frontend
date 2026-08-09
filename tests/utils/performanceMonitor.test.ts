@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach, type MockInstance } from 'vitest';
 import {
   PerformanceMonitor,
   perfMonitor,
@@ -112,7 +112,13 @@ describe('afterPaint', () => {
 });
 
 describe('startCellEditMeasurement / recordCellEditMeasurement', () => {
-  let nowSpy: ReturnType<typeof vi.spyOn>;
+  // `ReturnType<typeof vi.spyOn>` (no type args) resolves through vi.spyOn's
+  // overload set with unresolved generics, landing on
+  // `MockInstance<unknown[], unknown>` — incompatible with the concrete
+  // `MockInstance<[], number>` `vi.spyOn(performance, 'now')` actually
+  // produces. Naming the concrete instantiation instead of relying on
+  // inference through an unapplied overloaded generic.
+  let nowSpy: MockInstance<[], number>;
 
   beforeEach(() => {
     perfMonitor.clear();

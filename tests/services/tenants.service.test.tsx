@@ -17,6 +17,7 @@ import {
 } from '@/services/tenants.service';
 import { http, HttpResponse } from 'msw';
 import { server } from '../setup';
+import { Tenant, TenantStatus, TenantPlan } from '@/types/tenant.types';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -33,13 +34,16 @@ const wrapper = ({ children }: { children: React.ReactNode }) => (
   </Provider>
 );
 
-const mockTenant = {
+// T-117: eskiden anotasyonsuz object literal — `code` üretim tipinde yok
+// (`Tenant`'ta yok; `CreateTenantDto`'da da yok — bkz. tenants.service.ts
+// bulgusu aşağıda).
+const mockTenant: Tenant = {
   id: '1',
-  code: 'TENANT001',
   name: 'Test Tenant',
-  status: 'ACTIVE',
-  createdAt: new Date().toISOString(),
-  updatedAt: new Date().toISOString(),
+  status: TenantStatus.ACTIVE,
+  plan: TenantPlan.PROFESSIONAL,
+  createdAt: new Date(),
+  updatedAt: new Date(),
 };
 
 describe('useTenants', () => {
@@ -117,7 +121,6 @@ describe('useCreateTenant', () => {
     const { result } = renderHook(() => useCreateTenant(), { wrapper });
 
     await result.current.mutateAsync({
-      code: 'TENANT001',
       name: 'New Tenant',
     });
 

@@ -1,0 +1,6 @@
+// T-114 fixture — deliberately three lint findings (measured, not assumed):
+// two `@typescript-eslint/no-unused-vars` (one per unused const) plus one
+// `@typescript-eslint/no-explicit-any` (the second const's `any` annotation
+// trips both rules on the same line).
+const unused_one: number = 1;
+const unused_two: any = 2;

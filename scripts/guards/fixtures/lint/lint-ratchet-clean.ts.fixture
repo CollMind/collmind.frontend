@@ -1,0 +1,2 @@
+// T-114 fixture — deliberately zero lint findings.
+export const cleanValue: number = 1;

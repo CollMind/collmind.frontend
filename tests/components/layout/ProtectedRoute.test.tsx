@@ -7,7 +7,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
 import { ProtectedRoute } from '@/components/layout/ProtectedRoute';
 import authReducer from '@/store/slices/auth.slice';
-import { User } from '@/types/user.types';
+import { User, UserRole, UserStatus } from '@/types/user.types';
 import { http, HttpResponse } from 'msw';
 import { server } from '../../setup';
 
@@ -80,12 +80,14 @@ describe('ProtectedRoute', () => {
   const mockUser: User = {
     id: '1',
     email: 'test@example.com',
-    role: 'ADMIN',
+    role: UserRole.ADMIN,
+    fullName: 'Test User',
     firstName: 'Test',
     lastName: 'User',
-    status: 'ACTIVE',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    status: UserStatus.ACTIVE,
+    tenantId: 'tenant-1',
+    createdAt: new Date(),
+    updatedAt: new Date(),
   };
 
   it('redirects to login when not authenticated', () => {
@@ -211,7 +213,7 @@ describe('ProtectedRoute', () => {
   it('redirects when user does not have required role', () => {
     const plannerUser: User = {
       ...mockUser,
-      role: 'PLANNER',
+      role: UserRole.PLANNER,
     };
 
     const store = createMockStore({

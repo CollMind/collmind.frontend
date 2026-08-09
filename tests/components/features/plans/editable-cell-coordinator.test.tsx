@@ -1,8 +1,10 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, within, fireEvent } from '@testing-library/react';
-import { StrictMode, useState } from 'react';
+import { StrictMode, useState, act, type ReactElement } from 'react';
+import { createRoot } from 'react-dom/client';
+import { flushSync } from 'react-dom';
 import { Provider } from 'react-redux';
-import { configureStore } from '@reduxjs/toolkit';
+import { configureStore, type EnhancedStore } from '@reduxjs/toolkit';
 import { EditableCell } from '@/components/features/plans/grid-cells';
 import uiReducer from '@/store/slices/ui.slice';
 
@@ -478,5 +480,178 @@ describe('EditableCell — B2: a cell that MOUNTS already open is not empty and 
     expect(input.selectionStart).toBe(0);
     expect(input.selectionEnd).toBe('1234,56'.length);
     expect(document.activeElement).toBe(input);
+  });
+});
+
+/**
+ * S6 — close→reopen race, deterministic.
+ *
+ * Product bug fixed this session: `EditableCell` filled `editValue` in the
+ * RENDER phase on open, but used to clear it in a passive EFFECT on close.
+ * Under load, that effect could fire AFTER the next open's render had
+ * already filled the box — wiping the reopened cell back to empty. Measured
+ * against the e2e corner test: 3 of 5 runs opened empty before the fix, 5/5
+ * after.
+ *
+ * ⚠️ SHAPE WARNING (CLAUDE.md §2.7 #6) — two shapes were measured here and
+ * only one discriminates:
+ *
+ *   - NOT discriminating: a single `act()` wrapping two RTL `rerender`
+ *     calls. RTL flushes pending passive effects on every `render`/
+ *     `rerender` call, so the close's effect always runs BEFORE the reopen
+ *     commits — the race this test exists to create never happens, and the
+ *     fixed and broken code produce the identical string.
+ *   - Discriminating: raw `createRoot` + two back-to-back `flushSync`
+ *     renders, with passive effects flushed only ONCE at the end via
+ *     `await act(async () => {})`. `flushSync` commits synchronously but
+ *     does NOT run `useEffect` callbacks — those stay queued until the
+ *     final `act`. This is the only setup that guarantees the close's
+ *     effect lands AFTER the reopen's commit, which is the exact ordering
+ *     the bug depended on.
+ *
+ * Mutated to confirm (`grid-cells.tsx`, `setEditValue(isOpen ? formatForEdit(value) : '')`
+ * split back into "format in render on open, clear in the effect on
+ * close"): both tests below went red — the first with an empty box where
+ * `'987,65'` was expected, the second with the PREVIOUS cell's error text
+ * still showing on the reopened box. Reverted after confirming.
+ */
+
+function RawEditableCellHarness({
+  isOpen,
+  value,
+}: {
+  isOpen: boolean;
+  value: number;
+}): ReactElement {
+  return (
+    <table>
+      <tbody>
+        <tr>
+          <td>
+            <EditableCell
+              value={value}
+              format="number"
+              decimals={2}
+              onSave={() => {}}
+              onCancel={() => {}}
+              isOpen={isOpen}
+              onOpen={() => {}}
+            />
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  );
+}
+
+function rawTree(
+  store: EnhancedStore,
+  isOpen: boolean,
+  value: number
+): ReactElement {
+  return (
+    <Provider store={store}>
+      <StrictMode>
+        <RawEditableCellHarness isOpen={isOpen} value={value} />
+      </StrictMode>
+    </Provider>
+  );
+}
+
+describe('EditableCell — close→reopen race is deterministic (S6)', () => {
+  it("a reopen landing before the close's passive effect flushes is not wiped by it", async () => {
+    const store = configureStore({ reducer: { ui: uiReducer } });
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = createRoot(container);
+
+    try {
+      // Steady state: open, with effects flushed, BEFORE the race under
+      // test. This is not itself the race — it establishes the box the
+      // close→reopen pair below is closing.
+      await act(async () => {
+        root.render(rawTree(store, true, 1234.56));
+      });
+      expect(within(container).getByRole('textbox')).toHaveValue('1234,56');
+
+      // THE RACE: close, then reopen with a DIFFERENT value, as two
+      // separate synchronous commits with no effect flush between them.
+      flushSync(() => {
+        root.render(rawTree(store, false, 1234.56));
+      });
+      flushSync(() => {
+        root.render(rawTree(store, true, 987.65));
+      });
+
+      // Only now does React run the effects deferred by BOTH commits above.
+      await act(async () => {});
+
+      expect(within(container).getByRole('textbox')).toHaveValue('987,65');
+    } finally {
+      act(() => {
+        root.unmount();
+      });
+      container.remove();
+    }
+  });
+
+  it('a value rejected before the race does not leave its error on the reopened box, and the abandonment toast still fires', async () => {
+    const store = configureStore({ reducer: { ui: uiReducer } });
+    const container = document.createElement('div');
+    document.body.appendChild(container);
+    const root = createRoot(container);
+
+    try {
+      await act(async () => {
+        root.render(rawTree(store, true, 1234.56));
+      });
+
+      const badInput = within(container).getByRole('textbox');
+      fireEvent.change(badInput, { target: { value: 'abc' } });
+      fireEvent.blur(badInput);
+
+      // T-106: unreadable text keeps the box open with its own reason —
+      // this is the starting point the race below evicts.
+      expect(
+        within(container).getByText(/Geçersiz sayı/)
+      ).toBeInTheDocument();
+      expect(store.getState().ui.notifications).toHaveLength(0);
+
+      // Same race as the previous test, this time evicting a cell that is
+      // still holding an UNREAD error, not a saved value.
+      flushSync(() => {
+        root.render(rawTree(store, false, 1234.56));
+      });
+      flushSync(() => {
+        root.render(rawTree(store, true, 987.65));
+      });
+
+      await act(async () => {});
+
+      const reopened = within(container).getByRole(
+        'textbox'
+      ) as HTMLInputElement;
+      expect(reopened).toHaveValue('987,65');
+      expect(reopened).not.toHaveAttribute('aria-invalid');
+      expect(reopened.className).not.toContain('border-red-500');
+      expect(
+        within(container).queryByText(/Geçersiz sayı/)
+      ).not.toBeInTheDocument();
+
+      // The eviction toast is a SEPARATE mechanism (`decideCellAbandonment`)
+      // from the box's own error text, and must still fire exactly once —
+      // clean reopening must not also silence the report of the discarded
+      // value.
+      expect(store.getState().ui.notifications).toHaveLength(1);
+      expect(store.getState().ui.notifications[0]).toMatchObject({
+        type: 'error',
+        message: 'Girilen değer okunamadı, kaydedilmedi.',
+      });
+    } finally {
+      act(() => {
+        root.unmount();
+      });
+      container.remove();
+    }
   });
 });
