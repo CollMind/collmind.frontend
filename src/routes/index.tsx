@@ -1,4 +1,5 @@
 import { createBrowserRouter } from 'react-router-dom';
+import type { RouteObject } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { ProtectedRoute } from '@/components/layout/ProtectedRoute';
@@ -98,7 +99,13 @@ const NotFoundPage = () => (
   </div>
 );
 
-export const router = createBrowserRouter([
+// T-179: the raw route config is exported separately from `router` so tests
+// can drive it through `createMemoryRouter` (jsdom-safe, no real
+// `window.history`) instead of introspecting `createBrowserRouter`'s
+// internal `RemixRouter` shape or re-declaring the `requiredRole` arrays by
+// hand — a hand-copied test fixture would drift from this file exactly the
+// way `Sidebar.tsx`'s per-persona menus already have (see T-179 report).
+export const routeConfig: RouteObject[] = [
   {
     path: '/login',
     element: <LoginPage />,
@@ -311,7 +318,13 @@ export const router = createBrowserRouter([
     path: '/agreements',
     element: (
       <ProtectedRoute
-        requiredRole={['ADMIN', 'PLANNER', 'MANAGER', 'FINANCE', 'READONLY']}
+        requiredRole={[
+          'ADMIN',
+          'PLANNER',
+          'CATEGORY_MANAGER',
+          'FINANCE_MANAGER',
+          'READONLY',
+        ]}
       >
         <AppLayout>
           <ErrorBoundary>
@@ -325,7 +338,13 @@ export const router = createBrowserRouter([
     path: '/agreements/:id',
     element: (
       <ProtectedRoute
-        requiredRole={['ADMIN', 'PLANNER', 'MANAGER', 'FINANCE', 'READONLY']}
+        requiredRole={[
+          'ADMIN',
+          'PLANNER',
+          'CATEGORY_MANAGER',
+          'FINANCE_MANAGER',
+          'READONLY',
+        ]}
       >
         <AppLayout>
           <ErrorBoundary>
@@ -351,7 +370,12 @@ export const router = createBrowserRouter([
     path: '/agreement-approvals',
     element: (
       <ProtectedRoute
-        requiredRole={['ADMIN', 'MANAGER', 'FINANCE', 'READONLY']}
+        requiredRole={[
+          'ADMIN',
+          'CATEGORY_MANAGER',
+          'FINANCE_MANAGER',
+          'READONLY',
+        ]}
       >
         <AppLayout>
           <ErrorBoundary>
@@ -369,7 +393,7 @@ export const router = createBrowserRouter([
           'ADMIN',
           'PLANNER',
           'CATEGORY_MANAGER',
-          'FINANCE',
+          'FINANCE_MANAGER',
           'READONLY',
         ]}
       >
@@ -389,7 +413,7 @@ export const router = createBrowserRouter([
           'ADMIN',
           'PLANNER',
           'CATEGORY_MANAGER',
-          'FINANCE',
+          'FINANCE_MANAGER',
           'READONLY',
         ]}
       >
@@ -404,7 +428,9 @@ export const router = createBrowserRouter([
   {
     path: '/plan-approvals',
     element: (
-      <ProtectedRoute requiredRole={['ADMIN', 'MANAGER', 'READONLY']}>
+      <ProtectedRoute
+        requiredRole={['ADMIN', 'CATEGORY_MANAGER', 'READONLY']}
+      >
         <AppLayout>
           <ErrorBoundary>
             <PlanApprovalsPage />
@@ -417,7 +443,12 @@ export const router = createBrowserRouter([
     path: '/finance',
     element: (
       <ProtectedRoute
-        requiredRole={['ADMIN', 'FINANCE', 'CATEGORY_MANAGER', 'READONLY']}
+        requiredRole={[
+          'ADMIN',
+          'FINANCE_MANAGER',
+          'CATEGORY_MANAGER',
+          'READONLY',
+        ]}
       >
         <AppLayout>
           <ErrorBoundary>
@@ -430,7 +461,7 @@ export const router = createBrowserRouter([
   {
     path: '/off-invoice/upload',
     element: (
-      <ProtectedRoute requiredRole={['ADMIN', 'FINANCE']}>
+      <ProtectedRoute requiredRole={['ADMIN', 'FINANCE_MANAGER']}>
         <AppLayout>
           <ErrorBoundary>
             <OffInvoiceUploadPage />
@@ -443,7 +474,7 @@ export const router = createBrowserRouter([
     path: '/off-invoice/transactions',
     element: (
       <ProtectedRoute
-        requiredRole={['ADMIN', 'FINANCE', 'PLANNER', 'READONLY']}
+        requiredRole={['ADMIN', 'FINANCE_MANAGER', 'PLANNER', 'READONLY']}
       >
         <AppLayout>
           <ErrorBoundary>
@@ -457,7 +488,7 @@ export const router = createBrowserRouter([
     path: '/off-invoice',
     element: (
       <ProtectedRoute
-        requiredRole={['ADMIN', 'FINANCE', 'PLANNER', 'READONLY']}
+        requiredRole={['ADMIN', 'FINANCE_MANAGER', 'PLANNER', 'READONLY']}
       >
         <AppLayout>
           <ErrorBoundary>
@@ -470,7 +501,7 @@ export const router = createBrowserRouter([
   {
     path: '/on-invoice/upload',
     element: (
-      <ProtectedRoute requiredRole={['ADMIN', 'FINANCE']}>
+      <ProtectedRoute requiredRole={['ADMIN', 'FINANCE_MANAGER']}>
         <AppLayout>
           <ErrorBoundary>
             <OnInvoiceUploadPage />
@@ -483,7 +514,7 @@ export const router = createBrowserRouter([
     path: '/on-invoice',
     element: (
       <ProtectedRoute
-        requiredRole={['ADMIN', 'FINANCE', 'PLANNER', 'READONLY']}
+        requiredRole={['ADMIN', 'FINANCE_MANAGER', 'PLANNER', 'READONLY']}
       >
         <AppLayout>
           <ErrorBoundary>
@@ -707,4 +738,6 @@ export const router = createBrowserRouter([
       </ProtectedRoute>
     ),
   },
-]);
+];
+
+export const router = createBrowserRouter(routeConfig);
