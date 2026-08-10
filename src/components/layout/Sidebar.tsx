@@ -581,17 +581,22 @@ export function Sidebar() {
   };
 
   // Select navigation based on user role
+  // T-182: ham string karşılaştırması (`'CATEGORY_MANAGER'`) `UserRole` enum
+  // değerine çevrildi ve deprecated `'FINANCE'` alias'ı çıkarıldı — migration
+  // 1791 (`ConsolidateRolesToBrd`) FINANCE→FINANCE_MANAGER'ı zaten taşıdı,
+  // `main.users`'ta FINANCE = 0 (2026-08-11 ölçümü, bkz. T-179/T-182).
+  // T-165: yetenek tabanlı modele geçince bu kontrol kaldırılacak.
   const navigation = useMemo(() => {
-    if (user?.role === 'ADMIN') {
+    if (user?.role === UserRole.ADMIN) {
       return adminNavigation;
     }
-    if (user?.role === 'PLANNER') {
+    if (user?.role === UserRole.PLANNER) {
       return plannerNavigation;
     }
-    if (user?.role === 'CATEGORY_MANAGER') {
+    if (user?.role === UserRole.CATEGORY_MANAGER) {
       return categoryManagerNavigation;
     }
-    if (user?.role === 'FINANCE_MANAGER' || user?.role === 'FINANCE') {
+    if (user?.role === UserRole.FINANCE_MANAGER) {
       return financeManagerNavigation;
     }
     return defaultNavigation;
@@ -623,7 +628,7 @@ export function Sidebar() {
     const newExpanded = new Set<string>();
 
     // Always expand Admin menu for ADMIN users
-    if (user?.role === 'ADMIN') {
+    if (user?.role === UserRole.ADMIN) {
       newExpanded.add('Admin');
     }
 
@@ -661,7 +666,8 @@ export function Sidebar() {
     const active = item.href ? isActive(item.href) : false;
     const hasActive = hasActiveChild(item);
     const indentClass = level > 0 ? 'ml-6' : '';
-    const isAdminHeader = item.title === 'Admin' && user?.role === 'ADMIN';
+    const isAdminHeader =
+      item.title === 'Admin' && user?.role === UserRole.ADMIN;
 
     if (hasChildren) {
       return (
@@ -777,7 +783,7 @@ export function Sidebar() {
 
   const SidebarContent = () => {
     // For admin, settings is already in the Admin menu, so don't show it separately
-    const showSettingsSeparately = user?.role !== 'ADMIN';
+    const showSettingsSeparately = user?.role !== UserRole.ADMIN;
 
     return (
       <ScrollArea className="flex-1 px-3 py-4">

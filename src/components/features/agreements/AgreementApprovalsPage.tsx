@@ -27,6 +27,7 @@ import { useNavigate } from 'react-router-dom';
 import { toNumberOrZero } from '@/utils/numberUtils';
 import { useMe } from '@/services/users.service';
 import { UserRole } from '@/types/user.types';
+import { hasRole } from '@/utils/roleUtils';
 
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('tr-TR', {
@@ -352,7 +353,7 @@ export function AgreementApprovalsPage() {
 
 interface AgreementApprovalCardProps {
   agreement: Agreement;
-  userRole?: string;
+  userRole?: UserRole;
   onReview: () => void;
   onApprove: () => void;
   onReject: () => void;
@@ -360,7 +361,8 @@ interface AgreementApprovalCardProps {
   isRejecting: boolean;
 }
 
-function AgreementApprovalCard({
+// exported for tests (T-182): renders/hides the approve-reject action pair
+export function AgreementApprovalCard({
   agreement,
   userRole,
   onReview,
@@ -472,7 +474,15 @@ function AgreementApprovalCard({
             <Eye className="mr-2 h-4 w-4" />
             Detay İncele
           </Button>
-          {userRole === UserRole.MANAGER && (
+          {/* T-182: gerçek onaycılar `agreement.controller.ts:194,219`
+              (`@Roles(ADMIN, CATEGORY_MANAGER, FINANCE_MANAGER)`) — eski
+              birebir eşitlik (`userRole === UserRole.MANAGER`, 0 kullanıcı)
+              düğmeyi kimseye göstermiyordu ve `ADMIN` bypass'ı yoktu.
+              T-165: yetenek tabanlı modele geçince bu kontrol kaldırılacak. */}
+          {hasRole(userRole, [
+            UserRole.CATEGORY_MANAGER,
+            UserRole.FINANCE_MANAGER,
+          ]) && (
             <>
               <Button
                 variant="destructive"

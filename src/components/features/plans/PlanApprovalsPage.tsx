@@ -25,6 +25,9 @@ import { BudgetApprovalModal } from './BudgetApprovalModal';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { userEndpoints } from '@/api/endpoints/users.endpoints';
 import { toNumberOrZero } from '@/utils/numberUtils';
+import { useMe } from '@/services/users.service';
+import { UserRole } from '@/types/user.types';
+import { hasRole } from '@/utils/roleUtils';
 
 const formatCurrency = (value: number) => {
   return new Intl.NumberFormat('tr-TR', {
@@ -50,6 +53,7 @@ const formatDate = (dateString?: string) => {
 };
 
 export function PlanApprovalsPage() {
+  const { data: user } = useMe();
   const toast = useToast();
   const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState('');
@@ -255,6 +259,7 @@ export function PlanApprovalsPage() {
             <PlanApprovalCard
               key={plan.id}
               plan={plan}
+              userRole={user?.role}
               onReview={() => setSelectedPlan(plan)}
               onApprove={() => setBudgetApprovalPlan(plan)}
               onReject={() => setRejectPlan(plan)}
@@ -334,6 +339,7 @@ export function PlanApprovalsPage() {
 
 interface PlanApprovalCardProps {
   plan: Plan;
+  userRole?: UserRole;
   onReview: () => void;
   onApprove: () => void;
   onReject: () => void;
@@ -341,8 +347,10 @@ interface PlanApprovalCardProps {
   isRejecting: boolean;
 }
 
-function PlanApprovalCard({
+// exported for tests (T-182): renders/hides the approve-reject action pair
+export function PlanApprovalCard({
   plan,
+  userRole,
   onReview,
   onApprove,
   onReject,
@@ -454,23 +462,32 @@ function PlanApprovalCard({
             <Eye className="mr-2 h-4 w-4" />
             Detay İncele
           </Button>
-          <Button
-            variant="destructive"
-            onClick={onReject}
-            disabled={isRejecting || isApproving}
-            className="flex-1"
-          >
-            <X className="mr-2 h-4 w-4" />
-            Reddet
-          </Button>
-          <Button
-            onClick={onApprove}
-            disabled={isApproving || isRejecting}
-            className="flex-1 bg-green-600 hover:bg-green-700"
-          >
-            <Check className="mr-2 h-4 w-4" />
-            Onayla
-          </Button>
+          {/* T-182: gerçek onaycılar `plan.controller.ts:461,492`
+              (`@Roles(ADMIN, CATEGORY_MANAGER)`) — düğmeler daha önce hiç
+              rol kontrolü olmadan render ediliyordu (`READONLY` dahil
+              herkes görüyor, backend 403 döndürüyordu).
+              T-165: yetenek tabanlı modele geçince bu kontrol kaldırılacak. */}
+          {hasRole(userRole, [UserRole.CATEGORY_MANAGER]) && (
+            <>
+              <Button
+                variant="destructive"
+                onClick={onReject}
+                disabled={isRejecting || isApproving}
+                className="flex-1"
+              >
+                <X className="mr-2 h-4 w-4" />
+                Reddet
+              </Button>
+              <Button
+                onClick={onApprove}
+                disabled={isApproving || isRejecting}
+                className="flex-1 bg-green-600 hover:bg-green-700"
+              >
+                <Check className="mr-2 h-4 w-4" />
+                Onayla
+              </Button>
+            </>
+          )}
         </div>
       </CardContent>
     </Card>
