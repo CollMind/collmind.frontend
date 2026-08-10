@@ -61,7 +61,13 @@ export function GrandTotals({ plan }: GrandTotalsProps) {
   // TOTAL SPEND: From plan.totalSpend (aggregated from all tactics)
   const totalSpend = toNumberOrZero(plan.totalSpend);
 
-  // GP ROI: From plan.overallRoi (calculated as: (Incremental GP / Total Spend) * 100)
+  // GP ROI: from plan.overallRoi. The formula is a per-tenant DB row, not a
+  // constant; the seed/migration default is INCR_GP / TOTAL_PLANNED_SPEND * 100
+  // (ADR 0011, migration 1801000000000) — measured 2026-08-10 in `main.kpis`
+  // where kpi_code = 'GP_ROI_PCT'.
+  // WARNING: at FU/plan level this is NOT that formula. `aggregate()` maps
+  // WEIGHTED_AVG onto an unweighted mean over the non-null SKUs
+  // (kpi-engine.service.ts:307-309, :112-116) — see T-177.
   const gpRoi = plan.overallRoi || 0;
   const targetRoi = 20.0; // Default target ROI (will be configurable from KPI config)
   const roiDiff = gpRoi - targetRoi;
