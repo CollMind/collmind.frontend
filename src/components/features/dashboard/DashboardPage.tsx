@@ -106,13 +106,12 @@ export function DashboardPage() {
   const { title, subtitle } = getDashboardTitle(persona);
 
   // RBAC: Planner onay aksiyonu yapamaz, CategoryManager duzenleme yapamaz
+  // ⚠️ B dalgası / R2a (⛔ P0, 2026-08-13): `UserRole.MANAGER` backend'den KALDIRILDI
+  // (0 kullanıcı, K-2.6.4d) — deprecated alias dalı çıkarıldı, yalnız canonical kaldı.
   const canCreateAgreement =
     !readonly &&
     (role === UserRole.ADMIN ||
       role === UserRole.PLANNER ||
-      role === UserRole.MANAGER ||
-      // T-028a: backend @Roles MANAGER→CATEGORY_MANAGER konsolidasyonu
-      // (deprecated alias korunur, canonical eklenir).
       role === UserRole.CATEGORY_MANAGER);
   const canMutate = !readonly;
 

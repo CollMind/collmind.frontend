@@ -1,14 +1,21 @@
+/**
+ * B dalgası / R2a (backend `user.entity.ts`, migration `1803000000000`) — ⛔ P0
+ * düzeltmesi (2026-08-13): backend enum'u ile TEL BİREBİR eşleşmeli. Bir turda backend
+ * enum DEĞERLERİ yanlışlıkla Türkçeye taşınmıştı (`ADMIN='YÖNETİCİ'`); bağımsız kontrol
+ * bunun `hasRole`'ü (birebir string eşitliği) sessizce kırdığını ölçtü — her rol kapılı
+ * rota her kullanıcı için reddediliyordu. Karar geri alındı: enum DEĞERLERİ ASCII kalır.
+ *
+ * `MANAGER`/`APPROVER`/(eski jenerik) `FINANCE` KALDIRILDI — backend'de 0 kullanıcı
+ * (K-2.6.4b, K-2.6.4d). `FINANCE_MANAGER`'ın tel değeri `FINANCE_MANAGER` → `FINANCE`
+ * oldu (backend eski jenerik `FINANCE`'ı sildiği için etiketi devraldı). TS enum KEY'i
+ * `FINANCE_MANAGER` olarak KALDI — yalnız taşıdığı string değişti.
+ */
 export enum UserRole {
   ADMIN = 'ADMIN',
   PLANNER = 'PLANNER',
-  MANAGER = 'MANAGER', // Replaces APPROVER — approves plans and agreements
-  FINANCE = 'FINANCE',
-  FINANCE_MANAGER = 'FINANCE_MANAGER',
   CATEGORY_MANAGER = 'CATEGORY_MANAGER',
+  FINANCE_MANAGER = 'FINANCE', // ⚠️ tek ad değişikliği — bkz. üst yorum
   READONLY = 'READONLY', // Read-only access — all GET endpoints, no write
-
-  /** @deprecated Use MANAGER instead. Will be removed in a future migration. */
-  APPROVER = 'APPROVER',
 }
 
 export enum UserStatus {

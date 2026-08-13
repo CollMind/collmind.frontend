@@ -113,8 +113,8 @@ describe('AgreementApprovalCard — T-182 role gating', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('deprecated MANAGER alias\'ı ile görmüyor (0 kullanıcı, main.users 2026-08-11)', () => {
-    renderCard(UserRole.MANAGER);
+  it('bilinmeyen/silinmiş rol etiketiyle görmüyor (eski MANAGER, B dalgası/R2a ile enum\'dan kaldırıldı — 0 kullanıcı, main.users 2026-08-11)', () => {
+    renderCard('MANAGER' as unknown as UserRole);
     expect(
       screen.queryByRole('button', { name: /onayla/i })
     ).not.toBeInTheDocument();

@@ -9,21 +9,19 @@ export type DashboardPersona =
 
 /**
  * Tek bir rolden dashboard persona'sını belirler.
- * Öncelik sırası: READONLY > FINANCE / FINANCE_MANAGER > CATEGORY_MANAGER / MANAGER / APPROVER > ADMIN > PLANNER
+ * Öncelik sırası: READONLY > FINANCE_MANAGER > CATEGORY_MANAGER > ADMIN > PLANNER
+ *
+ * ⚠️ B dalgası / R2a (⛔ P0 düzeltmesi, 2026-08-13): `MANAGER`/`APPROVER`/(eski jenerik)
+ * `FINANCE` enum'dan KALDIRILDI (backend 0 kullanıcı, K-2.6.4b/d) — bu üç dalın
+ * karşılaştırdığı değerler artık DERLENMİYOR bile, satırlar kaldırıldı.
  */
 export function getPrimaryPersona(
   role: UserRole | undefined
 ): DashboardPersona {
   if (!role) return 'readonly';
   if (role === UserRole.READONLY) return 'readonly';
-  if (role === UserRole.FINANCE || role === UserRole.FINANCE_MANAGER)
-    return 'finance';
-  if (
-    role === UserRole.CATEGORY_MANAGER ||
-    role === UserRole.MANAGER ||
-    role === UserRole.APPROVER
-  )
-    return 'category';
+  if (role === UserRole.FINANCE_MANAGER) return 'finance';
+  if (role === UserRole.CATEGORY_MANAGER) return 'category';
   if (role === UserRole.ADMIN) return 'admin';
   return 'planner';
 }

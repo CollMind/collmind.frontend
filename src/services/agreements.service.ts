@@ -244,23 +244,18 @@ export function useAgreementPermissions(agreement: Agreement | undefined) {
     agreement.status === AgreementStatus.DRAFT &&
     (userRole === 'ADMIN' || userRole === 'PLANNER');
 
+  // ⚠️ B dalgası / R2a (⛔ P0, 2026-08-13): `UserRole.MANAGER`/`.FINANCE` (jenerik)
+  // backend'den KALDIRILDI (0 kullanıcı, K-2.6.4b/d) — deprecated alias dalları
+  // çıkarıldı, yalnız canonical (`CATEGORY_MANAGER`/`FINANCE_MANAGER`) kaldı.
   const canApprove =
     agreement.status === AgreementStatus.PENDING &&
     (userRole === UserRole.ADMIN ||
-      userRole === UserRole.MANAGER ||
-      userRole === UserRole.FINANCE ||
-      // T-028a: backend @Roles MANAGER→CATEGORY_MANAGER, FINANCE→FINANCE_MANAGER
-      // konsolidasyonu (deprecated alias'lar korunur, canonical eklenir).
       userRole === UserRole.CATEGORY_MANAGER ||
       userRole === UserRole.FINANCE_MANAGER);
 
   const canReject =
     agreement.status === AgreementStatus.PENDING &&
     (userRole === UserRole.ADMIN ||
-      userRole === UserRole.MANAGER ||
-      userRole === UserRole.FINANCE ||
-      // T-028a: backend @Roles MANAGER→CATEGORY_MANAGER, FINANCE→FINANCE_MANAGER
-      // konsolidasyonu (deprecated alias'lar korunur, canonical eklenir).
       userRole === UserRole.CATEGORY_MANAGER ||
       userRole === UserRole.FINANCE_MANAGER);
 

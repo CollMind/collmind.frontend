@@ -208,10 +208,15 @@ describe('route RBAC gates (src/routes/index.tsx)', () => {
   });
 
   describe('Part B — regresyon guard\'ı: routeConfig genelinde deprecated rol taraması', () => {
-    // Deprecated etiketler `UserRole` enum'ından ÇIKARILMADI (K1 kararı ayrı
-    // — bkz. docs/analysis/0056 §C), yalnızca route KAPILARINDAN çıkarıldı.
-    // Bu guard onların bir daha sessizce geri gelmediğini doğrular.
-    const DEPRECATED_ROLES = ['MANAGER', 'FINANCE', 'APPROVER'];
+    // ⚠️ B dalgası / R2a (⛔ P0, 2026-08-13) bu listeyi TERSİNE ÇEVİRDİ — kayıt için:
+    //   önce (T-179, docs/analysis/0056 §C): 'FINANCE' deprecated'di, 'FINANCE_MANAGER'
+    //   kanonikti. Backend enum'u burada TEL PROTOKOLÜ — B dalgası eski jenerik
+    //   'FINANCE' rolünü sildi (0 kullanıcı) ve etiketi FINANCE_MANAGER'a devretti;
+    //   şimdi 'FINANCE' KANONİK, ham 'FINANCE_MANAGER' string'i (varsa) STALE.
+    // `MANAGER`/`APPROVER` `UserRole` enum'ından TAMAMEN kaldırıldı (0 kullanıcı,
+    // K-2.6.4b/d) — artık deprecated değil, YOK. Üçü de burada aynı listede kalıyor
+    // çünkü ikisi de "bu string route KAPISINDA görünmemeli" anlamına geliyor.
+    const DEPRECATED_ROLES = ['MANAGER', 'APPROVER', 'FINANCE_MANAGER'];
 
     function collectRequiredRoleProps(
       node: React.ReactNode,

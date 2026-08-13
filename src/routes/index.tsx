@@ -315,6 +315,11 @@ export const routeConfig: RouteObject[] = [
     ),
   },
   {
+    // ⚠️ B dalgası / R2a (⛔ P0, 2026-08-13): bu dosyadaki tüm `requiredRole` dizileri
+    // backend'in TEL değerleriyle (`UserRole` enum'unun taşıdığı string) birebir
+    // eşleşmeli — bileşen tipiyle değil. `'FINANCE_MANAGER'` → `'FINANCE'` oldu (11
+    // yerde, grep ile değiştirildi); backend eski jenerik `FINANCE` rolünü sildiği
+    // için etiketi Finance Manager'a devretti (bkz. backend `user.entity.ts`).
     path: '/agreements',
     element: (
       <ProtectedRoute
@@ -322,7 +327,7 @@ export const routeConfig: RouteObject[] = [
           'ADMIN',
           'PLANNER',
           'CATEGORY_MANAGER',
-          'FINANCE_MANAGER',
+          'FINANCE',
           'READONLY',
         ]}
       >
@@ -342,7 +347,7 @@ export const routeConfig: RouteObject[] = [
           'ADMIN',
           'PLANNER',
           'CATEGORY_MANAGER',
-          'FINANCE_MANAGER',
+          'FINANCE',
           'READONLY',
         ]}
       >
@@ -373,7 +378,7 @@ export const routeConfig: RouteObject[] = [
         requiredRole={[
           'ADMIN',
           'CATEGORY_MANAGER',
-          'FINANCE_MANAGER',
+          'FINANCE',
           'READONLY',
         ]}
       >
@@ -393,7 +398,7 @@ export const routeConfig: RouteObject[] = [
           'ADMIN',
           'PLANNER',
           'CATEGORY_MANAGER',
-          'FINANCE_MANAGER',
+          'FINANCE',
           'READONLY',
         ]}
       >
@@ -413,7 +418,7 @@ export const routeConfig: RouteObject[] = [
           'ADMIN',
           'PLANNER',
           'CATEGORY_MANAGER',
-          'FINANCE_MANAGER',
+          'FINANCE',
           'READONLY',
         ]}
       >
@@ -445,7 +450,7 @@ export const routeConfig: RouteObject[] = [
       <ProtectedRoute
         requiredRole={[
           'ADMIN',
-          'FINANCE_MANAGER',
+          'FINANCE',
           'CATEGORY_MANAGER',
           'READONLY',
         ]}
@@ -461,7 +466,7 @@ export const routeConfig: RouteObject[] = [
   {
     path: '/off-invoice/upload',
     element: (
-      <ProtectedRoute requiredRole={['ADMIN', 'FINANCE_MANAGER']}>
+      <ProtectedRoute requiredRole={['ADMIN', 'FINANCE']}>
         <AppLayout>
           <ErrorBoundary>
             <OffInvoiceUploadPage />
@@ -474,7 +479,7 @@ export const routeConfig: RouteObject[] = [
     path: '/off-invoice/transactions',
     element: (
       <ProtectedRoute
-        requiredRole={['ADMIN', 'FINANCE_MANAGER', 'PLANNER', 'READONLY']}
+        requiredRole={['ADMIN', 'FINANCE', 'PLANNER', 'READONLY']}
       >
         <AppLayout>
           <ErrorBoundary>
@@ -488,7 +493,7 @@ export const routeConfig: RouteObject[] = [
     path: '/off-invoice',
     element: (
       <ProtectedRoute
-        requiredRole={['ADMIN', 'FINANCE_MANAGER', 'PLANNER', 'READONLY']}
+        requiredRole={['ADMIN', 'FINANCE', 'PLANNER', 'READONLY']}
       >
         <AppLayout>
           <ErrorBoundary>
@@ -501,7 +506,7 @@ export const routeConfig: RouteObject[] = [
   {
     path: '/on-invoice/upload',
     element: (
-      <ProtectedRoute requiredRole={['ADMIN', 'FINANCE_MANAGER']}>
+      <ProtectedRoute requiredRole={['ADMIN', 'FINANCE']}>
         <AppLayout>
           <ErrorBoundary>
             <OnInvoiceUploadPage />
@@ -514,7 +519,7 @@ export const routeConfig: RouteObject[] = [
     path: '/on-invoice',
     element: (
       <ProtectedRoute
-        requiredRole={['ADMIN', 'FINANCE_MANAGER', 'PLANNER', 'READONLY']}
+        requiredRole={['ADMIN', 'FINANCE', 'PLANNER', 'READONLY']}
       >
         <AppLayout>
           <ErrorBoundary>

@@ -46,6 +46,10 @@ const getStatusColor = (status: string): string => {
   }
 };
 
+// ⚠️ B dalgası / R2a (⛔ P0, 2026-08-13): `MANAGER`/`APPROVER` dalları KALDIRILDI —
+// backend'de 0 kullanıcı, `UserRole` enum'undan silindi (K-2.6.4b/d), bu tel değerleri
+// artık backend'den asla gelmiyor. `FINANCE` artık Finance Manager'ın etiketi (eski
+// jenerik `FINANCE` rolü silindi, `FINANCE_MANAGER`'ın teli `FINANCE`'a taşındı).
 const getRoleColor = (role: string): string => {
   const roleUpper = role.toUpperCase();
   switch (roleUpper) {
@@ -53,13 +57,7 @@ const getRoleColor = (role: string): string => {
       return 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400 border-purple-200 dark:border-purple-800';
     case 'PLANNER':
       return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 border-blue-200 dark:border-blue-800';
-    case 'MANAGER':
-      return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 border-green-200 dark:border-green-800';
-    case 'APPROVER':
-      return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 border-green-200 dark:border-green-800';
     case 'FINANCE':
-      return 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400 border-orange-200 dark:border-orange-800';
-    case 'FINANCE_MANAGER':
       return 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400 border-amber-200 dark:border-amber-800';
     case 'CATEGORY_MANAGER':
       return 'bg-teal-100 text-teal-800 dark:bg-teal-900/30 dark:text-teal-400 border-teal-200 dark:border-teal-800';
@@ -156,18 +154,12 @@ export function EnumBadge({ value, type = 'auto', className }: EnumBadgeProps) {
     ) {
       colorClass = getStatusColor(valueStr);
     }
-    // Check if it's a role
+    // Check if it's a role — B dalgası / R2a (⛔ P0): backend'in beş kanonik tel
+    // değeriyle birebir (`ADMIN`/`PLANNER`/`CATEGORY_MANAGER`/`FINANCE`/`READONLY`).
     else if (
-      [
-        'ADMIN',
-        'PLANNER',
-        'MANAGER',
-        'APPROVER',
-        'FINANCE',
-        'FINANCE_MANAGER',
-        'CATEGORY_MANAGER',
-        'READONLY',
-      ].includes(valueUpper)
+      ['ADMIN', 'PLANNER', 'CATEGORY_MANAGER', 'FINANCE', 'READONLY'].includes(
+        valueUpper
+      )
     ) {
       colorClass = getRoleColor(valueStr);
     }
