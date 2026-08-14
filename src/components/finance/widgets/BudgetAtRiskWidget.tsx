@@ -107,7 +107,7 @@ export function BudgetAtRiskWidget({ filters }: BudgetAtRiskWidgetProps) {
                 <div className="flex items-center gap-2">
                   <span>{formatCurrency(plan.totalSpend)}</span>
                   <Badge className="bg-red-600 text-white">
-                    ROI: {plan.gpRoi.toFixed(1)}%
+                    ROI: {plan.gpRoi == null ? '—' : `${Number(plan.gpRoi).toFixed(1)}%`}
                   </Badge>
                 </div>
               </div>

@@ -102,7 +102,14 @@ export function PlanApprovalDetailModal({
   const incrementalPercent =
     baseVolume > 0 ? (incremental / baseVolume) * 100 : 0;
   const incrementalGp = planData.totalGp - baseVolume * 0; // Simplified - should calculate base GP properly
-  const roi = planData.overallRoi || 0;
+  // `overallRoi` is a `decimal` column (arrives as STRING from `pg`) and
+  // `null` when a dependency is missing (§2.5) — `toNumberOrZero` handles
+  // both. ⚠️ Still silently reads "not computed" as "0% ROI, below
+  // target" here, same class as [[T-172]]; that redesign is out of this
+  // task's touches (`PlanApprovalDetailModal.tsx` is not in
+  // T-216a/T-216b/T-172's touches lists) — flagged as a follow-up, not
+  // silently fixed.
+  const roi = toNumberOrZero(planData.overallRoi);
   const isLowRoi = roi < 20;
 
   const handleApprove = () => {
@@ -250,7 +257,9 @@ export function PlanApprovalDetailModal({
                   const fuIncremental = fuPlannedVolume - fuBaseVolume;
                   const fuUplift =
                     fuBaseVolume > 0 ? (fuIncremental / fuBaseVolume) * 100 : 0;
-                  const fuRoi = planFu.gpRoi || 0;
+                  // Same decimal-as-string/silent-zero caveat as `roi`
+                  // above.
+                  const fuRoi = toNumberOrZero(planFu.gpRoi);
                   const isFuLowRoi = fuRoi < 20;
 
                   return (
@@ -341,7 +350,9 @@ export function PlanApprovalDetailModal({
                           fuBaseVolume > 0
                             ? (fuIncremental / fuBaseVolume) * 100
                             : 0;
-                        const fuRoi = planFu.gpRoi || 0;
+                        // Same decimal-as-string/silent-zero caveat as
+                        // `roi` above.
+                        const fuRoi = toNumberOrZero(planFu.gpRoi);
 
                         return (
                           <>

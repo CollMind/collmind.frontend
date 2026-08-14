@@ -1,7 +1,12 @@
 import { Plan } from '@/api/endpoints/plans.endpoints';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { toNumberOrZero } from '@/utils/numberUtils';
+import { toNumber, toNumberOrZero } from '@/utils/numberUtils';
+import {
+  formatCoverageLabel,
+  RAG_NOT_CALCULATED_LABEL,
+  resolveRagPresentation,
+} from '@/utils/ragCoverage';
 import {
   Table,
   TableBody,
@@ -45,19 +50,38 @@ const getStatusBadge = (status: Plan['status']) => {
   );
 };
 
-const getRagStatus = (ragStatus?: string) => {
-  if (!ragStatus) return null;
+/**
+ * `K-2.4.22a`/`INV-N-004`: `ragStatus === null` used to render nothing at
+ * all — no colour AND no explanation, the reader could not tell "not
+ * computed" from "no data in this cell". `GRİ` is a first-class fourth
+ * state: it still shows a badge, and (`K-2.4.22b`) the coverage ratio next
+ * to it — never silently withdrawn.
+ */
+const getRagBadge = (
+  ragStatus: Plan['ragStatus'],
+  coverageRatio: Plan['coverageRatio']
+) => {
+  const presentation = resolveRagPresentation(ragStatus, coverageRatio);
 
-  if (ragStatus === 'RED') {
+  if (presentation.ragStatus === 'RED') {
     return <span className="text-red-600 font-medium">• KRİTİK</span>;
   }
-  if (ragStatus === 'GREEN') {
+  if (presentation.ragStatus === 'GREEN') {
     return <span className="text-green-600 font-medium">• İYİ</span>;
   }
-  if (ragStatus === 'AMBER') {
+  if (presentation.ragStatus === 'AMBER') {
     return <span className="text-yellow-600 font-medium">• RİSKLİ</span>;
   }
-  return null;
+
+  const coverageLabel = formatCoverageLabel(presentation.coverageRatio);
+  return (
+    <span className="text-gray-500 font-medium">
+      •{' '}
+      {presentation.isNeverCalculated
+        ? RAG_NOT_CALCULATED_LABEL
+        : `GRİ${coverageLabel ? ` · ${coverageLabel}` : ''}`}
+    </span>
+  );
 };
 
 const formatCurrency = (amount: number) => {
@@ -156,14 +180,23 @@ export function PlanList({
                   </TableCell>
                   <TableCell>{getStatusBadge(plan.status)}</TableCell>
                   <TableCell className="text-right text-sm">
-                    {plan.overallRoi !== null && plan.overallRoi !== undefined
-                      ? `${plan.overallRoi.toFixed(1)}%`
-                      : '0.0%'}
+                    {(() => {
+                      // `overallRoi` is `null` when a dependency (e.g. COGS)
+                      // is missing — §2.5/[[T-172]]: rendering "0.0%" here
+                      // read as a real, terrible ROI instead of "not
+                      // computed". It is also a `decimal` column (arrives as
+                      // a STRING from `pg`), so `.toFixed` was never safe to
+                      // call on it directly.
+                      const roi = toNumber(plan.overallRoi ?? null);
+                      return roi !== null ? `${roi.toFixed(1)}%` : '—';
+                    })()}
                   </TableCell>
                   <TableCell className="text-right text-sm font-medium">
                     {formatCurrency(toNumberOrZero(plan.totalSpend))}
                   </TableCell>
-                  <TableCell>{getRagStatus(plan.ragStatus)}</TableCell>
+                  <TableCell>
+                    {getRagBadge(plan.ragStatus, plan.coverageRatio)}
+                  </TableCell>
                   <TableCell>
                     <div className="flex items-center justify-center gap-1">
                       <Button

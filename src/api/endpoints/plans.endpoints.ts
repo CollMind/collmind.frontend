@@ -7,6 +7,16 @@ export interface CalculationResult {
   decimalPlaces: number;
   ragStatus?: 'RED' | 'AMBER' | 'GREEN' | null;
   calculatedAt?: string;
+  /**
+   * T-177/T-218: fraction of children (SKUs for an FU rollup, FUs for a plan
+   * rollup) that resolved into `value` — 0..1, `null` when this result was
+   * never an aggregate (`recomputeRatioFromChildren`, `kpi-engine.service.ts`).
+   * `ragStatus` is only ever non-null when this is exactly `1`
+   * (`K-2.4.22c` — see `src/utils/ragCoverage.ts`). Key may be entirely
+   * absent (not just `undefined`) on older JSONB rows persisted before
+   * T-177 — always read through `resolveRagPresentation`, not directly.
+   */
+  coverageRatio?: number | null;
 }
 
 export interface Plan {
@@ -39,8 +49,24 @@ export interface Plan {
   totalPlannedVolume: number | string;
   totalSpend: number | string;
   totalGp: number;
-  overallRoi?: number;
-  ragStatus?: 'RED' | 'AMBER' | 'GREEN';
+  /**
+   * `plans.overall_roi` is a `decimal` column — the `pg` driver returns it as
+   * a STRING (measured: `numeric(18,4)` → `typeof 'string'`, no
+   * `DecimalTransformer` on this entity). `null` when a dependency (e.g.
+   * COGS) is missing — never coerce to `0` (`§2.5`, `T-172`). Read through
+   * `toNumber`/`toNumberOrZero` (`@/utils/numberUtils`), never `.toFixed`
+   * directly.
+   */
+  overallRoi?: number | string | null;
+  /** `null` = coverage was not full; no colour is safe to show (`K-2.4.22a1`). */
+  ragStatus?: 'RED' | 'AMBER' | 'GREEN' | null;
+  /**
+   * T-218: fraction of FUs that resolved into `overallRoi` — same
+   * decimal-as-string caveat as `overallRoi` above. `null` = never
+   * calculated (no FUs, or recalc has not run). See
+   * `@/utils/ragCoverage#resolveRagPresentation`.
+   */
+  coverageRatio?: number | string | null;
   createdAt: string;
   updatedAt: string;
   createdBy?: string;
@@ -62,8 +88,9 @@ export interface PlanFu {
   totalPlannedVolume: number | string;
   totalSpend: number | string;
   totalGp: number;
-  gpRoi?: number;
-  ragStatus?: 'RED' | 'AMBER' | 'GREEN';
+  /** `decimal` column, arrives as string — see `Plan.overallRoi` above. */
+  gpRoi?: number | string | null;
+  ragStatus?: 'RED' | 'AMBER' | 'GREEN' | null;
   calculatedKpis?: Record<string, CalculationResult>;
   fu?: { id: string; name: string; code: string };
   planSkus?: PlanSku[];
@@ -82,8 +109,9 @@ export interface PlanSku {
   plannedTurnover: number;
   tacticSpend: number;
   plannedGp: number;
-  gpRoi?: number;
-  ragStatus?: 'RED' | 'AMBER' | 'GREEN';
+  /** `decimal` column, arrives as string — see `Plan.overallRoi` above. */
+  gpRoi?: number | string | null;
+  ragStatus?: 'RED' | 'AMBER' | 'GREEN' | null;
   calculatedKpis?: Record<string, CalculationResult>;
   // LTA spend alanları
   baseLtaOnInvoiceSpend: number;

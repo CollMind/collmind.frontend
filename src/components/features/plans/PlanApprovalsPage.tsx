@@ -134,12 +134,19 @@ export function PlanApprovalsPage() {
   // Calculate summary statistics
   const pendingCount = plans?.length || 0;
   const approvedTodayCount = 0; // TODO: Calculate from approved plans
+  // `overallRoi` is a `decimal` column (arrives as STRING from `pg`) and
+  // `null` when a dependency is missing (§2.5) — `toNumberOrZero` reads
+  // both correctly. ⚠️ Still silently averages/counts "not computed" as
+  // "0% ROI", same class as [[T-172]]; that redesign is out of this task's
+  // touches (`PlanApprovalsPage.tsx` is not in T-216a/T-216b/T-172's
+  // touches lists) — flagged as a follow-up, not silently fixed.
   const avgRoi =
     plans && plans.length > 0
-      ? plans.reduce((sum, p) => sum + (p.overallRoi || 0), 0) / plans.length
+      ? plans.reduce((sum, p) => sum + toNumberOrZero(p.overallRoi), 0) /
+        plans.length
       : 0;
   const lowRoiCount =
-    plans?.filter((p) => (p.overallRoi || 0) < 20).length || 0;
+    plans?.filter((p) => toNumberOrZero(p.overallRoi) < 20).length || 0;
 
   if (isLoading) return <LoadingSpinner />;
 
@@ -377,7 +384,8 @@ export function PlanApprovalCard({
   const fuCount = plan.planFus?.length || 0;
   const skuCount =
     plan.planFus?.reduce((sum, fu) => sum + (fu.planSkus?.length || 0), 0) || 0;
-  const roi = plan.overallRoi || 0;
+  // Same decimal-as-string/silent-zero caveat as `avgRoi` above.
+  const roi = toNumberOrZero(plan.overallRoi);
   const isLowRoi = roi < 20;
 
   return (

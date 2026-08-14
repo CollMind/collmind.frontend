@@ -13,6 +13,11 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import {
+  formatCoverageLabel,
+  RAG_NOT_CALCULATED_LABEL,
+  resolveRagPresentation,
+} from '@/utils/ragCoverage';
 
 interface EditableCellProps {
   value: number | null | undefined;
@@ -539,8 +544,15 @@ export function InheritedCell({
 }
 
 interface RAGCellProps {
-  status?: 'RED' | 'AMBER' | 'GREEN';
+  status?: 'RED' | 'AMBER' | 'GREEN' | null;
   value?: number | null;
+  /**
+   * `K-2.4.22a1`: 0..1 fraction of children this KPI resolved over —
+   * `plan_fus`/`plan_skus`'s `calculated_kpis[kpiCode].coverageRatio`.
+   * `null` when this result was never an aggregate, or the recalc that
+   * would have produced it has not run.
+   */
+  coverageRatio?: number | null;
   thresholds?: {
     green?: number;
     amber?: number;
@@ -551,23 +563,34 @@ interface RAGCellProps {
 export function RAGCell({
   status,
   value,
+  coverageRatio,
   thresholds,
   className = '',
 }: RAGCellProps) {
+  // K-2.4.22c/INV-N-004: a colour from the full-coverage palette is only
+  // ever legitimate when `status` itself carries one — `resolveRagPresentation`
+  // is the single place that decision is made (§7.1: don't re-derive it here).
+  const presentation = resolveRagPresentation(status, coverageRatio);
+  const coverageLabel = formatCoverageLabel(presentation.coverageRatio);
+
   const getStatusColor = (): string => {
-    if (status === 'GREEN')
+    if (presentation.ragStatus === 'GREEN')
       return 'bg-green-100 text-green-800 border-green-300';
-    if (status === 'AMBER')
+    if (presentation.ragStatus === 'AMBER')
       return 'bg-amber-100 text-amber-800 border-amber-300';
-    if (status === 'RED') return 'bg-red-100 text-red-800 border-red-300';
+    if (presentation.ragStatus === 'RED')
+      return 'bg-red-100 text-red-800 border-red-300';
     return 'bg-gray-100 text-gray-600 border-gray-300';
   };
 
   const getStatusLabel = (): string => {
-    if (status === 'GREEN') return '● İYİ';
-    if (status === 'AMBER') return '● RİSKLİ';
-    if (status === 'RED') return '● KRİTİK';
-    return '● N/A';
+    if (presentation.ragStatus === 'GREEN') return '● İYİ';
+    if (presentation.ragStatus === 'AMBER') return '● RİSKLİ';
+    if (presentation.ragStatus === 'RED') return '● KRİTİK';
+    // GRİ (K-2.4.22a) — never "N/A": that erased the coverage ratio
+    // (K-2.4.22b requires it to stay visible next to the badge).
+    if (presentation.isNeverCalculated) return `● ${RAG_NOT_CALCULATED_LABEL}`;
+    return `● GRİ${coverageLabel ? ` · ${coverageLabel}` : ''}`;
   };
 
   const tooltipContent = (
@@ -575,6 +598,12 @@ export function RAGCell({
       <div className="font-semibold mb-1">Status: {getStatusLabel()}</div>
       {value !== null && value !== undefined && (
         <div>Value: {value.toFixed(2)}</div>
+      )}
+      {!presentation.isFullCoverage && (
+        <div>
+          Kapsama:{' '}
+          {coverageLabel ?? 'bilinmiyor (hiç hesaplanmadı)'}
+        </div>
       )}
       {thresholds && (
         <div className="mt-1">
@@ -593,9 +622,7 @@ export function RAGCell({
             className={`text-center px-3 py-1.5 rounded border-2 font-medium text-xs ${getStatusColor()} ${className}`}
           >
             <div className="flex items-center justify-center gap-1">
-              <span className="text-lg">
-                {status === 'GREEN' ? '●' : status === 'AMBER' ? '●' : '●'}
-              </span>
+              <span className="text-lg">●</span>
               <span>{getStatusLabel()}</span>
             </div>
           </div>

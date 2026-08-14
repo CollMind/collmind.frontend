@@ -63,6 +63,16 @@ export function PlanAnalysis({ planId }: PlanAnalysisProps) {
           Hedef Altı
         </Badge>
       );
+    } else if (analysis.gpRoiPerformance.status === 'NOT_COMPUTABLE') {
+      // T-172 / INV-N-004: hesaplanamayan bir değer bir İŞ YARGISINA çökmez.
+      // Bu dal olmadan NOT_COMPUTABLE aşağıdaki `else`'e düşer ve YEŞİL
+      // "Hedef Üstü" görünür — düzeltmeden ÖNCEKİNDEN (kırmızı "Hedef Altı")
+      // daha kötü bir yanlış gösterim. `GRAY` bir değer değil, sunum (K-2.4.22a1).
+      return (
+        <Badge className="bg-gray-100 text-gray-700 border-gray-200">
+          Hesaplanmadı
+        </Badge>
+      );
     } else if (analysis.gpRoiPerformance.status === 'ON_TARGET') {
       return (
         <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">

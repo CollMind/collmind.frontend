@@ -46,7 +46,7 @@ import {
   InheritedCell,
   RAGCell,
 } from './grid-cells';
-import { toNumberOrNull, toNumberOrZero } from '@/utils/numberUtils';
+import { toNumber, toNumberOrNull, toNumberOrZero } from '@/utils/numberUtils';
 import {
   startCellEditMeasurement,
   recordCellEditMeasurement,
@@ -335,7 +335,7 @@ function getSkuCellValue(
 
     // ROI
     case 'GP_ROI_PCT':
-      return planSku.gpRoi ?? null;
+      return toNumber(planSku.gpRoi ?? null);
     case 'TO_ROI_PCT': {
       const incrSpend = (() => {
         const baseTotal =
@@ -1571,7 +1571,17 @@ export function FuRowEnhanced({
                   formula={col.formula}
                 />
               ) : col.code === 'RAG_STATUS' ? (
-                <RAGCell status={planFu.ragStatus} />
+                // K-2.4.22a/K-2.4.22b: RAG_STATUS carries the GP_ROI_PCT
+                // rollup's status/value/coverage — `getFuCellValue` doesn't
+                // have a case for this column code (it isn't a plain field),
+                // so those three are read directly off the KPI result.
+                <RAGCell
+                  status={planFu.ragStatus}
+                  value={toNumber(planFu.gpRoi ?? null)}
+                  coverageRatio={
+                    planFu.calculatedKpis?.['GP_ROI_PCT']?.coverageRatio
+                  }
+                />
               ) : (
                 <EditableCell
                   value={value}
@@ -1602,7 +1612,13 @@ export function FuRowEnhanced({
           );
         })}
         <TableCell className="text-center sticky right-0 bg-blue-50 z-10">
-          <RAGCell status={planFu.ragStatus} />
+          <RAGCell
+            status={planFu.ragStatus}
+            value={toNumber(planFu.gpRoi ?? null)}
+            coverageRatio={
+              planFu.calculatedKpis?.['GP_ROI_PCT']?.coverageRatio
+            }
+          />
         </TableCell>
       </TableRow>
 
@@ -1691,7 +1707,13 @@ export function FuRowEnhanced({
                       parentLabel={planFu.fu?.name}
                     />
                   ) : col.code === 'RAG_STATUS' ? (
-                    <RAGCell status={planSku.ragStatus} />
+                    <RAGCell
+                      status={planSku.ragStatus}
+                      value={toNumber(planSku.gpRoi ?? null)}
+                      coverageRatio={
+                        planSku.calculatedKpis?.['GP_ROI_PCT']?.coverageRatio
+                      }
+                    />
                   ) : (
                     <EditableCell
                       value={value}
@@ -1723,7 +1745,13 @@ export function FuRowEnhanced({
               );
             })}
             <TableCell className="text-center sticky right-0 bg-white z-10">
-              <RAGCell status={planSku.ragStatus} />
+              <RAGCell
+                status={planSku.ragStatus}
+                value={toNumber(planSku.gpRoi ?? null)}
+                coverageRatio={
+                  planSku.calculatedKpis?.['GP_ROI_PCT']?.coverageRatio
+                }
+              />
             </TableCell>
           </TableRow>
         ))}

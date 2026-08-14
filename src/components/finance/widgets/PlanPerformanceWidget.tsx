@@ -148,7 +148,14 @@ export function PlanPerformanceWidget({ filters }: PlanPerformanceWidgetProps) {
                 <TableCell>{formatCurrency(row.totalSpend)}</TableCell>
                 <TableCell>{row.onInvoicePercent.toFixed(1)}%</TableCell>
                 <TableCell>{row.offInvoicePercent.toFixed(1)}%</TableCell>
-                <TableCell>{row.gpRoi.toFixed(1)}%</TableCell>
+                {/* T-172: `null` = hesaplanamadı; `%0.0` bir iş yargısı olurdu */}
+                <TableCell>
+                  {row.gpRoi == null ? (
+                    <span className="text-muted-foreground">—</span>
+                  ) : (
+                    `${Number(row.gpRoi).toFixed(1)}%`
+                  )}
+                </TableCell>
                 <TableCell>{getRagBadge(row.ragStatus)}</TableCell>
                 <TableCell>
                   <Badge variant="outline">{row.status}</Badge>

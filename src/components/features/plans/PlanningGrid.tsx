@@ -25,6 +25,12 @@ import { useToast } from '@/hooks/useToast';
 import { AddFuDialog } from './AddFuDialog';
 import { planEndpoints } from '@/api/endpoints/plans.endpoints';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  formatCoverageLabel,
+  RAG_NOT_CALCULATED_LABEL,
+  resolveRagPresentation,
+} from '@/utils/ragCoverage';
+import { toNumber } from '@/utils/numberUtils';
 
 interface PlanningGridProps {
   plan: Plan;
@@ -54,19 +60,46 @@ const formatPercentage = (val: number | null | undefined, decimals = 1) => {
   return `${val.toFixed(decimals)}%`;
 };
 
-const getRagBadge = (status?: string) => {
-  if (!status) return <span className="text-gray-300">-</span>;
+// ⚠️ This component has no production callers today (dead code — measured
+// 2026-08-14, see PlanDetailPage.tsx which renders `PlanningGridEnhanced`
+// under this same alias instead). Fixed for correctness anyway
+// (§7.1/CLAUDE.md: an unreachable path is still a documented defect, not a
+// reason to leave it broken) and flagged to Team Lead for a removal/wiring
+// decision — a stale duplicate is exactly the class of risk `İlke 4`
+// tracks (two grid implementations, one dark).
+const getRagBadge = (
+  status: 'RED' | 'AMBER' | 'GREEN' | null | undefined,
+  coverageRatio: number | string | null | undefined
+) => {
+  const presentation = resolveRagPresentation(status, coverageRatio);
   const map: Record<string, { dotColor: string; label: string }> = {
     RED: { dotColor: 'bg-red-500', label: 'KRİTİK' },
     AMBER: { dotColor: 'bg-amber-500', label: 'RİSKLİ' },
     GREEN: { dotColor: 'bg-green-500', label: 'İYİ' },
   };
-  const info = map[status];
-  if (!info) return <span className="text-gray-300">-</span>;
+  const info = presentation.ragStatus ? map[presentation.ragStatus] : null;
+  if (info) {
+    return (
+      <div className="flex items-center justify-center gap-1.5">
+        <span className={`w-2 h-2 rounded-full ${info.dotColor}`} />
+        <span className="text-xs font-medium text-gray-700">
+          {info.label}
+        </span>
+      </div>
+    );
+  }
+
+  // GRİ (K-2.4.22a) — never a bare "-": that erased both the colour and
+  // the explanation (INV-N-004).
+  const coverageLabel = formatCoverageLabel(presentation.coverageRatio);
   return (
     <div className="flex items-center justify-center gap-1.5">
-      <span className={`w-2 h-2 rounded-full ${info.dotColor}`} />
-      <span className="text-xs font-medium text-gray-700">{info.label}</span>
+      <span className="w-2 h-2 rounded-full bg-gray-400" />
+      <span className="text-xs font-medium text-gray-500">
+        {presentation.isNeverCalculated
+          ? RAG_NOT_CALCULATED_LABEL
+          : `GRİ${coverageLabel ? ` · ${coverageLabel}` : ''}`}
+      </span>
     </div>
   );
 };
@@ -119,7 +152,7 @@ const getSkuValueForKpi = (
     case 'GP':
       return planSku.plannedGp ?? null;
     case 'GP_ROI_PCT':
-      return planSku.gpRoi ?? null;
+      return toNumber(planSku.gpRoi ?? null);
     case 'GP_MARGIN_PCT':
       if (!planSku.plannedTurnover) return null;
       return (planSku.plannedGp / planSku.plannedTurnover) * 100;
@@ -710,7 +743,10 @@ function FuRow({
           </TableCell>
         ))}
         <TableCell className="text-center sticky right-0 bg-gray-50 z-20 border-l border-gray-200 shadow-[-2px_0_4px_-2px_rgba(0,0,0,0.1)]">
-          {getRagBadge(planFu.ragStatus)}
+          {getRagBadge(
+            planFu.ragStatus,
+            planFu.calculatedKpis?.['GP_ROI_PCT']?.coverageRatio
+          )}
         </TableCell>
       </TableRow>
 
@@ -806,7 +842,10 @@ function FuRow({
               );
             })}
             <TableCell className="text-center sticky right-0 bg-white z-20 border-l border-gray-200 shadow-[-2px_0_4px_-2px_rgba(0,0,0,0.1)]">
-              {getRagBadge(planSku.ragStatus)}
+              {getRagBadge(
+                planSku.ragStatus,
+                planSku.calculatedKpis?.['GP_ROI_PCT']?.coverageRatio
+              )}
             </TableCell>
           </TableRow>
         ))}

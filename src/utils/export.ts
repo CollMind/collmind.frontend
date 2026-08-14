@@ -76,6 +76,32 @@ export function exportMultipleSheets(
 }
 
 /**
+ * `K-2.4.22a`/`INV-N-004`: the raw `ragStatus` enum used to be written
+ * straight into the cell. A screen's stale/withdrawn colour self-heals on
+ * the next refresh; an exported file does not — it is handed around and
+ * outlives the session, making this the longest-lived surface for the same
+ * confidence-claim falsification `INV-N-004` records.
+ *
+ * ⚠️ `PlanPerformanceRow` (the finance-reporting DTO this sheet is built
+ * from) does not carry `coverageRatio` — measured 2026-08-14, 0 occurrences
+ * in `finance-reporting.service.ts`/`finance-reporting.endpoints.ts`. Only
+ * `plans`/`plan_fus`/`plan_skus` do (T-218), and this sheet is not built
+ * from any of those. So the label below can say coverage is not full, but
+ * — honestly — not the ratio itself; inventing a number here would be
+ * exactly the kind of fabrication `§2.5` forbids, just relocated to a
+ * label instead of a computation. Carrying the ratio into this DTO is a
+ * backend change, flagged as a follow-up rather than worked around.
+ */
+export function formatRagStatusForExport(
+  ragStatus: 'RED' | 'AMBER' | 'GREEN' | string | null | undefined
+): string {
+  if (ragStatus === 'RED') return 'KRİTİK';
+  if (ragStatus === 'AMBER') return 'RİSKLİ';
+  if (ragStatus === 'GREEN') return 'İYİ';
+  return 'GRİ — kapsama tam değil (oran bu raporda taşınmıyor)';
+}
+
+/**
  * Export finance dashboard report
  */
 export function exportFinanceReport(
@@ -175,7 +201,7 @@ export function exportFinanceReport(
         'On-Invoice %': `${row.onInvoicePercent.toFixed(1)}%`,
         'Off-Invoice %': `${row.offInvoicePercent.toFixed(1)}%`,
         'GP ROI %': `${row.gpRoi.toFixed(1)}%`,
-        'RAG Status': row.ragStatus,
+        'RAG Status': formatRagStatusForExport(row.ragStatus),
         Status: row.status,
         'Start Date': row.startDate,
         'End Date': row.endDate,
