@@ -2,7 +2,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { budgetEndpoints } from '@/api/endpoints/budget.endpoints';
 import {
   BudgetEnvelope,
-  BudgetReservation,
   BudgetTransaction,
   ReservedAmountResponse,
   CreateBudgetEnvelopeDto,
@@ -18,8 +17,6 @@ export const budgetKeys = {
     [...budgetKeys.envelope(id), 'reserved'] as const,
   transactions: (id: string) =>
     [...budgetKeys.envelope(id), 'transactions'] as const,
-  reservations: (envelopeId: string) =>
-    [...budgetKeys.all, 'reservations', envelopeId] as const,
 };
 
 export const useBudgetEnvelopes = () => {
@@ -72,51 +69,6 @@ export const useReserveBudget = () => {
         error.response?.data?.message || 'Budget rezerve edilemedi';
       toast.error(errorMessage);
     },
-  });
-};
-
-export const useApproveReservation = () => {
-  const queryClient = useQueryClient();
-  const toast = useToast();
-
-  return useMutation({
-    mutationFn: (id: string) =>
-      budgetEndpoints.approveReservation(id).then((res) => res.data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: budgetKeys.all });
-      toast.success('Rezervasyon onaylandı');
-    },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Rezervasyon onaylanamadı');
-    },
-  });
-};
-
-export const useRejectReservation = () => {
-  const queryClient = useQueryClient();
-  const toast = useToast();
-
-  return useMutation({
-    mutationFn: ({ id, reason }: { id: string; reason: string }) =>
-      budgetEndpoints.rejectReservation(id, reason).then((res) => res.data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: budgetKeys.all });
-      toast.success('Rezervasyon reddedildi');
-    },
-    onError: (error: any) => {
-      toast.error(error.response?.data?.message || 'Rezervasyon reddedilemedi');
-    },
-  });
-};
-
-export const useBudgetReservations = (envelopeId: string) => {
-  return useQuery({
-    queryKey: budgetKeys.reservations(envelopeId),
-    queryFn: () =>
-      budgetEndpoints
-        .getReservationsByEnvelope(envelopeId)
-        .then((res) => res.data),
-    enabled: !!envelopeId,
   });
 };
 

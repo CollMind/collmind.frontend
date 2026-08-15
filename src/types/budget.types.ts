@@ -78,34 +78,6 @@ export interface CreateBudgetEnvelopeDto {
 }
 
 /**
- * Budget Reservation Durumları
- */
-export enum BudgetReservationStatus {
-  PENDING = 'PENDING',
-  APPROVED = 'APPROVED',
-  REJECTED = 'REJECTED',
-  CANCELLED = 'CANCELLED',
-}
-
-/**
- * Budget Reservation
- */
-export interface BudgetReservation {
-  id: string;
-  envelopeId: string;
-  amount: number;
-  agreementName?: string;
-  notes?: string;
-  status: BudgetReservationStatus;
-  requestedBy?: string;
-  approvedBy?: string;
-  rejectedBy?: string;
-  rejectionReason?: string;
-  createdAt?: string;
-  updatedAt?: string;
-}
-
-/**
  * Budget Rezerve Etme DTO
  */
 export interface ReserveBudgetDto {

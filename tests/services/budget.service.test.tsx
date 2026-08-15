@@ -10,9 +10,6 @@ import {
   useBudgetEnvelope,
   useCreateBudgetEnvelope,
   useReserveBudget,
-  useApproveReservation,
-  useRejectReservation,
-  useBudgetReservations,
   useBudgetReservedAmount,
   useBudgetTransactions,
 } from '@/services/budget.service';
@@ -205,93 +202,11 @@ describe('useReserveBudget', () => {
   });
 });
 
-describe('useApproveReservation', () => {
-  beforeEach(() => {
-    queryClient.clear();
-  });
-
-  it('should approve reservation successfully', async () => {
-    server.use(
-      http.post('http://localhost:3000/budget/reservations/:id/approve', ({ params }) => {
-        return HttpResponse.json({
-          id: params.id as string,
-          status: 'APPROVED',
-        });
-      })
-    );
-
-    const { result } = renderHook(() => useApproveReservation(), { wrapper });
-
-    await result.current.mutateAsync('1');
-
-    await waitFor(() => {
-      expect(result.current.isSuccess).toBe(true);
-    });
-  });
-});
-
-describe('useRejectReservation', () => {
-  beforeEach(() => {
-    queryClient.clear();
-  });
-
-  it('should reject reservation successfully', async () => {
-    server.use(
-      http.post('http://localhost:3000/budget/reservations/:id/reject', ({ params }) => {
-        return HttpResponse.json({
-          id: params.id as string,
-          status: 'REJECTED',
-        });
-      })
-    );
-
-    const { result } = renderHook(() => useRejectReservation(), { wrapper });
-
-    await result.current.mutateAsync({
-      id: '1',
-      reason: 'Test rejection',
-    });
-
-    await waitFor(() => {
-      expect(result.current.isSuccess).toBe(true);
-    });
-  });
-});
-
-describe('useBudgetReservations', () => {
-  beforeEach(() => {
-    queryClient.clear();
-  });
-
-  it('should fetch reservations for envelope', async () => {
-    server.use(
-      http.get('http://localhost:3000/budget/envelopes/:id/reservations', () => {
-        return HttpResponse.json([
-          {
-            id: '1',
-            envelopeId: '1',
-            amount: 10000,
-            status: 'PENDING',
-          },
-        ]);
-      })
-    );
-
-    const { result } = renderHook(() => useBudgetReservations('1'), { wrapper });
-
-    await waitFor(() => {
-      expect(result.current.isSuccess).toBe(true);
-    });
-
-    expect(result.current.data).toBeDefined();
-  });
-
-  it('should not fetch when envelopeId is empty', () => {
-    const { result } = renderHook(() => useBudgetReservations(''), { wrapper });
-
-    expect(result.current.isFetching).toBe(false);
-  });
-});
+// T-225: `useApproveReservation` / `useRejectReservation` / `useBudgetReservations`
+// (ve `BudgetReservation` tipi) kaldırıldı — backend'de karşılık gelen
+// `reservations/:id/approve` · `reservations/:id/reject` ·
+// `envelopes/:id/reservations` rotaları hiç yoktu (404, tüketici 0). Bu
+// dosyadaki eski testler o ölü rotaları MSW ile taklit ediyordu.
 
 describe('useBudgetReservedAmount', () => {
   beforeEach(() => {
@@ -301,9 +216,10 @@ describe('useBudgetReservedAmount', () => {
   it('should fetch reserved amount', async () => {
     server.use(
       // T-040: mock yolu `/reserved-amount` idi; gerçek endpoint `/reserved`
-      // (backend `budget.controller.ts:90` @Get('envelopes/:id/reserved'),
-      // frontend `budget.endpoints.ts:23`). Handler hiç eşleşmiyor, istek
-      // düşüyor ve `isSuccess` false kalıyordu. Üretim kodu doğru, mock yanlıştı.
+      // (backend `budget.controller.ts` @Get('envelopes/:id/reserved'),
+      // frontend `budget.endpoints.ts` `getReservedAmount`). Handler hiç
+      // eşleşmiyor, istek düşüyor ve `isSuccess` false kalıyordu. Üretim kodu
+      // doğru, mock yanlıştı.
       http.get('http://localhost:3000/budget/envelopes/:id/reserved', () => {
         return HttpResponse.json({
           reservedAmount: 20000,

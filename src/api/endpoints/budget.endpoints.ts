@@ -1,7 +1,6 @@
 import apiClient from '../client';
 import {
   BudgetEnvelope,
-  BudgetReservation,
   BudgetTransaction,
   ReservedAmountResponse,
   CreateBudgetEnvelopeDto,
@@ -26,22 +25,11 @@ export const budgetEndpoints = {
   getTransactions: (id: string) =>
     apiClient.get<BudgetTransaction[]>(`/budget/envelopes/${id}/transactions`),
 
-  // Budget Reservations
+  // Budget Reservation (Event-Sourced: backend `reserveBudget` yazar
+  // ve `BudgetTransaction` döner — bkz. T-225, backend
+  // `modules/shared/budget/budget.service.ts:197..`)
   reserveBudget: (data: ReserveBudgetDto) =>
-    apiClient.post<BudgetReservation>('/budget/reserve', data),
-
-  approveReservation: (id: string) =>
-    apiClient.post<BudgetReservation>(`/budget/reservations/${id}/approve`),
-
-  rejectReservation: (id: string, reason: string) =>
-    apiClient.post<BudgetReservation>(`/budget/reservations/${id}/reject`, {
-      reason,
-    }),
-
-  getReservationsByEnvelope: (envelopeId: string) =>
-    apiClient.get<BudgetReservation[]>(
-      `/budget/envelopes/${envelopeId}/reservations`
-    ),
+    apiClient.post<BudgetTransaction>('/budget/reserve', data),
 
   getBudgetStatus: (
     channel: string,
