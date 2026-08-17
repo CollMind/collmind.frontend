@@ -154,8 +154,8 @@ describe('route RBAC gates (src/routes/index.tsx)', () => {
       ).not.toBeInTheDocument();
     });
 
-    it('/agreement-approvals: FINANCE_MANAGER girebilir (T-179 öncesi kırıktı)', async () => {
-      renderAtPath('/agreement-approvals', UserRole.FINANCE_MANAGER);
+    it('/agreement-approvals: FINANCE girebilir (T-179 öncesi kırıktı)', async () => {
+      renderAtPath('/agreement-approvals', UserRole.FINANCE);
       expect(
         await screen.findByText('AgreementApprovalsPage Stub')
       ).toBeInTheDocument();
@@ -169,8 +169,8 @@ describe('route RBAC gates (src/routes/index.tsx)', () => {
       ).not.toBeInTheDocument();
     });
 
-    it('/finance: FINANCE_MANAGER girebilir (T-179 öncesi kırıktı — kapı deprecated `FINANCE` kullanıyordu)', async () => {
-      renderAtPath('/finance', UserRole.FINANCE_MANAGER);
+    it('/finance: FINANCE girebilir (T-179 öncesi kırıktı — kapı deprecated `FINANCE` kullanıyordu)', async () => {
+      renderAtPath('/finance', UserRole.FINANCE);
       expect(
         await screen.findByText('FinanceDashboard Stub')
       ).toBeInTheDocument();
@@ -184,14 +184,14 @@ describe('route RBAC gates (src/routes/index.tsx)', () => {
       ).not.toBeInTheDocument();
     });
 
-    it('/off-invoice/upload: FINANCE_MANAGER girebilir (T-179 öncesi kırıktı)', async () => {
-      renderAtPath('/off-invoice/upload', UserRole.FINANCE_MANAGER);
+    it('/off-invoice/upload: FINANCE girebilir (T-179 öncesi kırıktı)', async () => {
+      renderAtPath('/off-invoice/upload', UserRole.FINANCE);
       expect(
         await screen.findByText('OffInvoiceUploadPage Stub')
       ).toBeInTheDocument();
     });
 
-    it('/off-invoice/upload: PLANNER giremez (backend `POST /agreement-transactions/upload` @Roles ADMIN+FINANCE_MANAGER — agreement-transaction.controller.ts:288-289 — BRD §7.2 ile çelişiyor, bkz. task raporu)', async () => {
+    it('/off-invoice/upload: PLANNER giremez (backend `POST /agreement-transactions/upload` @Roles UserRole.ADMIN+UserRole.FINANCE — agreement-transaction.controller.ts:289 — BRD §7.2 ile çelişiyor, bkz. task raporu)', async () => {
       renderAtPath('/off-invoice/upload', UserRole.PLANNER);
       expect(await screen.findByText('Dashboard Stub')).toBeInTheDocument();
       expect(

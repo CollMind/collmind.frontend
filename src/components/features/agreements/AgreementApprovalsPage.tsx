@@ -475,13 +475,14 @@ export function AgreementApprovalCard({
             Detay İncele
           </Button>
           {/* T-182: gerçek onaycılar `agreement.controller.ts:194,219`
-              (`@Roles(ADMIN, CATEGORY_MANAGER, FINANCE_MANAGER)`) — eski
-              birebir eşitlik (`userRole === UserRole.MANAGER`, 0 kullanıcı)
+              (`@Roles(UserRole.ADMIN, UserRole.CATEGORY_MANAGER, UserRole.FINANCE)`)
+              — eski birebir eşitlik (`userRole === UserRole.MANAGER`, 0 kullanıcı)
               düğmeyi kimseye göstermiyordu ve `ADMIN` bypass'ı yoktu.
-              T-165: yetenek tabanlı modele geçince bu kontrol kaldırılacak. */}
+              T-165: yetenek tabanlı modele geçince bu kontrol kaldırılacak.
+              `Z7` (2026-08-17): TS key `FINANCE_MANAGER` → `FINANCE` oldu. */}
           {hasRole(userRole, [
             UserRole.CATEGORY_MANAGER,
-            UserRole.FINANCE_MANAGER,
+            UserRole.FINANCE,
           ]) && (
             <>
               <Button

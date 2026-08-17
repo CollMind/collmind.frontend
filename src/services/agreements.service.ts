@@ -246,18 +246,19 @@ export function useAgreementPermissions(agreement: Agreement | undefined) {
 
   // ⚠️ B dalgası / R2a (⛔ P0, 2026-08-13): `UserRole.MANAGER`/`.FINANCE` (jenerik)
   // backend'den KALDIRILDI (0 kullanıcı, K-2.6.4b/d) — deprecated alias dalları
-  // çıkarıldı, yalnız canonical (`CATEGORY_MANAGER`/`FINANCE_MANAGER`) kaldı.
+  // çıkarıldı, yalnız canonical (`CATEGORY_MANAGER`/`FINANCE`) kaldı.
+  // `Z7` (2026-08-17): TS key `FINANCE_MANAGER` → `FINANCE` oldu (bkz. `user.types.ts`).
   const canApprove =
     agreement.status === AgreementStatus.PENDING &&
     (userRole === UserRole.ADMIN ||
       userRole === UserRole.CATEGORY_MANAGER ||
-      userRole === UserRole.FINANCE_MANAGER);
+      userRole === UserRole.FINANCE);
 
   const canReject =
     agreement.status === AgreementStatus.PENDING &&
     (userRole === UserRole.ADMIN ||
       userRole === UserRole.CATEGORY_MANAGER ||
-      userRole === UserRole.FINANCE_MANAGER);
+      userRole === UserRole.FINANCE);
 
   const canCancel =
     (agreement.status === AgreementStatus.APPROVED ||

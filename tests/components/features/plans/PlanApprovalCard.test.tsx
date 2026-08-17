@@ -10,10 +10,11 @@ import { UserRole } from '@/types/user.types';
 // kontrolü olmadan render ediliyordu (`userRole|hasRole|UserRole` geçiş
 // sayısı: 0). `READONLY` düğmeyi görüyor, tıklıyor, backend 403 veriyordu.
 // Gerçek onaycılar `plan.controller.ts:461,492` — `@Roles(ADMIN,
-// CATEGORY_MANAGER)`. `FINANCE_MANAGER` bu düğmeyi KASITLI olarak görmüyor:
-// FM yalnız escalation hattındaki `PENDING_FINANCE_REVIEW` planları onaylar
-// (ADR 0002), ve bu liste yalnız `PENDING_APPROVAL` planları döndürür
-// (`plan.service.ts:396`) — FM için bu düğme hiçbir zaman geçerli değil.
+// CATEGORY_MANAGER)`. `FINANCE` (Finance Manager, eski TS key `FINANCE_MANAGER`
+// — `Z7`, 2026-08-17) bu düğmeyi KASITLI olarak görmüyor: FM yalnız escalation
+// hattındaki `PENDING_FINANCE_REVIEW` planları onaylar (ADR 0002), ve bu liste
+// yalnız `PENDING_APPROVAL` planları döndürür (`plan.service.ts:396`) — FM için
+// bu düğme hiçbir zaman geçerli değil.
 //
 // §2.7 #6: pozitif/negatif çift assertion — yalnız pozitif yazılsaydı bu
 // suite "düğme hep görünüyor" (bugünkü kusur) ile "doğru gated" arasını
@@ -93,8 +94,8 @@ describe('PlanApprovalCard — T-182 role gating', () => {
     ).not.toBeInTheDocument();
   });
 
-  it('FINANCE_MANAGER görmüyor (yalnız escalation/PENDING_FINANCE_REVIEW hattında onaylar — ADR 0002)', () => {
-    renderCard(UserRole.FINANCE_MANAGER);
+  it('FINANCE görmüyor (yalnız escalation/PENDING_FINANCE_REVIEW hattında onaylar — ADR 0002)', () => {
+    renderCard(UserRole.FINANCE);
     expect(
       screen.queryByRole('button', { name: /onayla/i })
     ).not.toBeInTheDocument();

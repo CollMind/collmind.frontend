@@ -596,7 +596,7 @@ export function Sidebar() {
     if (user?.role === UserRole.CATEGORY_MANAGER) {
       return categoryManagerNavigation;
     }
-    if (user?.role === UserRole.FINANCE_MANAGER) {
+    if (user?.role === UserRole.FINANCE) {
       return financeManagerNavigation;
     }
     return defaultNavigation;

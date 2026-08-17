@@ -10,8 +10,9 @@ import { UserRole } from '@/types/user.types';
 // `userRole === UserRole.MANAGER` — a literal equality against a deprecated
 // alias with 0 users (`main.users`, 2026-08-11) and no `hasRole`/`ADMIN`
 // bypass. Nobody, including ADMIN, could see the button. The real approvers
-// are `agreement.controller.ts:194,219` — `@Roles(ADMIN, CATEGORY_MANAGER,
-// FINANCE_MANAGER)`.
+// are `agreement.controller.ts:194,219` — `@Roles(UserRole.ADMIN,
+// UserRole.CATEGORY_MANAGER, UserRole.FINANCE)` (backend TS key was renamed
+// `FINANCE_MANAGER` → `FINANCE` in `Z7`, 2026-08-17; wire value unchanged).
 //
 // §2.7 #6: every assertion pairs a role that MUST see the buttons with one
 // that must NOT — a suite that only asserts the positive case can't tell
@@ -77,8 +78,8 @@ describe('AgreementApprovalCard — T-182 role gating', () => {
     expect(screen.getByRole('button', { name: /reddet/i })).toBeInTheDocument();
   });
 
-  it('FINANCE_MANAGER görüyor (backend: agreement.controller.ts:194,219)', () => {
-    renderCard(UserRole.FINANCE_MANAGER);
+  it('FINANCE görüyor (backend: agreement.controller.ts:194,219)', () => {
+    renderCard(UserRole.FINANCE);
     expect(screen.getByRole('button', { name: /onayla/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /reddet/i })).toBeInTheDocument();
   });
