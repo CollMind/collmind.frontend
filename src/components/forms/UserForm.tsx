@@ -25,9 +25,17 @@ import {
   UpdateUserFormData,
 } from '@/schemas/user.schema';
 import { useCreateUser, useUpdateUser } from '@/services/users.service';
-import { UserRole, UserStatus, User } from '@/types/user.types';
+import {
+  UserRole,
+  UserStatus,
+  User,
+  CreateUserDto,
+  SCOPE_REQUIRED_ROLES,
+} from '@/types/user.types';
 import { Loader2 } from 'lucide-react';
 import { EnumBadge } from '@/components/common/EnumBadge';
+import { UserScopeFields } from './UserScopeFields';
+import { useToast } from '@/hooks/useToast';
 
 interface UserFormProps {
   user?: User;
@@ -38,6 +46,7 @@ interface UserFormProps {
 export function UserForm({ user, onSuccess, onCancel }: UserFormProps) {
   const createMutation = useCreateUser();
   const updateMutation = useUpdateUser();
+  const toast = useToast();
 
   const form = useForm<CreateUserFormData | UpdateUserFormData>({
     resolver: zodResolver(user ? updateUserSchema : createUserSchema),
@@ -54,8 +63,35 @@ export function UserForm({ user, onSuccess, onCancel }: UserFormProps) {
           role: UserRole.PLANNER,
           status: UserStatus.ACTIVE,
           mustChangePassword: false,
+          scope: [{ cplId: undefined, categoryId: undefined }],
         },
   });
+
+  // Yalnız yaratma modunda anlamlı (`update` şeması `role` taşımaz — rol
+  // değişimi bu formda YOK, [[T-242]]'nin konusu).
+  const selectedRole = user ? undefined : (form.watch('role') as UserRole);
+  const scopeRequired = !user && SCOPE_REQUIRED_ROLES.has(selectedRole!);
+
+  /**
+   * T-243 — backend `A3`/`R1`/`B1` kapılarının istemci tarafı yansıması:
+   * `scope` anahtarı WILDCARD rollerde payload'da HİÇ BULUNMAZ (boş dizi
+   * de değil — conditional spread yokluğu garantiliyor). SCOPE_REQUIRED
+   * rollerde CM satırları `cplId` taşımaz (R1), "Tümü" seçimi (`null`)
+   * backend'in beklediği şekilde iletilir.
+   */
+  const buildScopePayload = (
+    role: UserRole,
+    scope: CreateUserFormData['scope'],
+  ): CreateUserDto['scope'] | undefined => {
+    if (!SCOPE_REQUIRED_ROLES.has(role)) {
+      return undefined;
+    }
+    return (scope ?? []).map((pair) =>
+      role === UserRole.CATEGORY_MANAGER
+        ? { categoryId: pair.categoryId as string }
+        : { cplId: pair.cplId ?? null, categoryId: pair.categoryId ?? null },
+    );
+  };
 
   const onSubmit = async (data: CreateUserFormData | UpdateUserFormData) => {
     try {
@@ -65,11 +101,35 @@ export function UserForm({ user, onSuccess, onCancel }: UserFormProps) {
           data: data as UpdateUserFormData,
         });
       } else {
-        await createMutation.mutateAsync(data as CreateUserFormData);
+        const createData = data as CreateUserFormData;
+        const scope = buildScopePayload(createData.role, createData.scope);
+        const payload: CreateUserDto = {
+          email: createData.email,
+          password: createData.password,
+          fullName: createData.fullName,
+          firstName: createData.firstName,
+          lastName: createData.lastName,
+          role: createData.role,
+          status: createData.status,
+          phoneNumber: createData.phoneNumber,
+          department: createData.department,
+          jobTitle: createData.jobTitle,
+          mustChangePassword: createData.mustChangePassword,
+          permissions: createData.permissions,
+          ...(scope !== undefined ? { scope } : {}),
+        };
+        await createMutation.mutateAsync(payload);
       }
       onSuccess?.();
     } catch (error) {
       console.error('Failed to save user:', error);
+      // R2 (409, rol değişimi kapsam tutarsızlığı) ve diğer backend
+      // hataları — istemci doğrulaması tek savunma değil, backend'in
+      // mesajı burada kullanıcıya anlaşılır şekilde gösterilir.
+      const message = (
+        error as { response?: { data?: { message?: string } } }
+      )?.response?.data?.message;
+      toast.error(message || 'Kullanıcı kaydedilirken hata oluştu');
     }
   };
 
@@ -165,6 +225,8 @@ export function UserForm({ user, onSuccess, onCancel }: UserFormProps) {
             />
           )}
         </div>
+
+        {scopeRequired && <UserScopeFields role={selectedRole as UserRole} />}
 
         <div className="grid grid-cols-2 gap-4">
           <FormField

@@ -32,6 +32,40 @@ export enum UserStatus {
   LOCKED = 'LOCKED',
 }
 
+/**
+ * T-243 — istemci tarafı ergonomi kararı, sözleşme kaynağı DEĞİL.
+ *
+ * Kaynak — backend `user-scope.entity.ts` (`WILDCARD_SCOPE_ROLES` /
+ * `SCOPE_REQUIRED_ROLES`, T-241 karar (b)). Backend'in dört kapısı
+ * (B1/R1/A3/R2, `user.service.ts`) bu listeden BAĞIMSIZ olarak çalışmaya
+ * devam eder — bu iki set yalnız `UserForm`'un hangi alanları
+ * gösterdiğini/zorunlu kıldığını belirler. İki liste birbirinden ayrı
+ * güncellenirse (backend'e yeni bir rol eklenir, burası unutulursa)
+ * sonuç bir güvenlik açığı DEĞİL, bir ergonomi gerilemesidir: istemci
+ * yanlış alanı gösterir/gizler, backend yine de doğru 400/409'u döner.
+ */
+export const SCOPE_REQUIRED_ROLES: ReadonlySet<UserRole> = new Set([
+  UserRole.PLANNER,
+  UserRole.CATEGORY_MANAGER,
+]);
+
+export const WILDCARD_SCOPE_ROLES: ReadonlySet<UserRole> = new Set([
+  UserRole.ADMIN,
+  UserRole.FINANCE,
+  UserRole.READONLY,
+]);
+
+/**
+ * T-241 — backend `UserScopePairDto` (`create-user.dto.ts`) ile alan
+ * adları BİREBİR. `null` = o boyutta "hepsi"; `undefined` = kullanıcı
+ * henüz seçim yapmadı (istemci-yalnız ara durum, backend'e hiç gönderilmez
+ * — bkz. `UserForm.tsx`'in gönderim öncesi normalizasyonu).
+ */
+export interface UserScopePair {
+  cplId?: string | null;
+  categoryId?: string | null;
+}
+
 export interface User {
   id: string;
   email: string;
@@ -62,6 +96,13 @@ export interface CreateUserDto {
   jobTitle?: string;
   mustChangePassword?: boolean;
   permissions?: string[];
+  /**
+   * `SCOPE_REQUIRED_ROLES` (PLANNER/CATEGORY_MANAGER) için ZORUNLU (≥1
+   * çift). `WILDCARD_SCOPE_ROLES` (ADMIN/FINANCE/READONLY) için bu alan
+   * HİÇ GÖNDERİLMEMELİDİR — backend `A3` kapısı, verilirse 400 döner
+   * (`user.service.ts` `resolveScopeRowsToWrite`).
+   */
+  scope?: UserScopePair[];
 }
 
 export interface UpdateUserDto {
