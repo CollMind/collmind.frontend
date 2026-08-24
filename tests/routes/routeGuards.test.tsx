@@ -191,7 +191,7 @@ describe('route RBAC gates (src/routes/index.tsx)', () => {
       ).toBeInTheDocument();
     });
 
-    it('/off-invoice/upload: PLANNER giremez (backend `POST /agreement-transactions/upload` @Roles UserRole.ADMIN+UserRole.FINANCE — agreement-transaction.controller.ts:289 — BRD §7.2 ile çelişiyor, bkz. task raporu)', async () => {
+    it('/off-invoice/upload: PLANNER giremez (backend `POST /agreement-transactions/upload` @Roles UserRole.ADMIN+UserRole.FINANCE — agreement-transaction.controller.ts:289. T-277/Z35: `POST /agreement-transactions` (tekil, Manuel Giriş) `{ADMIN,FINANCE}`e EŞİTLENDİ — bu kapı artık BRD `§7.2`/`K-2.6.14` ile ÇELİŞMİYOR, çelişkinin belgesi değil UYUMUN doğrulaması)', async () => {
       renderAtPath('/off-invoice/upload', UserRole.PLANNER);
       expect(await screen.findByText('Dashboard Stub')).toBeInTheDocument();
       expect(

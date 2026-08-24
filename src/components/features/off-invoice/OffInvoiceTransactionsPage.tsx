@@ -11,6 +11,9 @@ import {
 } from '@/types/off-invoice.types';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { useToast } from '@/hooks/useToast';
+import { useMe } from '@/services/users.service';
+import { hasRole } from '@/utils/roleUtils';
+import { UserRole } from '@/types/user.types';
 import { OffInvoiceManualEntryModal } from './OffInvoiceManualEntryModal';
 
 type Tab = 'off' | 'on' | 'all';
@@ -18,6 +21,13 @@ type Tab = 'off' | 'on' | 'all';
 export function OffInvoiceTransactionsPage() {
   const navigate = useNavigate();
   const toast = useToast();
+  // T-277 / Z35: bu buton `POST /agreement-transactions`'ı çağırır
+  // (agreement-transaction.controller.ts:51-52, `@Roles(ADMIN, FINANCE)`
+  // — Z35 ile `/off-invoice/upload` ile EŞİTLENDİ, PLANNER düştü). Sayfanın
+  // kendisi PLANNER/READONLY'ye açık (listeleme meşru); kapanan yalnız
+  // bu YAZMA eylemi. `hasRole` ADMIN'i örtük olarak geçirir (roleUtils.ts).
+  const { data: user } = useMe();
+  const canManualEntry = hasRole(user?.role, [UserRole.FINANCE]);
   const [transactions, setTransactions] = useState<AgreementTransaction[]>([]);
   const [onInvoiceEntries, setOnInvoiceEntries] = useState<OnInvoiceEntry[]>(
     []
@@ -167,12 +177,14 @@ export function OffInvoiceTransactionsPage() {
           </p>
         </div>
         <div className="flex space-x-3">
-          <button
-            onClick={() => setIsManualEntryModalOpen(true)}
-            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-          >
-            Manuel Giriş
-          </button>
+          {canManualEntry && (
+            <button
+              onClick={() => setIsManualEntryModalOpen(true)}
+              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+            >
+              Manuel Giriş
+            </button>
+          )}
           <button
             onClick={() => navigate('/off-invoice/upload')}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
