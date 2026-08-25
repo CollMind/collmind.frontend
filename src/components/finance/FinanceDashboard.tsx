@@ -29,6 +29,9 @@ import {
   financeReportingEndpoints,
   ReportFilters,
 } from '@/api/endpoints/finance-reporting.endpoints';
+import { useMe } from '@/services/users.service';
+import { hasRole } from '@/utils/roleUtils';
+import { UserRole } from '@/types/user.types';
 import { BudgetUtilizationWidget } from './widgets/BudgetUtilizationWidget';
 import { SpendTrendWidget } from './widgets/SpendTrendWidget';
 import { SpendCompositionWidget } from './widgets/SpendCompositionWidget';
@@ -38,7 +41,26 @@ import { MechanicEffectivenessWidget } from './widgets/MechanicEffectivenessWidg
 import { VarianceAnalysisWidget } from './widgets/VarianceAnalysisWidget';
 import { CashFlowProjectionWidget } from './widgets/CashFlowProjectionWidget';
 
+// T-287 K3 vaka 1: ekran kapısı (`routes/index.tsx:448-456`, `{A,CM,F,RO}`)
+// `CATEGORY_MANAGER`'ı ekrana alıyor, ama `finance-reporting.controller.ts`
+// `budget-at-risk` / `variance-analysis` / `cash-flow-projection` uçlarının
+// `@Roles`'u `{A,F,RO}` — CM yok. Daraltma yönü: EKRAN KAPISI DEĞİŞMEZ (dört
+// widget CM'e hâlâ açık), yalnız bu üç widget CM için hiç istenmez/render
+// edilmez (403 yerine gösterilmez). Bkz. T-287 brief, "widget seviyesinde
+// koşullu render".
+const FINANCE_RESTRICTED_WIDGET_ROLES: UserRole[] = [
+  UserRole.ADMIN,
+  UserRole.FINANCE,
+  UserRole.READONLY,
+];
+
 export function FinanceDashboard() {
+  const { data: currentUser } = useMe();
+  const canSeeRestrictedWidgets = hasRole(
+    currentUser?.role,
+    FINANCE_RESTRICTED_WIDGET_ROLES
+  );
+
   const [filters, setFilters] = useState<ReportFilters>({
     startDate: new Date(new Date().getFullYear(), new Date().getMonth(), 1)
       .toISOString()
@@ -132,10 +154,16 @@ export function FinanceDashboard() {
     staleTime: 30000,
   });
 
+  // T-287 K3 vaka 1: `budget-at-risk` / `variance-analysis` /
+  // `cash-flow-projection` yalnız {ADMIN,FINANCE,READONLY}'a açık
+  // (finance-reporting.controller.ts:135-136,173-174,223-224). `enabled`
+  // olmadan CATEGORY_MANAGER için bu export-amaçlı kopya çağrılar da 403
+  // üretirdi — widget'ların kendi `useQuery`'leriyle AYNI koşul.
   const { data: budgetAtRisk } = useQuery({
     queryKey: ['budget-at-risk', filters],
     queryFn: () => financeReportingEndpoints.getBudgetAtRisk(filters),
     staleTime: 30000,
+    enabled: canSeeRestrictedWidgets,
   });
 
   const { data: mechanicEffectiveness } = useQuery({
@@ -152,12 +180,14 @@ export function FinanceDashboard() {
         'budget_vs_actual'
       ),
     staleTime: 30000,
+    enabled: canSeeRestrictedWidgets,
   });
 
   const { data: cashFlowProjection } = useQuery({
     queryKey: ['cash-flow-projection', filters],
     queryFn: () => financeReportingEndpoints.getCashFlowProjection(filters, 12),
     staleTime: 30000,
+    enabled: canSeeRestrictedWidgets,
   });
 
   const handleExport = () => {
@@ -351,26 +381,28 @@ export function FinanceDashboard() {
           </CardContent>
         </Card>
 
-        {/* Budget at Risk */}
-        <Card className={expandedWidget === 'risk' ? 'lg:col-span-2' : ''}>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle>Budget at Risk Analizi</CardTitle>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => toggleWidget('risk')}
-            >
-              {expandedWidget === 'risk' ? (
-                <Minimize2 className="h-4 w-4" />
-              ) : (
-                <Maximize2 className="h-4 w-4" />
-              )}
-            </Button>
-          </CardHeader>
-          <CardContent>
-            <BudgetAtRiskWidget filters={filters} />
-          </CardContent>
-        </Card>
+        {/* Budget at Risk — T-287 K3: {A,F,RO}, CATEGORY_MANAGER hariç */}
+        {canSeeRestrictedWidgets && (
+          <Card className={expandedWidget === 'risk' ? 'lg:col-span-2' : ''}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle>Budget at Risk Analizi</CardTitle>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => toggleWidget('risk')}
+              >
+                {expandedWidget === 'risk' ? (
+                  <Minimize2 className="h-4 w-4" />
+                ) : (
+                  <Maximize2 className="h-4 w-4" />
+                )}
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <BudgetAtRiskWidget filters={filters} />
+            </CardContent>
+          </Card>
+        )}
 
         {/* Mechanic Effectiveness */}
         <Card className={expandedWidget === 'mechanic' ? 'lg:col-span-2' : ''}>
@@ -418,47 +450,55 @@ export function FinanceDashboard() {
           </CardContent>
         </Card>
 
-        {/* Variance Analysis */}
-        <Card className={expandedWidget === 'variance' ? 'lg:col-span-2' : ''}>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle>Varyans Analizi</CardTitle>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => toggleWidget('variance')}
-            >
-              {expandedWidget === 'variance' ? (
-                <Minimize2 className="h-4 w-4" />
-              ) : (
-                <Maximize2 className="h-4 w-4" />
-              )}
-            </Button>
-          </CardHeader>
-          <CardContent>
-            <VarianceAnalysisWidget filters={filters} />
-          </CardContent>
-        </Card>
+        {/* Variance Analysis — T-287 K3: {A,F,RO}, CATEGORY_MANAGER hariç */}
+        {canSeeRestrictedWidgets && (
+          <Card
+            className={expandedWidget === 'variance' ? 'lg:col-span-2' : ''}
+          >
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle>Varyans Analizi</CardTitle>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => toggleWidget('variance')}
+              >
+                {expandedWidget === 'variance' ? (
+                  <Minimize2 className="h-4 w-4" />
+                ) : (
+                  <Maximize2 className="h-4 w-4" />
+                )}
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <VarianceAnalysisWidget filters={filters} />
+            </CardContent>
+          </Card>
+        )}
 
-        {/* Cash Flow Projection */}
-        <Card className={expandedWidget === 'cashflow' ? 'lg:col-span-2' : ''}>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle>Nakit Akış Projeksiyonu</CardTitle>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => toggleWidget('cashflow')}
-            >
-              {expandedWidget === 'cashflow' ? (
-                <Minimize2 className="h-4 w-4" />
-              ) : (
-                <Maximize2 className="h-4 w-4" />
-              )}
-            </Button>
-          </CardHeader>
-          <CardContent>
-            <CashFlowProjectionWidget filters={filters} />
-          </CardContent>
-        </Card>
+        {/* Cash Flow Projection — T-287 K3: {A,F,RO}, CATEGORY_MANAGER hariç */}
+        {canSeeRestrictedWidgets && (
+          <Card
+            className={expandedWidget === 'cashflow' ? 'lg:col-span-2' : ''}
+          >
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle>Nakit Akış Projeksiyonu</CardTitle>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => toggleWidget('cashflow')}
+              >
+                {expandedWidget === 'cashflow' ? (
+                  <Minimize2 className="h-4 w-4" />
+                ) : (
+                  <Maximize2 className="h-4 w-4" />
+                )}
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <CashFlowProjectionWidget filters={filters} />
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   );

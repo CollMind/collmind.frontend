@@ -303,9 +303,15 @@ export const routeConfig: RouteObject[] = [
     ),
   },
   {
+    // T-287 K3 vaka 3: bu kapı `requiredRole` TAŞIMIYORDU, yani beş rol de
+    // ekrana giriyordu — ama çağırdığı `GET /ledger`
+    // (ledger.controller.ts:24-25, `@Roles(ADMIN,FINANCE,PLANNER)`) yalnız
+    // üç rolü kabul ediyor. Daraltma: ekran kapısı rota kümesine hizalandı
+    // (erişim GENİŞLETİLMEDİ — CATEGORY_MANAGER ve READONLY bugün zaten
+    // canlı `403` alıyordu).
     path: '/budget/ledger',
     element: (
-      <ProtectedRoute>
+      <ProtectedRoute requiredRole={['ADMIN', 'FINANCE', 'PLANNER']}>
         <AppLayout>
           <ErrorBoundary>
             <BudgetLedgerPage />
@@ -476,11 +482,16 @@ export const routeConfig: RouteObject[] = [
     ),
   },
   {
+    // T-287 K3 vaka 2: bu ekran `agreement-transaction.controller.ts`
+    // `{ADMIN,FINANCE,PLANNER}` rota kümesi üzerine kuruludur (count/
+    // transactions/summary) — `READONLY` bu kümede YOK, sayfa yükleme anında
+    // `Promise.all` içindeki üç off-invoice çağrısının hepsinde 403 alır ve
+    // (kırılganlık ayrı ele alındı, aşağı bkz.) sayfanın TAMAMI kırılır.
+    // Daraltma: ekran kapısı rota kümesine hizalandı (erişim
+    // GENİŞLETİLMEDİ — READONLY bugün zaten canlı `403` alıyordu).
     path: '/off-invoice/transactions',
     element: (
-      <ProtectedRoute
-        requiredRole={['ADMIN', 'FINANCE', 'PLANNER', 'READONLY']}
-      >
+      <ProtectedRoute requiredRole={['ADMIN', 'FINANCE', 'PLANNER']}>
         <AppLayout>
           <ErrorBoundary>
             <OffInvoiceTransactionsPage />
@@ -490,11 +501,10 @@ export const routeConfig: RouteObject[] = [
     ),
   },
   {
+    // Aynı sayfa, aynı gerekçe — bkz. `/off-invoice/transactions` yorumu.
     path: '/off-invoice',
     element: (
-      <ProtectedRoute
-        requiredRole={['ADMIN', 'FINANCE', 'PLANNER', 'READONLY']}
-      >
+      <ProtectedRoute requiredRole={['ADMIN', 'FINANCE', 'PLANNER']}>
         <AppLayout>
           <ErrorBoundary>
             <OffInvoiceTransactionsPage />

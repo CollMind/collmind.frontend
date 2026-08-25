@@ -45,17 +45,30 @@ export function OffInvoiceTransactionsPage() {
   const [isManualEntryModalOpen, setIsManualEntryModalOpen] = useState(false);
 
   // Load counts only once on mount
+  // T-287 K3 vaka 2: `Promise.all` yerine `allSettled` — off-invoice ve
+  // on-invoice sayaçları BAĞIMSIZ kaynaklardır (ayrı @Roles kümeleri, ayrı
+  // uçlar); birinin reddi diğerinin gösterilmesini engellememeli.
   useEffect(() => {
     const loadCounts = async () => {
-      try {
-        const [offInvoiceCountData, onInvoiceCountData] = await Promise.all([
-          offInvoiceEndpoints.getCount(),
-          onInvoiceEndpoints.getCount(),
-        ]);
-        setOffInvoiceCount(offInvoiceCountData);
-        setOnInvoiceCount(onInvoiceCountData);
-      } catch (error: any) {
-        console.error('Count yüklenirken hata oluştu:', error);
+      const [offResult, onResult] = await Promise.allSettled([
+        offInvoiceEndpoints.getCount(),
+        onInvoiceEndpoints.getCount(),
+      ]);
+      if (offResult.status === 'fulfilled') {
+        setOffInvoiceCount(offResult.value);
+      } else {
+        console.error(
+          'Off-invoice count yüklenirken hata oluştu:',
+          offResult.reason
+        );
+      }
+      if (onResult.status === 'fulfilled') {
+        setOnInvoiceCount(onResult.value);
+      } else {
+        console.error(
+          'On-invoice count yüklenirken hata oluştu:',
+          onResult.reason
+        );
       }
     };
     loadCounts();
@@ -65,37 +78,70 @@ export function OffInvoiceTransactionsPage() {
     loadData();
   }, [dateFrom, dateTo, selectedCpl, selectedStatus]);
 
+  // T-287 K3 vaka 2: `Promise.all` yerine `allSettled`. Off-invoice
+  // (`agreement-transactions`, {A,F,P}) ve on-invoice (`on-invoice`,
+  // {A,F,P,RO}) AYRI @Roles kümeleridir — biri 403 alsa bile diğeri kendi
+  // başına render edilebilmeli. Önceki şekil (`Promise.all`) tek bir
+  // reddi sayfanın TAMAMINA yayıyordu (bkz. T-287 brief §K3 vaka 2).
   const loadData = async () => {
     setIsLoading(true);
     try {
-      const [txData, onInvoiceData, summaryData] = await Promise.all([
-        offInvoiceEndpoints.getTransactions({
-          invoiceDateFrom: dateFrom || undefined,
-          invoiceDateTo: dateTo || undefined,
-          cplId: selectedCpl || undefined,
-          status: selectedStatus || undefined,
-        }),
-        onInvoiceEndpoints.getEntries({
-          invoiceDateFrom: dateFrom || undefined,
-          invoiceDateTo: dateTo || undefined,
-          status: selectedStatus || undefined,
-        }),
-        offInvoiceEndpoints.getSummary({
-          invoiceDateFrom: dateFrom || undefined,
-          invoiceDateTo: dateTo || undefined,
-        }),
-      ]);
+      const [txResult, onInvoiceResult, summaryResult] =
+        await Promise.allSettled([
+          offInvoiceEndpoints.getTransactions({
+            invoiceDateFrom: dateFrom || undefined,
+            invoiceDateTo: dateTo || undefined,
+            cplId: selectedCpl || undefined,
+            status: selectedStatus || undefined,
+          }),
+          onInvoiceEndpoints.getEntries({
+            invoiceDateFrom: dateFrom || undefined,
+            invoiceDateTo: dateTo || undefined,
+            status: selectedStatus || undefined,
+          }),
+          offInvoiceEndpoints.getSummary({
+            invoiceDateFrom: dateFrom || undefined,
+            invoiceDateTo: dateTo || undefined,
+          }),
+        ]);
 
-      // Debug: Log first transaction to check CPL relation
-      if (txData.length > 0) {
-        console.log('First transaction:', txData[0]);
-        console.log('CPL relation:', txData[0].agreement?.cpl);
+      let hadFailure = false;
+
+      if (txResult.status === 'fulfilled') {
+        const txData = txResult.value;
+        // Debug: Log first transaction to check CPL relation
+        if (txData.length > 0) {
+          console.log('First transaction:', txData[0]);
+          console.log('CPL relation:', txData[0].agreement?.cpl);
+        }
+        setTransactions(txData);
+      } else {
+        hadFailure = true;
+        console.error('Off-invoice işlemleri yüklenirken hata:', txResult.reason);
       }
-      setTransactions(txData);
-      setOnInvoiceEntries(onInvoiceData);
-      setSummary(summaryData);
-    } catch (error: any) {
-      toast.error('Veriler yüklenirken hata oluştu');
+
+      if (onInvoiceResult.status === 'fulfilled') {
+        setOnInvoiceEntries(onInvoiceResult.value);
+      } else {
+        hadFailure = true;
+        console.error(
+          'On-invoice kayıtları yüklenirken hata:',
+          onInvoiceResult.reason
+        );
+      }
+
+      if (summaryResult.status === 'fulfilled') {
+        setSummary(summaryResult.value);
+      } else {
+        hadFailure = true;
+        console.error('Özet yüklenirken hata:', summaryResult.reason);
+      }
+
+      if (hadFailure) {
+        toast.error(
+          'Bazı veriler yüklenemedi — sayfadaki içeriğin bir kısmı eksik olabilir'
+        );
+      }
     } finally {
       setIsLoading(false);
     }
