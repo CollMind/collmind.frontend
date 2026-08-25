@@ -8,16 +8,33 @@ import authReducer from '@/store/slices/auth.slice';
 import { FinanceDashboard } from '@/components/finance/FinanceDashboard';
 import { financeReportingEndpoints } from '@/api/endpoints/finance-reporting.endpoints';
 import { UserRole, UserStatus, User } from '@/types/user.types';
+import { useMe } from '@/services/users.service';
 
 // T-287 K3 vaka 1: `/finance` ekran kapısı `CATEGORY_MANAGER`'ı içeri alıyor
-// (`routes/index.tsx:448-456`, `{A,CM,F,RO}`) ama üç widget'ın çağırdığı
-// rota kümesi CM'i içermiyor (`finance-reporting.controller.ts:135-136,
-// 173-174, 223-224` → `{A,F,RO}`). Sonuç: CM ekrana girer, üç widget canlı
+// (`routes/index.tsx`'in `path: '/finance'` girdisi, `{A,CM,F,RO}`) ama üç widget'ın çağırdığı
+// rota kümesi CM'i içermiyor (`finance-reporting.controller.ts`'in `budget-at-risk` ·
+// `variance-analysis` · `cash-flow-projection` uçları → `{A,F,RO}`). Sonuç: CM ekrana girer, üç widget canlı
 // `403` verir. Bu suite önce KUSURU görür (`financeReportingEndpoints`
 // mock'larının reject ile "backend 403 verdi" simülasyonu), sonra düzeltme
 // sonrası bu üç çağrının CM için HİÇ YAPILMADIĞINI (widget seviyesinde
 // koşullu render) doğrular. Ekran kapısı DEĞİŞMEZ — dört widget CM için hâlâ
 // çalışır (pozitif yarı).
+
+// ⛔ KRİTİK (code-reviewer B1, 2026-08-26): `FinanceDashboard` rolü
+// `useMe()`'den okur, redux'tan DEĞİL. Rolü yalnız store'a koymak bu pini
+// AYIRT EDİCİLİKTEN TÜMÜYLE YOKSUN bırakıyordu — MSW handler'ı `/users/me`
+// için koşulsuz `ADMIN` döndürüyor, `hasRole` ADMIN'i geçiriyor, ve
+// `canSeeRestrictedWidgets` HER ROL için `true` oluyordu.
+// Mutasyonla ölçüldü: `CATEGORY_MANAGER` izinli listeye GERİ EKLENDİĞİNDE —
+// yani bu task'ın önlemek için var olduğu TAM REGRESYON — suite YEŞİL kalıyordu.
+// Doğru şekil kardeş testte zaten vardı (OffInvoiceTransactionsPage.resilience).
+// `DISIPLIN`: "fixture, ayırt etmek istediği iki tarafta FARKLI değer taşımalı".
+vi.mock('@/services/users.service', async () => {
+  const actual = await vi.importActual<
+    typeof import('@/services/users.service')
+  >('@/services/users.service');
+  return { ...actual, useMe: vi.fn() };
+});
 
 vi.mock('@/api/endpoints/finance-reporting.endpoints', async () => {
   const actual = await vi.importActual<
@@ -95,6 +112,12 @@ const baseUser: Omit<User, 'role'> = {
 };
 
 function renderDashboard(role: UserRole) {
+  // Bileşenin rolü GERÇEKTEN okuduğu yer — pinin ayırt ediciliği buna bağlı.
+  vi.mocked(useMe).mockReturnValue({
+    data: { ...baseUser, role } as User,
+    isLoading: false,
+  } as ReturnType<typeof useMe>);
+
   const store = configureStore({
     reducer: { auth: authReducer },
     preloadedState: {
@@ -118,7 +141,7 @@ function renderDashboard(role: UserRole) {
   );
 }
 
-describe('FinanceDashboard — T-287 K3 vaka 1: CATEGORY_MANAGER × üç finance-reporting widget', () => {
+describe('SÖZLEŞME: rota kümesinde olmayan rol, o rotayı çağıran widget’i HİÇ istemez', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     const forbidden = Object.assign(new Error('Forbidden'), {

@@ -41,7 +41,7 @@ import { MechanicEffectivenessWidget } from './widgets/MechanicEffectivenessWidg
 import { VarianceAnalysisWidget } from './widgets/VarianceAnalysisWidget';
 import { CashFlowProjectionWidget } from './widgets/CashFlowProjectionWidget';
 
-// T-287 K3 vaka 1: ekran kapısı (`routes/index.tsx:448-456`, `{A,CM,F,RO}`)
+// T-287 K3 vaka 1: ekran kapısı (`routes/index.tsx`'in `path: '/finance'` girdisi, `{A,CM,F,RO}`)
 // `CATEGORY_MANAGER`'ı ekrana alıyor, ama `finance-reporting.controller.ts`
 // `budget-at-risk` / `variance-analysis` / `cash-flow-projection` uçlarının
 // `@Roles`'u `{A,F,RO}` — CM yok. Daraltma yönü: EKRAN KAPISI DEĞİŞMEZ (dört
@@ -156,7 +156,8 @@ export function FinanceDashboard() {
 
   // T-287 K3 vaka 1: `budget-at-risk` / `variance-analysis` /
   // `cash-flow-projection` yalnız {ADMIN,FINANCE,READONLY}'a açık
-  // (finance-reporting.controller.ts:135-136,173-174,223-224). `enabled`
+  // (finance-reporting.controller.ts, `budget-at-risk`/`variance-analysis`/
+  // `cash-flow-projection` uçlarının `@Roles`'u). `enabled`
   // olmadan CATEGORY_MANAGER için bu export-amaçlı kopya çağrılar da 403
   // üretirdi — widget'ların kendi `useQuery`'leriyle AYNI koşul.
   const { data: budgetAtRisk } = useQuery({

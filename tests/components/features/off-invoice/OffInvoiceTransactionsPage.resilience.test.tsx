@@ -17,12 +17,26 @@ import {
 import { UserRole, UserStatus, User } from '@/types/user.types';
 
 // T-287 K3 vaka 2, `Promise.all` kırılganlığı: `loadData`
-// (OffInvoiceTransactionsPage.tsx:71) üç off-invoice çağrısıyla bir
+// (OffInvoiceTransactionsPage.tsx'in `loadData` gövdesi) üç off-invoice çağrısıyla bir
 // on-invoice çağrısını TEK `Promise.all`'a koyuyor. Off-invoice
 // tarafındaki herhangi bir hata (403 dahil) `Promise.all`'ı reddeder ve
 // on-invoice listesi — kendi başına başarılı olsa bile — hiç render
 // olmuyor. Bu, `Promise.allSettled`'a geçilmesini gerektiren bir
 // dayanıklılık kusuru (rol kararı DEĞİL — bkz. T-287 brief §K3 vaka 2).
+
+// ⛔ B3 (code-reviewer): §2.5'in KULLANICIYA-GÖRÜNÜR yarısı pinsizdi.
+// Mutasyonla ölçüldü: `toast.error` bloğu KALDIRILDIĞINDA suite yeşil kalıyordu
+// — yani "kısmi içerik gösterilir" pinlenmişti ama "kullanıcı bir şeyin EKSİK
+// olduğunu görür" pinlenmemişti. `CLAUDE.md §4.2`: bağlayıcı koşul guard'a bağlanır.
+const toastErrorSpy = vi.fn();
+vi.mock('@/hooks/useToast', () => ({
+  useToast: () => ({
+    error: toastErrorSpy,
+    success: vi.fn(),
+    info: vi.fn(),
+    warning: vi.fn(),
+  }),
+}));
 
 vi.mock('@/services/users.service', async () => {
   const actual = await vi.importActual<
@@ -107,7 +121,7 @@ function renderPage(role: UserRole) {
   );
 }
 
-describe('OffInvoiceTransactionsPage — T-287 K3 vaka 2: Promise.all kırılganlığı', () => {
+describe('SÖZLEŞME: kısmi başarı içeriği düşürmez — ve eksiklik KULLANICIYA görünür', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockedGetOffCount.mockResolvedValue(3);
@@ -159,5 +173,52 @@ describe('OffInvoiceTransactionsPage — T-287 K3 vaka 2: Promise.all kırılgan
     await waitFor(() =>
       expect(screen.getByText('ON-INV-1')).toBeInTheDocument()
     );
+  });
+
+  // ⛔ §2.5'in İKİNCİ yarısı — B3. Kısmi içerik göstermek YETMEZ; kullanıcı
+  // bir şeyin eksik olduğunu GÖRMELİ. Aksi hâlde `allSettled` sessiz sıfırı
+  // İNANDIRICI kılar ve `Promise.all`'dan DAHA KÖTÜ olur.
+  it('reddedilen çağrı kullanıcıya GÖRÜNÜR bir hata üretir (sessiz sıfır DEĞİL)', async () => {
+    // ⛔ FIXTURE AYRIMI: üstteki `beforeEach` SAYAÇLARI BAŞARILI döndürüyor
+    // (`mockResolvedValue(3)`) — yani `loadCounts` hiç reddetmiyor ve o yol
+    // HİÇ KOŞMUYORDU. `DISIPLIN`: "negatif bir davranışsal kanıt, tetikleyen
+    // fixture olmadan kanıt değildir."
+    mockedGetOffCount.mockRejectedValue(new Error('403'));
+
+    renderPage(UserRole.FINANCE);
+
+    await waitFor(() =>
+      expect(screen.getByText('Fatura İşlemleri')).toBeInTheDocument()
+    );
+
+    // ⛔ AYIRT EDİCİ OLMALI: `loadData`'nın KENDİ toast'ı da bu spy'ı çağırıyor.
+    // İlk yazımda yalnız `toHaveBeenCalled()` vardı ve `loadCounts`'un toast'ını
+    // kaldıran mutasyon YEŞİL kalıyordu — assertion YANLIŞ ÜRETİCİ tarafından
+    // karşılanıyordu (`§2.7`: "kapsam var, ayırt etme gücü yok").
+    await waitFor(() =>
+      expect(toastErrorSpy).toHaveBeenCalledWith(
+        expect.stringContaining('sayaçlar yüklenemedi')
+      )
+    );
+  });
+
+  // §2.5 — reddedilen sayaç `0` olarak DEĞİL, "bilinmiyor" olarak render edilir.
+  // `0` "ölçüldü ve sıfır" demektir; reddedilen bir çağrı hakkında bunu söylemek
+  // bir YALANDIR, ve toplamı da kirletir.
+  it('reddedilen sayaç `0` değil `?` gösterir ve TOPLAMI kirletmez', async () => {
+    mockedGetOffCount.mockRejectedValue(new Error('403'));
+
+    renderPage(UserRole.FINANCE);
+
+    await waitFor(() =>
+      expect(screen.getByText('Fatura İşlemleri')).toBeInTheDocument()
+    );
+
+    await waitFor(() =>
+      expect(
+        screen.getByRole('button', { name: /Off-Invoice \?/ })
+      ).toBeInTheDocument()
+    );
+    expect(screen.getByRole('button', { name: /Tümü \?/ })).toBeInTheDocument();
   });
 });

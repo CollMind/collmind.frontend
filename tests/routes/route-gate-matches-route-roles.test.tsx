@@ -88,7 +88,7 @@ function renderAtPath(path: string, role: UserRole) {
   );
 }
 
-describe('T-287 K3 — route gate ↔ rota kümesi ayrışması (repro + pin)', () => {
+describe('SÖZLEŞME: ekran kapısı, o ekranın çağırdığı rotaların kümesinden GENİŞ olamaz', () => {
   beforeEach(() => {
     localStorage.clear();
   });
@@ -114,6 +114,26 @@ describe('T-287 K3 — route gate ↔ rota kümesi ayrışması (repro + pin)', 
       expect(
         screen.queryByText('OffInvoiceTransactionsPage Stub')
       ).not.toBeInTheDocument();
+    });
+  });
+
+  // S1 (code-reviewer): KARDEŞ ROTA aynı daraltmayı aldı ama pinsizdi.
+  // Mutasyonla ölçüldü: `/off-invoice`'a `READONLY` geri eklendiğinde suite
+  // YEŞİL kalıyordu — yani daraltmanın yarısı guard'sızdı.
+  describe('/off-invoice (kardeş rota — aynı sayfa, aynı küme)', () => {
+    it('FINANCE girer', () => {
+      renderAtPath('/off-invoice', UserRole.FINANCE);
+      expect(screen.getByText('OffInvoiceTransactionsPage Stub')).toBeInTheDocument();
+    });
+
+    it('PLANNER girer', () => {
+      renderAtPath('/off-invoice', UserRole.PLANNER);
+      expect(screen.getByText('OffInvoiceTransactionsPage Stub')).toBeInTheDocument();
+    });
+
+    it('READONLY GİREMEZ (rota kümesi {A,F,P} — RO yok)', () => {
+      renderAtPath('/off-invoice', UserRole.READONLY);
+      expect(screen.getByText('Dashboard Stub')).toBeInTheDocument();
     });
   });
 

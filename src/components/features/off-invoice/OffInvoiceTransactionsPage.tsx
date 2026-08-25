@@ -22,7 +22,7 @@ export function OffInvoiceTransactionsPage() {
   const navigate = useNavigate();
   const toast = useToast();
   // T-277 / Z35: bu buton `POST /agreement-transactions`'ı çağırır
-  // (agreement-transaction.controller.ts:51-52, `@Roles(ADMIN, FINANCE)`
+  // (agreement-transaction.controller.ts, `@Roles(ADMIN, FINANCE)`
   // — Z35 ile `/off-invoice/upload` ile EŞİTLENDİ, PLANNER düştü). Sayfanın
   // kendisi PLANNER/READONLY'ye açık (listeleme meşru); kapanan yalnız
   // bu YAZMA eylemi. `hasRole` ADMIN'i örtük olarak geçirir (roleUtils.ts).
@@ -35,8 +35,13 @@ export function OffInvoiceTransactionsPage() {
   const [summary, setSummary] = useState<TransactionSummary | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<Tab>('off');
-  const [offInvoiceCount, setOffInvoiceCount] = useState<number>(0);
-  const [onInvoiceCount, setOnInvoiceCount] = useState<number>(0);
+  // ⛔ `number | null` — `0` DEĞİL (§2.5, code-reviewer B2).
+  // `allSettled`'a geçiş bu vakayı KÖTÜLEŞTİRMİŞTİ: `Promise.all` ikisini
+  // birlikte düşürüyordu (belirgin bozukluk); `allSettled` ile reddedilen
+  // sayaç `0` olarak render ediliyor ve "Off 0 | On 2 | Tümü 2" İNANDIRICI
+  // görünüyordu. `null` = "bilinmiyor", `0` = "ölçüldü ve sıfır".
+  const [offInvoiceCount, setOffInvoiceCount] = useState<number | null>(null);
+  const [onInvoiceCount, setOnInvoiceCount] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
@@ -61,6 +66,7 @@ export function OffInvoiceTransactionsPage() {
           'Off-invoice count yüklenirken hata oluştu:',
           offResult.reason
         );
+        setOffInvoiceCount(null);
       }
       if (onResult.status === 'fulfilled') {
         setOnInvoiceCount(onResult.value);
@@ -69,6 +75,11 @@ export function OffInvoiceTransactionsPage() {
           'On-invoice count yüklenirken hata oluştu:',
           onResult.reason
         );
+        setOnInvoiceCount(null);
+      }
+      if (offResult.status === 'rejected' || onResult.status === 'rejected') {
+        // §2.5: kullanıcı BİR ŞEYİN EKSİK olduğunu görmeli — console yetmez.
+        toast.error('Bazı sayaçlar yüklenemedi; gösterilen sayılar eksik olabilir.');
       }
     };
     loadCounts();
@@ -313,7 +324,7 @@ export function OffInvoiceTransactionsPage() {
                   : 'border-transparent text-gray-600'
               }`}
             >
-              Off-Invoice {offInvoiceCount}
+              Off-Invoice {offInvoiceCount ?? '?'}
             </button>
             <button
               onClick={() => setActiveTab('on')}
@@ -323,7 +334,7 @@ export function OffInvoiceTransactionsPage() {
                   : 'border-transparent text-gray-600'
               }`}
             >
-              On-Invoice {onInvoiceCount}
+              On-Invoice {onInvoiceCount ?? '?'}
             </button>
             <button
               onClick={() => setActiveTab('all')}
@@ -333,7 +344,12 @@ export function OffInvoiceTransactionsPage() {
                   : 'border-transparent text-gray-600'
               }`}
             >
-              Tümü {offInvoiceCount + onInvoiceCount}
+              {/* ⛔ Bilinmeyen bir sayaçla toplam ÜRETİLMEZ (§2.5): eksik
+                  bir bileşenin toplamı, tam bir toplam gibi görünür. */}
+              Tümü{' '}
+              {offInvoiceCount === null || onInvoiceCount === null
+                ? '?'
+                : offInvoiceCount + onInvoiceCount}
             </button>
           </div>
         </div>

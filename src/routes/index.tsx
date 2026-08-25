@@ -305,7 +305,7 @@ export const routeConfig: RouteObject[] = [
   {
     // T-287 K3 vaka 3: bu kapı `requiredRole` TAŞIMIYORDU, yani beş rol de
     // ekrana giriyordu — ama çağırdığı `GET /ledger`
-    // (ledger.controller.ts:24-25, `@Roles(ADMIN,FINANCE,PLANNER)`) yalnız
+    // (ledger.controller.ts, `GET /` ucunun `@Roles(ADMIN,FINANCE,PLANNER)`'u) yalnız
     // üç rolü kabul ediyor. Daraltma: ekran kapısı rota kümesine hizalandı
     // (erişim GENİŞLETİLMEDİ — CATEGORY_MANAGER ve READONLY bugün zaten
     // canlı `403` alıyordu).
