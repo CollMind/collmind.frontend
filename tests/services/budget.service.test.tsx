@@ -9,7 +9,6 @@ import {
   useBudgetEnvelopes,
   useBudgetEnvelope,
   useCreateBudgetEnvelope,
-  useReserveBudget,
   useBudgetReservedAmount,
   useBudgetTransactions,
 } from '@/services/budget.service';
@@ -170,37 +169,12 @@ describe('useCreateBudgetEnvelope', () => {
   });
 });
 
-describe('useReserveBudget', () => {
-  beforeEach(() => {
-    queryClient.clear();
-  });
-
-  it('should reserve budget successfully', async () => {
-    server.use(
-      http.post('http://localhost:3000/budget/reserve', async ({ request }) => {
-        const body = await request.json() as any;
-        return HttpResponse.json({
-          id: '1',
-          envelopeId: body.envelopeId,
-          amount: body.amount,
-          status: 'PENDING',
-        });
-      })
-    );
-
-    const { result } = renderHook(() => useReserveBudget(), { wrapper });
-
-    await result.current.mutateAsync({
-      envelopeId: '1',
-      amount: 10000,
-      agreementId: 'agreement-1',
-    });
-
-    await waitFor(() => {
-      expect(result.current.isSuccess).toBe(true);
-    });
-  });
-});
+// `useReserveBudget` KALDIRILDI (T-289, `Z38`, `B3` kaza-dalgası `K6(c)`,
+// 2026-08-26) — backend `POST /budget/reserve` yapısal olarak kırık ve
+// ölüydü (`PessimisticLockTransactionRequiredError`, her çağrıda 500);
+// kanonik rezervasyon yolu `reserveForAgreement`/`reserveTypedForPlan`
+// (anlaşma/plan onayından). Bu testin MSW handler'ı gerçek 500'ü hiç
+// modellemiyordu.
 
 // T-225: `useApproveReservation` / `useRejectReservation` / `useBudgetReservations`
 // (ve `BudgetReservation` tipi) kaldırıldı — backend'de karşılık gelen

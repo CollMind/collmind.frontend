@@ -20,7 +20,6 @@ import { BudgetCategory } from '@/types/budget.types';
 interface BudgetEnvelopeListProps {
   envelopes: BudgetEnvelope[];
   isLoading?: boolean;
-  onReserveClick?: (envelope: BudgetEnvelope) => void;
 }
 
 type RAGStatus = 'good' | 'warning' | 'critical';
@@ -65,7 +64,6 @@ const formatCurrency = (amount: number, currency: string = 'TRY') => {
 export function BudgetEnvelopeList({
   envelopes,
   isLoading,
-  onReserveClick,
 }: BudgetEnvelopeListProps) {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
@@ -446,17 +444,9 @@ export function BudgetEnvelopeList({
                             >
                               <Eye className="h-4 w-4" />
                             </Button>
-                            {onReserveClick &&
-                              safeNumber(envelope.availableAmount) > 0 && (
-                                <Button
-                                  variant="default"
-                                  size="sm"
-                                  onClick={() => onReserveClick(envelope)}
-                                  title="Rezerve Et"
-                                >
-                                  Rezerve Et
-                                </Button>
-                              )}
+                            {/* "Rezerve Et" butonu KALDIRILDI (T-289, `Z38`,
+                                `K6(c)`, 2026-08-26) — backend `POST
+                                /budget/reserve` ile birlikte. */}
                           </div>
                         </td>
                       </tr>

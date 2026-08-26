@@ -5,7 +5,6 @@ import {
   BudgetTransaction,
   ReservedAmountResponse,
   CreateBudgetEnvelopeDto,
-  ReserveBudgetDto,
 } from '@/types/budget.types';
 import { useToast } from '@/hooks/useToast';
 
@@ -53,24 +52,8 @@ export const useCreateBudgetEnvelope = () => {
   });
 };
 
-export const useReserveBudget = () => {
-  const queryClient = useQueryClient();
-  const toast = useToast();
-
-  return useMutation({
-    mutationFn: (data: ReserveBudgetDto) =>
-      budgetEndpoints.reserveBudget(data).then((res) => res.data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: budgetKeys.all });
-      toast.success('Budget başarıyla rezerve edildi');
-    },
-    onError: (error: any) => {
-      const errorMessage =
-        error.response?.data?.message || 'Budget rezerve edilemedi';
-      toast.error(errorMessage);
-    },
-  });
-};
+// `useReserveBudget` KALDIRILDI (T-289, `Z38`, `B3` kaza-dalgası `K6(c)`,
+// 2026-08-26) — backend `POST /budget/reserve` ile birlikte (T-277 deseni).
 
 /**
  * Rezerve edilmiş tutarı getiren hook

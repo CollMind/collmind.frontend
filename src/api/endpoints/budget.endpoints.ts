@@ -4,7 +4,6 @@ import {
   BudgetTransaction,
   ReservedAmountResponse,
   CreateBudgetEnvelopeDto,
-  ReserveBudgetDto,
 } from '@/types/budget.types';
 
 export const budgetEndpoints = {
@@ -25,11 +24,11 @@ export const budgetEndpoints = {
   getTransactions: (id: string) =>
     apiClient.get<BudgetTransaction[]>(`/budget/envelopes/${id}/transactions`),
 
-  // Budget Reservation (Event-Sourced: backend `reserveBudget` yazar
-  // ve `BudgetTransaction` döner — bkz. T-225, backend
-  // `modules/shared/budget/budget.service.ts:197..`)
-  reserveBudget: (data: ReserveBudgetDto) =>
-    apiClient.post<BudgetTransaction>('/budget/reserve', data),
+  // `reserveBudget` (`POST /budget/reserve`) KALDIRILDI (T-289, `Z38`,
+  // `B3` kaza-dalgası `K6(c)`, 2026-08-26) — backend ucu ölü/kırıktı
+  // (her çağrıda 500, `PessimisticLockTransactionRequiredError`) ve
+  // kanonik rezervasyon yolu `reserveForAgreement`/`reserveTypedForPlan`
+  // (anlaşma/plan onayından) zaten canlı.
 
   getBudgetStatus: (
     channel: string,

@@ -9,7 +9,6 @@ import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import {
   BudgetDashboard,
   BudgetEnvelopeList,
-  ReserveBudgetDialog,
   BudgetEnvelopeForm,
 } from '@/components/budget';
 import { Button } from '@/components/ui/button';
@@ -20,7 +19,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { BudgetEnvelope, CreateBudgetEnvelopeDto } from '@/types/budget.types';
+import { CreateBudgetEnvelopeDto } from '@/types/budget.types';
 import { Wallet, Plus } from 'lucide-react';
 
 type BudgetView = 'dashboard' | 'list';
@@ -49,9 +48,6 @@ export function BudgetPage() {
     }
   };
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
-  const [reserveDialogOpen, setReserveDialogOpen] = useState(false);
-  const [selectedEnvelope, setSelectedEnvelope] =
-    useState<BudgetEnvelope | null>(null);
   const { data: envelopes, isLoading, error } = useBudgetEnvelopes();
   const createMutation = useCreateBudgetEnvelope();
   const { data: user } = useMe();
@@ -77,16 +73,6 @@ export function BudgetPage() {
     } catch (error) {
       // Error is handled by the hook
     }
-  };
-
-  const handleReserveClick = (envelope: BudgetEnvelope) => {
-    setSelectedEnvelope(envelope);
-    setReserveDialogOpen(true);
-  };
-
-  const handleReserveClose = () => {
-    setReserveDialogOpen(false);
-    setSelectedEnvelope(null);
   };
 
   return (
@@ -145,24 +131,14 @@ export function BudgetPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Reserve Budget Dialog */}
-      {selectedEnvelope && (
-        <ReserveBudgetDialog
-          envelope={selectedEnvelope}
-          isOpen={reserveDialogOpen}
-          onClose={handleReserveClose}
-        />
-      )}
+      {/* `ReserveBudgetDialog` KALDIRILDI (T-289, `Z38`, `K6(c)`, 2026-08-26) —
+          backend `POST /budget/reserve` ile birlikte, T-277 deseni. */}
 
       {/* Content */}
       {view === 'dashboard' ? (
         <BudgetDashboard onCreateEnvelope={() => setIsCreateDialogOpen(true)} />
       ) : (
-        <BudgetEnvelopeList
-          envelopes={envelopesArray}
-          isLoading={isLoading}
-          onReserveClick={handleReserveClick}
-        />
+        <BudgetEnvelopeList envelopes={envelopesArray} isLoading={isLoading} />
       )}
     </div>
   );

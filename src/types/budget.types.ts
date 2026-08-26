@@ -77,15 +77,8 @@ export interface CreateBudgetEnvelopeDto {
   metadata?: Record<string, any>;
 }
 
-/**
- * Budget Rezerve Etme DTO
- */
-export interface ReserveBudgetDto {
-  envelopeId: string;
-  agreementId: string; // Zorunlu
-  amount: number;
-  currency?: string; // Default: 'TRY'
-}
+// `ReserveBudgetDto` KALDIRILDI (T-289, `Z38`, `K6(c)`, 2026-08-26) —
+// `POST /budget/reserve` uç kaldırıldığı için.
 
 /**
  * Budget Transaction Tipleri
