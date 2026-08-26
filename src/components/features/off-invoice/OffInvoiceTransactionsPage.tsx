@@ -79,7 +79,9 @@ export function OffInvoiceTransactionsPage() {
       }
       if (offResult.status === 'rejected' || onResult.status === 'rejected') {
         // §2.5: kullanıcı BİR ŞEYİN EKSİK olduğunu görmeli — console yetmez.
-        toast.error('Bazı sayaçlar yüklenemedi; gösterilen sayılar eksik olabilir.');
+        toast.error(
+          'Bazı sayaçlar yüklenemedi; gösterilen sayılar eksik olabilir.'
+        );
       }
     };
     loadCounts();
@@ -89,10 +91,14 @@ export function OffInvoiceTransactionsPage() {
     loadData();
   }, [dateFrom, dateTo, selectedCpl, selectedStatus]);
 
-  // T-287 K3 vaka 2: `Promise.all` yerine `allSettled`. Off-invoice
-  // (`agreement-transactions`, {A,F,P}) ve on-invoice (`on-invoice`,
-  // {A,F,P,RO}) AYRI @Roles kümeleridir — biri 403 alsa bile diğeri kendi
-  // başına render edilebilmeli. Önceki şekil (`Promise.all`) tek bir
+  // T-287 K3 vaka 2: `Promise.all` yerine `allSettled`.
+  // ⚠️ GÜNCELLENDİ (`Z43 §2`, 2026-08-27): bu yorum ~~off-invoice `{A,F,P}` ↔
+  // on-invoice `{A,F,P,RO}` AYRI `@Roles` kümeleridir~~ diyordu. İKİSİ DE artık
+  // `{A,F,P,RO}` (`MODES_LEDGER_READ` `+READONLY`) ve ikisi de `@Roles` değil
+  // `@RequireCapability` taşıyor — anlatılan ASİMETRİ KALMADI.
+  // ⛔ Ama `allSettled` GEREKÇESİ değişmedi ve DARALMADI: gerekçe küme farkına
+  // DEĞİL, uçların BAĞIMSIZLIĞINA dayanır — birinden gelen bir red diğerlerini
+  // öldürmemeli. Küme eşitlendi diye zayıflamaz. Önceki şekil (`Promise.all`) tek bir
   // reddi sayfanın TAMAMINA yayıyordu (bkz. T-287 brief §K3 vaka 2).
   const loadData = async () => {
     setIsLoading(true);
@@ -128,7 +134,10 @@ export function OffInvoiceTransactionsPage() {
         setTransactions(txData);
       } else {
         hadFailure = true;
-        console.error('Off-invoice işlemleri yüklenirken hata:', txResult.reason);
+        console.error(
+          'Off-invoice işlemleri yüklenirken hata:',
+          txResult.reason
+        );
       }
 
       if (onInvoiceResult.status === 'fulfilled') {

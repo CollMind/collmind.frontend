@@ -14,6 +14,13 @@ import { User, UserRole, UserStatus } from '@/types/user.types';
 //   /off-invoice/transactions  ekran {A,F,P,RO}   rota-kümesi {A,F,P}   → RO 403
 //   /budget/ledger             ekran KAPISIZ      rota-kümesi {A,F,P}   → CM,RO 403
 //
+// ⛔ GÜNCELLEME (`Z43 §2`, `B3` istisna-dalgası `Faz-B`, 2026-08-27):
+// backend `MODES_LEDGER_READ` hücresi `+READONLY` aldı ({A,F,P} → {A,F,P,RO},
+// `K-2.6.4c`: "İZLEYİCİ bir İZLEME YETENEKLERİ SETİDİR"). İKİ-REPO-TEK-
+// KAPANIŞ: ekran kapıları aynı commit'te `+READONLY` aldı — bu dosyadaki
+// READONLY pinleri eskiden 403 (kapalı) bekliyordu, şimdi 200 (girer).
+// CATEGORY_MANAGER `MODES_LEDGER_READ`'in üyesi DEĞİL — o pin değişmedi.
+//
 // Bu dosya §2.7 #6 desenindeki "ayırt edici" şeklini izler: hem GİRMESİ
 // gereken hem GİRMEMESİ gereken rolü ayrı ayrı sınar. Route element'leri
 // ağır (data-fetch eden) bileşenler olduğu için stub'lanır — routeGuards.
@@ -108,12 +115,11 @@ describe('SÖZLEŞME: ekran kapısı, o ekranın çağırdığı rotaların küm
       ).toBeInTheDocument();
     });
 
-    it('READONLY GİREMEMELİ (backend agreement-transaction.controller.ts {A,F,P} — READONLY yok, sayfa canlıda kırık)', async () => {
+    it('READONLY girebilir (Z43 §2 genişlemesi — MODES_LEDGER_READ +RO, eskiden 403)', async () => {
       renderAtPath('/off-invoice/transactions', UserRole.READONLY);
-      expect(await screen.findByText('Dashboard Stub')).toBeInTheDocument();
       expect(
-        screen.queryByText('OffInvoiceTransactionsPage Stub')
-      ).not.toBeInTheDocument();
+        await screen.findByText('OffInvoiceTransactionsPage Stub')
+      ).toBeInTheDocument();
     });
   });
 
@@ -131,9 +137,11 @@ describe('SÖZLEŞME: ekran kapısı, o ekranın çağırdığı rotaların küm
       expect(screen.getByText('OffInvoiceTransactionsPage Stub')).toBeInTheDocument();
     });
 
-    it('READONLY GİREMEZ (rota kümesi {A,F,P} — RO yok)', () => {
+    it('READONLY girer (Z43 §2 genişlemesi — aynı sayfa, aynı küme)', async () => {
       renderAtPath('/off-invoice', UserRole.READONLY);
-      expect(screen.getByText('Dashboard Stub')).toBeInTheDocument();
+      expect(
+        await screen.findByText('OffInvoiceTransactionsPage Stub')
+      ).toBeInTheDocument();
     });
   });
 
@@ -160,12 +168,11 @@ describe('SÖZLEŞME: ekran kapısı, o ekranın çağırdığı rotaların küm
       ).not.toBeInTheDocument();
     });
 
-    it('READONLY GİREMEMELİ (aynı gerekçe)', async () => {
+    it('READONLY girebilir (Z43 §2 genişlemesi — MODES_LEDGER_READ +RO, eskiden 403)', async () => {
       renderAtPath('/budget/ledger', UserRole.READONLY);
-      expect(await screen.findByText('Dashboard Stub')).toBeInTheDocument();
       expect(
-        screen.queryByText('BudgetLedgerPage Stub')
-      ).not.toBeInTheDocument();
+        await screen.findByText('BudgetLedgerPage Stub')
+      ).toBeInTheDocument();
     });
 
     it('ADMIN her zaman girebilir (hasRole admin-bypass)', async () => {

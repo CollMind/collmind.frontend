@@ -309,9 +309,14 @@ export const routeConfig: RouteObject[] = [
     // üç rolü kabul ediyor. Daraltma: ekran kapısı rota kümesine hizalandı
     // (erişim GENİŞLETİLMEDİ — CATEGORY_MANAGER ve READONLY bugün zaten
     // canlı `403` alıyordu).
+    // ⛔ `Z43 §2/§4` (`B3` istisna-dalgası `Faz-B`, 2026-08-27) — backend
+    // `MODES_LEDGER_READ` hücresi `+READONLY` aldı ({A,F,P} → {A,F,P,RO},
+    // `K-2.6.4c`: "İZLEYİCİ bir İZLEME YETENEKLERİ SETİDİR"). İKİ-REPO-TEK-
+    // KAPANIŞ: backend `+RO` inip ekran kapısı kapalı kalırsa yetki
+    // ULAŞILAMAZ doğar (`EK_E` `🔒` sınıfı) — bu satır aynı commit'te açılır.
     path: '/budget/ledger',
     element: (
-      <ProtectedRoute requiredRole={['ADMIN', 'FINANCE', 'PLANNER']}>
+      <ProtectedRoute requiredRole={['ADMIN', 'FINANCE', 'PLANNER', 'READONLY']}>
         <AppLayout>
           <ErrorBoundary>
             <BudgetLedgerPage />
@@ -489,9 +494,15 @@ export const routeConfig: RouteObject[] = [
     // (kırılganlık ayrı ele alındı, aşağı bkz.) sayfanın TAMAMI kırılır.
     // Daraltma: ekran kapısı rota kümesine hizalandı (erişim
     // GENİŞLETİLMEDİ — READONLY bugün zaten canlı `403` alıyordu).
+    // ⛔ `Z43 §2/§4` (`B3` istisna-dalgası `Faz-B`, 2026-08-27) — backend
+    // `MODES_LEDGER_READ` hücresi `+READONLY` aldı (count/transactions/
+    // stats-summary artık {A,F,P,RO}). İKİ-REPO-TEK-KAPANIŞ: kapı burada
+    // aynı commit'te açılır, yoksa `200` dönen API'ye rağmen ekran
+    // ULAŞILAMAZ kalır (ürün sahibi: "API `200` olsa da ekran zinciri ayrı
+    // kırılabilir — kapanışın kanıtı iki repodan da gelir").
     path: '/off-invoice/transactions',
     element: (
-      <ProtectedRoute requiredRole={['ADMIN', 'FINANCE', 'PLANNER']}>
+      <ProtectedRoute requiredRole={['ADMIN', 'FINANCE', 'PLANNER', 'READONLY']}>
         <AppLayout>
           <ErrorBoundary>
             <OffInvoiceTransactionsPage />
@@ -504,7 +515,7 @@ export const routeConfig: RouteObject[] = [
     // Aynı sayfa, aynı gerekçe — bkz. `/off-invoice/transactions` yorumu.
     path: '/off-invoice',
     element: (
-      <ProtectedRoute requiredRole={['ADMIN', 'FINANCE', 'PLANNER']}>
+      <ProtectedRoute requiredRole={['ADMIN', 'FINANCE', 'PLANNER', 'READONLY']}>
         <AppLayout>
           <ErrorBoundary>
             <OffInvoiceTransactionsPage />
