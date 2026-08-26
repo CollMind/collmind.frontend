@@ -720,16 +720,13 @@ export const handlers = [
     }, { status: 201 });
   }),
 
-  http.post(`${API_BASE_URL}/budget/reserve`, async ({ request }) => {
-    const body = await request.json() as any;
-    return HttpResponse.json({
-      id: '1',
-      envelopeId: body.envelopeId,
-      amount: body.amount,
-      status: 'PENDING',
-      createdAt: new Date().toISOString(),
-    });
-  }),
+  // ⚰️ `POST /budget/reserve` handler'ı SİLİNDİ (T-289 / K6c-d, 2026-08-26).
+  // Uç artık YOK. Bir mock'un var olmayan bir uca "başarı" döndürmesi,
+  // `§2.7`'nin "mock üretimden kopuk" sınıfıdır: o handler dururken 404
+  // vermesi gereken bir çağrı test ortamında YEŞİL geçerdi.
+  // ⚠️ Ve bu handler zaten üretimden kopuktu: `status: 'PENDING'` döndürüyordu,
+  // gerçek servis `txStatus: POSTED` yazıyordu — ve gerçek uç HER ÇAĞRIDA 500
+  // veriyordu. Mock üç yönde birden yanlıştı.
 
   http.post(`${API_BASE_URL}/budget/reservations/:id/approve`, ({ params }) => {
     return HttpResponse.json({
