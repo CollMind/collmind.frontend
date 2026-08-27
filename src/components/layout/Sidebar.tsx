@@ -5,7 +5,6 @@ import {
   LayoutDashboard,
   Users,
   UsersRound,
-  Building2,
   Settings,
   ChevronLeft,
   ChevronDown,
@@ -517,12 +516,10 @@ const defaultNavigation: NavItem[] = [
         icon: Users,
         roles: ['ADMIN'],
       },
-      {
-        title: 'Tenants',
-        href: '/tenants',
-        icon: Building2,
-        roles: ['ADMIN'],
-      },
+      // ⛔ `T-307-m2` / `Z46 §1` (2026-08-27) — 'Tenants' menü linki
+      // KALICI OLARAK KALDIRILDI: kiracı yaşam-döngüsü (yarat/sil/listele)
+      // PLATFORM-SEVİYESİ bir iş, operatör-yolu (script + seed) dışında
+      // bu üründe hiçbir arayüzü YOK.
     ],
   },
   {

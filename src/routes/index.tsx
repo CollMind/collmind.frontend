@@ -26,9 +26,11 @@ import { CustomerDetailPage } from '@/components/features/customers/CustomerDeta
 import { CustomerCreatePage } from '@/components/features/customers/CustomerCreatePage';
 import { CustomerEditPage } from '@/components/features/customers/CustomerEditPage';
 import { CustomerImportPage } from '@/components/features/customers/CustomerImportPage';
-import { TenantsPage } from '@/components/features/tenants/TenantsPage';
-import { TenantDetailPage } from '@/components/features/tenants/TenantDetailPage';
-import { TenantCreatePage } from '@/components/features/tenants/TenantCreatePage';
+// ⛔ `T-307-m2` / `Z46 §1` (2026-08-27) — tenant yaşam-döngüsü ekranları
+// (`TenantsPage`/`TenantCreatePage`/`TenantDetailPage`) KALICI OLARAK
+// SİLİNDİ. Kiracı yaratmak/silmek/listelemek PLATFORM-SEVİYESİ bir iş —
+// bugünkü (ve tek) meşru yol SCRIPT + SEED, sahibi OPERATÖR. Bkz.
+// `collmind.backend/src/modules/tenant/tenant.controller.ts` başlık yorumu.
 import { ChannelManagementPage } from '@/components/features/admin/ChannelManagementPage';
 import { CategoryManagementPage } from '@/components/features/admin/CategoryManagementPage';
 import { CplManagementPage } from '@/components/features/admin/CplManagementPage';
@@ -219,42 +221,6 @@ export const routeConfig: RouteObject[] = [
     ),
   },
   {
-    path: '/tenants',
-    element: (
-      <ProtectedRoute requiredRole={['ADMIN']}>
-        <AppLayout>
-          <ErrorBoundary>
-            <TenantsPage />
-          </ErrorBoundary>
-        </AppLayout>
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: '/tenants/new',
-    element: (
-      <ProtectedRoute requiredRole={['ADMIN']}>
-        <AppLayout>
-          <ErrorBoundary>
-            <TenantCreatePage />
-          </ErrorBoundary>
-        </AppLayout>
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: '/tenants/:id',
-    element: (
-      <ProtectedRoute requiredRole={['ADMIN']}>
-        <AppLayout>
-          <ErrorBoundary>
-            <TenantDetailPage />
-          </ErrorBoundary>
-        </AppLayout>
-      </ProtectedRoute>
-    ),
-  },
-  {
     path: '/settings',
     element: (
       <ProtectedRoute>
@@ -316,7 +282,9 @@ export const routeConfig: RouteObject[] = [
     // ULAŞILAMAZ doğar (`EK_E` `🔒` sınıfı) — bu satır aynı commit'te açılır.
     path: '/budget/ledger',
     element: (
-      <ProtectedRoute requiredRole={['ADMIN', 'FINANCE', 'PLANNER', 'READONLY']}>
+      <ProtectedRoute
+        requiredRole={['ADMIN', 'FINANCE', 'PLANNER', 'READONLY']}
+      >
         <AppLayout>
           <ErrorBoundary>
             <BudgetLedgerPage />
@@ -386,12 +354,7 @@ export const routeConfig: RouteObject[] = [
     path: '/agreement-approvals',
     element: (
       <ProtectedRoute
-        requiredRole={[
-          'ADMIN',
-          'CATEGORY_MANAGER',
-          'FINANCE',
-          'READONLY',
-        ]}
+        requiredRole={['ADMIN', 'CATEGORY_MANAGER', 'FINANCE', 'READONLY']}
       >
         <AppLayout>
           <ErrorBoundary>
@@ -444,9 +407,7 @@ export const routeConfig: RouteObject[] = [
   {
     path: '/plan-approvals',
     element: (
-      <ProtectedRoute
-        requiredRole={['ADMIN', 'CATEGORY_MANAGER', 'READONLY']}
-      >
+      <ProtectedRoute requiredRole={['ADMIN', 'CATEGORY_MANAGER', 'READONLY']}>
         <AppLayout>
           <ErrorBoundary>
             <PlanApprovalsPage />
@@ -459,12 +420,7 @@ export const routeConfig: RouteObject[] = [
     path: '/finance',
     element: (
       <ProtectedRoute
-        requiredRole={[
-          'ADMIN',
-          'FINANCE',
-          'CATEGORY_MANAGER',
-          'READONLY',
-        ]}
+        requiredRole={['ADMIN', 'FINANCE', 'CATEGORY_MANAGER', 'READONLY']}
       >
         <AppLayout>
           <ErrorBoundary>
@@ -502,7 +458,9 @@ export const routeConfig: RouteObject[] = [
     // kırılabilir — kapanışın kanıtı iki repodan da gelir").
     path: '/off-invoice/transactions',
     element: (
-      <ProtectedRoute requiredRole={['ADMIN', 'FINANCE', 'PLANNER', 'READONLY']}>
+      <ProtectedRoute
+        requiredRole={['ADMIN', 'FINANCE', 'PLANNER', 'READONLY']}
+      >
         <AppLayout>
           <ErrorBoundary>
             <OffInvoiceTransactionsPage />
@@ -515,7 +473,9 @@ export const routeConfig: RouteObject[] = [
     // Aynı sayfa, aynı gerekçe — bkz. `/off-invoice/transactions` yorumu.
     path: '/off-invoice',
     element: (
-      <ProtectedRoute requiredRole={['ADMIN', 'FINANCE', 'PLANNER', 'READONLY']}>
+      <ProtectedRoute
+        requiredRole={['ADMIN', 'FINANCE', 'PLANNER', 'READONLY']}
+      >
         <AppLayout>
           <ErrorBoundary>
             <OffInvoiceTransactionsPage />

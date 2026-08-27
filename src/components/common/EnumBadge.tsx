@@ -6,18 +6,18 @@ import {
   CustomerChannel,
   CustomerStatus,
   CustomerType,
-  TenantStatus,
-  TenantPlan,
 } from '@/types';
 
+// ⛔ `T-307-m2` / `Z46 §1` (2026-08-27) — `TenantStatus`/`TenantPlan`
+// birleşimden KALDIRILDI (`tenant.types.ts` silindi, tenant yaşam-döngüsü
+// ekranları öldü). `type="plan"` çağrı yolu (`getPlanColor`) KALICI —
+// yalnız TİP birleşimi daraldı; string tabanlı switch değişmedi.
 type EnumValue =
   | UserRole
   | UserStatus
   | CustomerChannel
   | CustomerStatus
   | CustomerType
-  | TenantStatus
-  | TenantPlan
   | string;
 
 interface EnumBadgeProps {

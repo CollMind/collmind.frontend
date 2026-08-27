@@ -6,14 +6,23 @@ export const handlers = [
   // External IP lookup (src/utils/ipAddress.ts calls this directly on
   // login). Without a handler, `server.listen({ onUnhandledRequest: 'error' })`
   // throws for every test that renders the login flow (see T-040).
+  // ⛔ ÜÇ ÖLÜ HANDLER SİLİNDİ (`T-307-m2` review `S1`, 2026-08-27):
+  //   GET /tenants · POST /tenants · DELETE /tenants/:id
+  // Rotalar `Z46 §1(a)` ile ÖLDÜ; tek tüketicileri (`tests/services/
+  // tenants.service.test.tsx`) de aynı dalgada silindi. Bir mock, ARTIK VAR
+  // OLMAYAN bir sözleşmeyi modellerse, yarın ona karşı yazılan bir test
+  // ÜRETİMDE OLMAYAN bir şeyi YEŞİL doğrular (`§2.7 #8` ailesi, ve `T-301`in
+  // "silinmiş uca başarı dönen handler" vakasının birebir tekrarı olurdu).
+  // ⚠️ KALANLAR MEŞRU — bu uçlar CANLI: GET/:id · PATCH/:id · stats ·
+  //    activate · suspend (hepsi assertSelfTenant kilidinde).
   http.get('https://api.ipify.org', () => {
     return HttpResponse.json({ ip: '127.0.0.1' });
   }),
 
   // Auth handlers
   http.post(`${API_BASE_URL}/auth/login`, async ({ request }) => {
-    const body = await request.json() as any;
-    
+    const body = (await request.json()) as any;
+
     // Simulate invalid credentials
     if (body.email === 'invalid@example.com') {
       return HttpResponse.json(
@@ -21,7 +30,7 @@ export const handlers = [
         { status: 401 }
       );
     }
-    
+
     return HttpResponse.json({
       accessToken: 'mock-access-token',
       refreshToken: 'mock-refresh-token',
@@ -102,21 +111,24 @@ export const handlers = [
   }),
 
   http.post(`${API_BASE_URL}/users`, async ({ request }) => {
-    const body = await request.json() as any;
-    return HttpResponse.json({
-      id: '2',
-      email: body.email,
-      fullName: body.fullName,
-      role: body.role,
-      status: body.status || 'ACTIVE',
-      tenantId: 'tenant-1',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    }, { status: 201 });
+    const body = (await request.json()) as any;
+    return HttpResponse.json(
+      {
+        id: '2',
+        email: body.email,
+        fullName: body.fullName,
+        role: body.role,
+        status: body.status || 'ACTIVE',
+        tenantId: 'tenant-1',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+      { status: 201 }
+    );
   }),
 
   http.patch(`${API_BASE_URL}/users/me`, async ({ request }) => {
-    const body = await request.json() as any;
+    const body = (await request.json()) as any;
     return HttpResponse.json({
       id: '1',
       email: 'test@example.com',
@@ -130,7 +142,7 @@ export const handlers = [
   }),
 
   http.patch(`${API_BASE_URL}/users/:id`, async ({ params, request }) => {
-    const body = await request.json() as any;
+    const body = (await request.json()) as any;
     return HttpResponse.json({
       id: params.id as string,
       email: 'user@example.com',
@@ -144,7 +156,7 @@ export const handlers = [
   }),
 
   http.patch(`${API_BASE_URL}/users/me/password`, async ({ request }) => {
-    const body = await request.json() as any;
+    const body = (await request.json()) as any;
     if (body.currentPassword === 'wrong-password') {
       return HttpResponse.json(
         { message: 'Mevcut şifre hatalı' },
@@ -194,7 +206,7 @@ export const handlers = [
     const search = url.searchParams.get('search');
     const channel = url.searchParams.get('channel');
     const status = url.searchParams.get('status');
-    
+
     const customers = [
       {
         id: '1',
@@ -228,16 +240,17 @@ export const handlers = [
 
     let filtered = customers;
     if (search) {
-      filtered = filtered.filter(c => 
-        c.name.toLowerCase().includes(search.toLowerCase()) ||
-        c.code.toLowerCase().includes(search.toLowerCase())
+      filtered = filtered.filter(
+        (c) =>
+          c.name.toLowerCase().includes(search.toLowerCase()) ||
+          c.code.toLowerCase().includes(search.toLowerCase())
       );
     }
     if (channel) {
-      filtered = filtered.filter(c => c.channel === channel);
+      filtered = filtered.filter((c) => c.channel === channel);
     }
     if (status) {
-      filtered = filtered.filter(c => c.status === status);
+      filtered = filtered.filter((c) => c.status === status);
     }
 
     return HttpResponse.json(filtered);
@@ -368,23 +381,26 @@ export const handlers = [
   }),
 
   http.post(`${API_BASE_URL}/customers`, async ({ request }) => {
-    const body = await request.json() as any;
-    return HttpResponse.json({
-      id: '3',
-      code: body.code,
-      name: body.name,
-      channel: body.channel,
-      type: body.type || 'DIRECT',
-      status: body.status || 'ACTIVE',
-      isVip: body.isVip || false,
-      tenantId: 'tenant-1',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    }, { status: 201 });
+    const body = (await request.json()) as any;
+    return HttpResponse.json(
+      {
+        id: '3',
+        code: body.code,
+        name: body.name,
+        channel: body.channel,
+        type: body.type || 'DIRECT',
+        status: body.status || 'ACTIVE',
+        isVip: body.isVip || false,
+        tenantId: 'tenant-1',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+      { status: 201 }
+    );
   }),
 
   http.post(`${API_BASE_URL}/customers/bulk`, async ({ request }) => {
-    const body = await request.json() as any;
+    const body = (await request.json()) as any;
     return HttpResponse.json(
       body.customers.map((c: any, index: number) => ({
         id: `${index + 1}`,
@@ -398,7 +414,7 @@ export const handlers = [
   }),
 
   http.patch(`${API_BASE_URL}/customers/:id`, async ({ params, request }) => {
-    const body = await request.json() as any;
+    const body = (await request.json()) as any;
     return HttpResponse.json({
       id: params.id as string,
       code: 'CUST001',
@@ -471,40 +487,31 @@ export const handlers = [
       );
     }
 
-    return HttpResponse.json({
-      total: 10,
-      created: 8,
-      skipped: 2,
-      errors: [
-        {
-          row: 3,
-          code: 'CUST003',
-          error_type: 'ALREADY_EXISTS',
-          error_message: 'Müşteri kodu zaten mevcut',
-        },
-        {
-          row: 7,
-          code: 'CUST007',
-          error_type: 'MISSING_FIELD',
-          error_message: 'Name alanı zorunludur',
-        },
-      ],
-    }, { status: 201 });
+    return HttpResponse.json(
+      {
+        total: 10,
+        created: 8,
+        skipped: 2,
+        errors: [
+          {
+            row: 3,
+            code: 'CUST003',
+            error_type: 'ALREADY_EXISTS',
+            error_message: 'Müşteri kodu zaten mevcut',
+          },
+          {
+            row: 7,
+            code: 'CUST007',
+            error_type: 'MISSING_FIELD',
+            error_message: 'Name alanı zorunludur',
+          },
+        ],
+      },
+      { status: 201 }
+    );
   }),
 
   // Tenant handlers
-  http.get(`${API_BASE_URL}/tenants`, () => {
-    return HttpResponse.json([
-      {
-        id: '1',
-        code: 'TENANT001',
-        name: 'Test Tenant',
-        status: 'ACTIVE',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      },
-    ]);
-  }),
 
   http.get(`${API_BASE_URL}/tenants/:id`, ({ params }) => {
     return HttpResponse.json({
@@ -526,19 +533,8 @@ export const handlers = [
     });
   }),
 
-  http.post(`${API_BASE_URL}/tenants`, async ({ request }) => {
-    const body = await request.json() as any;
-    return HttpResponse.json({
-      id: '2',
-      ...body,
-      status: 'ACTIVE',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    }, { status: 201 });
-  }),
-
   http.patch(`${API_BASE_URL}/tenants/:id`, async ({ params, request }) => {
-    const body = await request.json() as any;
+    const body = (await request.json()) as any;
     return HttpResponse.json({
       id: params.id as string,
       code: 'TENANT001',
@@ -547,10 +543,6 @@ export const handlers = [
       ...body,
       updatedAt: new Date().toISOString(),
     });
-  }),
-
-  http.delete(`${API_BASE_URL}/tenants/:id`, () => {
-    return new HttpResponse(null, { status: 204 });
   }),
 
   http.post(`${API_BASE_URL}/tenants/:id/activate`, ({ params }) => {
@@ -603,19 +595,22 @@ export const handlers = [
   }),
 
   http.post(`${API_BASE_URL}/agreements`, async ({ request }) => {
-    const body = await request.json() as any;
-    return HttpResponse.json({
-      id: '2',
-      ...body,
-      status: 'DRAFT',
-      tenantId: 'tenant-1',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    }, { status: 201 });
+    const body = (await request.json()) as any;
+    return HttpResponse.json(
+      {
+        id: '2',
+        ...body,
+        status: 'DRAFT',
+        tenantId: 'tenant-1',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+      { status: 201 }
+    );
   }),
 
   http.patch(`${API_BASE_URL}/agreements/:id`, async ({ params, request }) => {
-    const body = await request.json() as any;
+    const body = (await request.json()) as any;
     return HttpResponse.json({
       id: params.id as string,
       code: 'AGR001',
@@ -710,14 +705,17 @@ export const handlers = [
   }),
 
   http.post(`${API_BASE_URL}/budget/envelopes`, async ({ request }) => {
-    const body = await request.json() as any;
-    return HttpResponse.json({
-      id: '2',
-      ...body,
-      tenantId: 'tenant-1',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    }, { status: 201 });
+    const body = (await request.json()) as any;
+    return HttpResponse.json(
+      {
+        id: '2',
+        ...body,
+        tenantId: 'tenant-1',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+      { status: 201 }
+    );
   }),
 
   // ⚰️ `POST /budget/reserve` handler'ı SİLİNDİ (T-289 / K6c-d, 2026-08-26).
@@ -1040,4 +1038,3 @@ export const handlers = [
     ]);
   }),
 ];
-
