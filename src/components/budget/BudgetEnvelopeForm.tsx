@@ -6,6 +6,7 @@ import {
 } from '@/types/budget.types';
 import { CustomerChannel } from '@/types/customer.types';
 import { categoryEndpoints } from '@/api/endpoints/master-data.endpoints';
+import { userEndpoints } from '@/api/endpoints/users.endpoints';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { NumericInput } from '@/components/common/NumericInput';
@@ -44,6 +45,11 @@ const MONTHS = [
 
 const CHANNELS = Object.values(CustomerChannel);
 
+// Radix `Select` bir `SelectItem`'ın `value=""` taşımasına izin vermez (uyarı fırlatır).
+// "Sahip seçilmedi" durumunu temsil etmek için ayrı bir sentinel kullanılır; gönderim
+// anında bu sentinel `undefined`'a çevrilir — asla boş string olarak backend'e gitmez.
+const NO_OWNER_SENTINEL = '__NO_OWNER__';
+
 export function BudgetEnvelopeForm({
   onSubmit,
   onCancel,
@@ -63,6 +69,11 @@ export function BudgetEnvelopeForm({
   const [currency, setCurrency] = useState<'TRY' | 'USD' | 'EUR'>(
     initialData?.currency || 'TRY'
   );
+  // `Z59 §3` — OPSİYONEL alan. Varsayılan: seçilmedi (sentinel). Kullanıcı hiçbir şey
+  // seçmezse `budgetOwnerId` istekten hiç GİTMEZ (bkz. `handleSubmit`) — boş string DEĞİL.
+  const [budgetOwnerId, setBudgetOwnerId] = useState(
+    initialData?.budgetOwnerId || NO_OWNER_SENTINEL
+  );
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -76,6 +87,31 @@ export function BudgetEnvelopeForm({
   const categories = useMemo(() => {
     return categoriesData?.data || [];
   }, [categoriesData]);
+
+  // Fetch users from API (bütçe sahibi seçici) — §7: dedike bir "user picker" bileşeni
+  // aranıp bulunamadı (grep: `UserSelect`/`UserPicker`/`UserCombobox` — sıfır sonuç).
+  // Bu dosyanın zaten kullandığı desen (Select + useQuery + userEndpoints.getAll)
+  // tekrar kullanıldı; yeni bir genel bileşen yazılmadı.
+  // ⚠️ `T-323` review (Team Lead, 2026-08-28) — BU SORGU HER ROL İÇİN ÇALIŞMAZ.
+  // Ölçüldü (`capabilities.ts`): `GET /users` → `USER_MANAGE` = **yalnız ADMIN**;
+  // zarf yaratma → `SHARED_ENVELOPE_WRITE` = ADMIN · FINANCE · PLANNER.
+  // ⇒ Zarf yaratabilen ÜÇ rolden İKİSİ bu listeyi ÇEKEMEZ (403).
+  // Kilitlenme yok (`|| []`), ama seçici BOŞ ve AÇIKLAMASIZ kalırdı — yani
+  // "yetkin yok" ile "hiç kullanıcı yok" AYNI GÖRÜNÜRDÜ. Aşağıda ayrılıyor.
+  const {
+    data: usersData,
+    isLoading: usersLoading,
+    isError: usersError,
+  } = useQuery({
+    queryKey: ['users', 'all'],
+    queryFn: () => userEndpoints.getAll(),
+    staleTime: 5 * 60 * 1000,
+    retry: false,
+  });
+
+  const users = useMemo(() => {
+    return usersData?.data || [];
+  }, [usersData]);
 
   // Period hesaplama
   const period = useMemo(() => {
@@ -146,6 +182,12 @@ export function BudgetEnvelopeForm({
         allocatedAmount,
         currency,
         status: BudgetEnvelopeStatus.DRAFT,
+        // `Z59 §3c` — boş bırakmak meşru-tanımlı bir durumdur. Sentinel ise alan
+        // isteğe hiç EKLENMEZ (`undefined`); boş string ASLA gönderilmez (uuid
+        // kolonuna boş string 500 üretir — DUR listesi madde 4).
+        ...(budgetOwnerId !== NO_OWNER_SENTINEL
+          ? { budgetOwnerId }
+          : {}),
       };
 
       await onSubmit(data);
@@ -264,6 +306,48 @@ export function BudgetEnvelopeForm({
         {errors.allocatedAmount && (
           <p className="text-xs text-red-600 mt-1">{errors.allocatedAmount}</p>
         )}
+      </div>
+
+      <div>
+        <Label htmlFor="budgetOwnerId">
+          Bütçe Sahibi{' '}
+          <span className="text-xs text-gray-500">(opsiyonel)</span>
+        </Label>
+        <Select
+          value={budgetOwnerId}
+          onValueChange={setBudgetOwnerId}
+          disabled={usersLoading}
+        >
+          <SelectTrigger id="budgetOwnerId">
+            {usersLoading ? (
+              <div className="flex items-center gap-2">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>Yükleniyor...</span>
+              </div>
+            ) : (
+              <SelectValue placeholder="Seçilmedi" />
+            )}
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={NO_OWNER_SENTINEL}>Seçilmedi</SelectItem>
+            {users.map((u) => (
+              <SelectItem key={u.id} value={u.id}>
+                {u.fullName} ({u.email})
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {usersError && (
+          <p className="text-xs text-amber-600 mt-1">
+            Kullanıcı listesi görüntülenemiyor (bu yetki yöneticiye aittir) —
+            bütçe sahibi atanamaz. Boş bırakıldığında bildirim finans ekibine
+            gider.
+          </p>
+        )}
+        <p className="text-xs text-gray-500 mt-1">
+          Bütçe eşiği aşımlarında bildirim bu kişiye gider. Boş bırakılırsa
+          bildirim finans ekibine yönlendirilir.
+        </p>
       </div>
 
       {/* Ön İzleme */}
