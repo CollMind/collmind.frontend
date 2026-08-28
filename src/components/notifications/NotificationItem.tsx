@@ -51,6 +51,8 @@ const getNotificationIcon = (type: NotificationType) => {
     case NotificationType.BUDGET_ALERT_80:
     case NotificationType.BUDGET_ALERT_100:
       return <AlertTriangle className="h-4 w-4 text-yellow-500" />;
+    case NotificationType.BUDGET_FINANCE_REVIEW:
+      return <AlertTriangle className="h-4 w-4 text-orange-600" />;
     case NotificationType.AGREEMENT_EXPIRING:
       return <Clock className="h-4 w-4 text-orange-500" />;
     default:

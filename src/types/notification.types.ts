@@ -5,6 +5,9 @@ export enum NotificationType {
   BUDGET_ALERT_80 = 'BUDGET_ALERT_80',
   BUDGET_ALERT_100 = 'BUDGET_ALERT_100',
   AGREEMENT_EXPIRING = 'AGREEMENT_EXPIRING',
+  // `Z57` / `T-317` (backend migration 1816000000000) — `K-2.2.7a`
+  // `FINANCE_REVIEW` kademesi (%90). Backend `NotificationType` ile birebir.
+  BUDGET_FINANCE_REVIEW = 'BUDGET_FINANCE_REVIEW',
 }
 
 export enum NotificationChannel {
