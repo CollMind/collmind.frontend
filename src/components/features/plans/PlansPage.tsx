@@ -247,10 +247,6 @@ export function PlansPage() {
     }
   };
 
-  const handleDownloadExcel = () => {
-    toast.info('Excel export özelliği yakında eklenecek');
-  };
-
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -259,10 +255,6 @@ export function PlansPage() {
           <p className="text-gray-600 mt-1">Promosyon planlarınızı yönetin</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={handleDownloadExcel}>
-            <Download className="mr-2 h-4 w-4" />
-            Excel İndir
-          </Button>
           {!isReadOnly(user?.role) && (
             <Button onClick={() => setIsCreateDialogOpen(true)}>
               <Plus className="mr-2 h-4 w-4" />

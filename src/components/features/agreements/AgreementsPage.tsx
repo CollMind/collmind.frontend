@@ -152,11 +152,6 @@ export function AgreementsPage() {
     }
   };
 
-  const handleDownloadExcel = () => {
-    // TODO: Implement Excel export
-    console.log('Download Excel');
-  };
-
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -166,14 +161,6 @@ export function AgreementsPage() {
           <p className="text-gray-500 mt-1">STA ve LTA anlaşmalarını yönetin</p>
         </div>
         <div className="flex gap-2">
-          <Button
-            variant="outline"
-            onClick={handleDownloadExcel}
-            className="gap-2"
-          >
-            <Download className="h-4 w-4" />
-            Download Excel
-          </Button>
           {!isReadOnly(user?.role) && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

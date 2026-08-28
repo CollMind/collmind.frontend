@@ -171,11 +171,6 @@ const adminNavigation: NavItem[] = [
         icon: Users,
       },
       {
-        title: 'Baseline Import',
-        href: '/admin/baseline-import',
-        icon: Upload,
-      },
-      {
         title: 'KPI Yönetimi',
         href: '/admin/kpi-management',
         icon: TrendingUp,
@@ -214,11 +209,6 @@ const adminNavigation: NavItem[] = [
         title: 'Audit Log',
         href: '/admin/audit-log',
         icon: History,
-      },
-      {
-        title: 'Konfigürasyon',
-        href: '/admin/configuration',
-        icon: Settings,
       },
     ],
   },

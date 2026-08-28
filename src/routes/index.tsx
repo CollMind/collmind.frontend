@@ -42,10 +42,8 @@ import { GenericUnitManagementPage } from '@/components/features/admin/GenericUn
 import { ForecastingUnitManagementPage } from '@/components/features/admin/ForecastingUnitManagementPage';
 import { SkuManagementPage } from '@/components/features/admin/SkuManagementPage';
 import { AdminOverviewPage } from '@/components/features/admin/AdminOverviewPage';
-import { BaselineImportPage } from '@/components/features/admin/BaselineImportPage';
 import { KpiManagementPage } from '@/components/features/admin/KpiManagementPage';
 import { AuditLogPage } from '@/components/features/admin/AuditLogPage';
-import { ConfigurationPage } from '@/components/features/admin/ConfigurationPage';
 import { OffInvoiceUploadPage } from '@/components/features/off-invoice/OffInvoiceUploadPage';
 import { OffInvoiceTransactionsPage } from '@/components/features/off-invoice/OffInvoiceTransactionsPage';
 import { OnInvoiceUploadPage } from '@/components/features/on-invoice/OnInvoiceUploadPage';
@@ -655,18 +653,6 @@ export const routeConfig: RouteObject[] = [
     ),
   },
   {
-    path: '/admin/baseline-import',
-    element: (
-      <ProtectedRoute requiredRole={['ADMIN']}>
-        <AppLayout>
-          <ErrorBoundary>
-            <BaselineImportPage />
-          </ErrorBoundary>
-        </AppLayout>
-      </ProtectedRoute>
-    ),
-  },
-  {
     path: '/admin/kpi-management',
     element: (
       <ProtectedRoute requiredRole={['ADMIN']}>
@@ -697,18 +683,6 @@ export const routeConfig: RouteObject[] = [
         <AppLayout>
           <ErrorBoundary>
             <AuditLogPage />
-          </ErrorBoundary>
-        </AppLayout>
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: '/admin/configuration',
-    element: (
-      <ProtectedRoute requiredRole={['ADMIN']}>
-        <AppLayout>
-          <ErrorBoundary>
-            <ConfigurationPage />
           </ErrorBoundary>
         </AppLayout>
       </ProtectedRoute>
