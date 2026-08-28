@@ -64,11 +64,21 @@ function schema(): string {
   return envOr('DB_SCHEMA', 'main');
 }
 
+// K1a / Z52 §4 — `DB_USERNAME` VARSAYILANI `postgres`'E DÜŞEMEZ (çapraz-repo
+// fallback'in TAM HEDEFİ, Z51 §3 #7). `.env`'den satır silinirse bu dosya
+// eskiden sessizce superuser'a düşüyordu. Yeni varsayılan `app_operator`
+// (K1a, NOSUPERUSER, BYPASSRLS) — bu altı tablodaki DELETE + ilgili SELECT
+// için ölçülmüş GRANT'i var (`scripts/db-roles/03-operator-grants.sql`).
+function envOrOperator(key: string): string {
+  const v = process.env[key];
+  return v === undefined || v === '' ? 'app_operator' : v;
+}
+
 async function connect(): Promise<Client> {
   const client = new Client({
     host: envOr('DB_HOST', 'localhost'),
     port: parseInt(envOr('DB_PORT', '5432'), 10),
-    user: envOr('DB_USERNAME', 'postgres'),
+    user: envOrOperator('DB_USERNAME'),
     password: envOr('DB_PASSWORD', ''),
     database: envOr('DB_DATABASE', ''),
   });
