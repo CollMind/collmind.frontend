@@ -1,3 +1,29 @@
+/**
+ * PlanningGridEnhanced — plan gridi.
+ *
+ * ⚠️ **[[T-334]] FORMÜL-KANON HİZALAMASI (2026-08-30) — ÖLÇÜM KAYDI**
+ *
+ * `Z65 §1` frontend'in İKİ kopyasının (`getSkuCellValue` / `getFuCellValue`)
+ * motorla çeliştiğini söylüyordu. Bu turda **formül formül karşılaştırıldı**;
+ * sonuç şu — ve beklenenin tersi:
+ *
+ * ```
+ * BASE_TO / PLAN_TO / INCR_TO / TO_UPLIFT_PCT   grid ZATEN KANONİKTİ
+ * BASE_NIV / PLAN_NIV / INCR_NIV                grid ZATEN KANONİKTİ
+ * BASE_GP / BASE_GM_PCT / INCR_GM_PCT           grid ZATEN KANONİKTİ (TO tabanlı)
+ * ```
+ * Çelişki **tek taraflıydı**: sapan yer motordu (`migration 1781`,
+ * `BASE_TO`'nun üstüne `NIV` yazılmıştı). `migration 1818` motoru kanona
+ * döndürünce iki yüzey **kendiliğinden** aynı sayıyı üretir hâle geldi;
+ * bu dosyada `TO`/`NIV`/`GP`/`GM` formüllerinin **tek karakteri
+ * değişmemiştir**. Değişen tek kalem `TO_ROI_PCT`'nin **paydası**
+ * (`Q6` — bkz. ilgili `case`).
+ *
+ * 📌 SINIF-NOTU (`Z65 §1a`, hüküm DEĞİL): *"frontend formül HESAPLAMAZ;
+ * motor SONUCUNU gösterir."* Bu dosya bugün **üçüncü bir formül kopyası**
+ * taşıyor (ve `?? 0` ile eksik girdiyi sıfıra çeviriyor — `§2.5` sınıfı).
+ * İkisi de **temizlik listesindedir**; `T-334` kapsamında çözülmedi.
+ */
 import { useState, useCallback, useRef, useMemo, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -337,17 +363,15 @@ function getSkuCellValue(
     case 'GP_ROI_PCT':
       return toNumber(planSku.gpRoi ?? null);
     case 'TO_ROI_PCT': {
-      const incrSpend = (() => {
-        const baseTotal =
-          (planSku.baseLtaOnInvoiceSpend ?? 0) +
-          (planSku.baseLtaOffInvoiceSpend ?? 0);
-        const plannedTotal =
-          (planSku.plannedLtaOnInvoiceSpend ?? 0) +
-          (planSku.plannedLtaOffInvoiceSpend ?? 0) +
-          (planSku.promoOnInvoiceSpend ?? 0) +
-          (planSku.promoOffInvoiceSpend ?? 0);
-        return plannedTotal - baseTotal;
-      })();
+      // `T-334`/`Q6` (`Z66 §1`) — ROI PAYDASI: *yalnız promo · LTA hariç ·
+      // incremental*. ⛔ ÖNCE `LTA dahil toplam artımsal harcama`ydı, yani
+      // motorun `GP_ROI_PCT` paydasından FARKLI bir taban — aynı ekranda
+      // iki ROI, iki payda. Backend `INCR_PROMO_SPEND` kalemini üretiyor
+      // (`spend-calculation`, `incremental.promoTotal`); grid onun SKU
+      // bileşenlerinden aynı sayıyı kuruyor (tabanda promo harcaması YOK).
+      const incrSpend =
+        (planSku.promoOnInvoiceSpend ?? 0) +
+        (planSku.promoOffInvoiceSpend ?? 0);
       if (!incrSpend || incrSpend <= 0) return null;
       const baseGsv = (planSku.baseVolume ?? 0) * (sku?.unitPrice ?? 0);
       const baseNiv = baseGsv - (planSku.baseLtaOnInvoiceSpend ?? 0);
@@ -712,15 +736,14 @@ function getFuCellValue(planFu: PlanFu, colCode: string): number | null {
     case 'GP_ROI_PCT':
       return planFu.gpRoi ? Number(planFu.gpRoi) : null;
     case 'TO_ROI_PCT': {
-      const baseTotal = skus.reduce((sum, sku) => {
-        return (
+      // `T-334`/`Q6` — SKU kopyasıyla AYNI payda (bkz. `getSkuCellValue`).
+      const incrSpend = skus.reduce(
+        (sum, sku) =>
           sum +
-          (sku.baseLtaOnInvoiceSpend ?? 0) +
-          (sku.baseLtaOffInvoiceSpend ?? 0)
-        );
-      }, 0);
-      const plannedTotal = toNumberOrZero(planFu.totalSpend);
-      const incrSpend = plannedTotal - baseTotal;
+          (sku.promoOnInvoiceSpend ?? 0) +
+          (sku.promoOffInvoiceSpend ?? 0),
+        0
+      );
       if (!incrSpend || incrSpend <= 0) return null;
       const baseTo = skus.reduce((sum, sku) => {
         const baseGsv = (sku.baseVolume ?? 0) * (sku.sku?.unitPrice ?? 0);
