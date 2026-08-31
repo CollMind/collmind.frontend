@@ -42,13 +42,41 @@ import { useMe } from '@/services/users.service';
 import { hasAnyRole } from '@/utils/roleUtils';
 import { UserRole } from '@/types/user.types';
 
-interface NavItem {
+/**
+ * ⛔ `Q18` (2026-08-31) — `NavItem` ARTIK BİR BİRLEŞİM: bir kalem ya
+ * TIKLANABİLİR BİR LİNKTİR (`href` ZORUNLU) ya da BİR GRUPTUR
+ * (`children` zorunlu). Üçüncü bir hâl — `href`'siz YAPRAK — YOKTU değil,
+ * VARDI: "Raporlar"ın altı kalemi tam olarak oydu ve `renderNavItem`'in
+ * `if (!item.href)` dalı onları gri/tıklanamaz basıyordu.
+ *
+ * O dal ile birlikte TİP DE KAPANIYOR (`CLAUDE.md §7`: "ikinci bir yol
+ * bırakma"). Dalı silip `href?: string` bırakmak, yarın eklenecek bir
+ * `href`'siz kalemi `<Link to={undefined}>` ile ÇALIŞMA ZAMANINA taşırdı —
+ * yani belge yerine bir kaza. Şimdi aynı kalem DERLENMİYOR.
+ */
+interface NavItemBase {
   title: string;
-  href?: string;
   icon: React.ComponentType<{ className?: string }>;
-  badge?: string | number;
-  children?: NavItem[];
   roles?: string[];
+}
+
+interface NavLink extends NavItemBase {
+  href: string;
+  badge?: string | number;
+  children?: never;
+}
+
+interface NavGroup extends NavItemBase {
+  href?: never;
+  badge?: never;
+  children: NavItem[];
+}
+
+type NavItem = NavLink | NavGroup;
+
+/** Bir kalem grup mu? Birleşimin TEK daraltma noktası. */
+function isGroup(item: NavItem): item is NavGroup {
+  return Array.isArray((item as NavGroup).children);
 }
 
 // Admin navigation menu
@@ -134,32 +162,17 @@ const adminNavigation: NavItem[] = [
       },
     ],
   },
-  {
-    title: 'Raporlar',
-    icon: BarChart3,
-    children: [
-      {
-        title: 'Plan Performans',
-        icon: BarChart3,
-      },
-      {
-        title: 'ROI Dağılım Analizi',
-        icon: TrendingUp,
-      },
-      {
-        title: 'Trade Spend Özeti',
-        icon: DollarSign,
-      },
-      {
-        title: 'Bütçe Kullanım Raporu',
-        icon: Wallet,
-      },
-      {
-        title: 'Anlaşma Durum Raporu',
-        icon: FileCheck,
-      },
-    ],
-  },
+  // ⛔ "Raporlar" GRUBU (ALTI KALEM + ÜST BAŞLIK) KALDIRILDI — `Q18`,
+  // 2026-08-31. Dört persona menüsünün DÖRDÜNDE de vardı ve kalemlerin
+  // (`Plan Performans` · `ROI Dağılım Analizi` · `Trade Spend Özeti` ·
+  // `Bütçe Kullanım Raporu` · `Anlaşma Durum Raporu` · `Planner Performans`)
+  // HİÇBİRİNDE `href` YOKTU; menüde gri ve tıklanamaz duruyorlardı.
+  // `404`'ten DÜRÜST, ama VAATTEN MASUM DEĞİL: adlarıyla bir rapor
+  // kataloğu vaat ediyorlardı ve o adlar `R` katmanı TASARLANMADAN
+  // verilmişti. `D1` emsali: VAAT KALDIRILIR — `R` katmanı geldiğinde menü
+  // GERÇEK rapor adlarıyla ve ÇALIŞAN linklerle doğar.
+  // ⛔ Üst başlık da birlikte gitti: boş bir "Raporlar" başlığı aynı vaadi
+  // bir seviye yukarıda tekrarlardı.
   {
     title: 'Anlaşma Onayları',
     href: '/agreement-approvals',
@@ -309,32 +322,6 @@ const plannerNavigation: NavItem[] = [
       },
     ],
   },
-  {
-    title: 'Raporlar',
-    icon: BarChart3,
-    children: [
-      {
-        title: 'Plan Performans',
-        icon: BarChart3,
-      },
-      {
-        title: 'ROI Dağılım Analizi',
-        icon: TrendingUp,
-      },
-      {
-        title: 'Trade Spend Özeti',
-        icon: DollarSign,
-      },
-      {
-        title: 'Bütçe Kullanım Raporu',
-        icon: Wallet,
-      },
-      {
-        title: 'Anlaşma Durum Raporu',
-        icon: FileCheck,
-      },
-    ],
-  },
 ];
 
 // Category Manager navigation menu
@@ -402,36 +389,6 @@ const categoryManagerNavigation: NavItem[] = [
         title: 'Ledger (Read Only)',
         href: '/budget/ledger',
         icon: BarChart3,
-      },
-    ],
-  },
-  {
-    title: 'Raporlar',
-    icon: BarChart3,
-    children: [
-      {
-        title: 'Plan Performans',
-        icon: BarChart3,
-      },
-      {
-        title: 'ROI Dağılım Analizi',
-        icon: TrendingUp,
-      },
-      {
-        title: 'Planner Performans',
-        icon: Users,
-      },
-      {
-        title: 'Trade Spend Özeti',
-        icon: DollarSign,
-      },
-      {
-        title: 'Bütçe Kullanım Raporu',
-        icon: Wallet,
-      },
-      {
-        title: 'Anlaşma Durum Raporu',
-        icon: FileCheck,
       },
     ],
   },
@@ -517,36 +474,6 @@ const financeManagerNavigation: NavItem[] = [
         title: 'Ledger (Read Only)',
         href: '/budget/ledger',
         icon: BarChart3,
-      },
-    ],
-  },
-  {
-    title: 'Raporlar',
-    icon: BarChart3,
-    children: [
-      {
-        title: 'Plan Performans',
-        icon: BarChart3,
-      },
-      {
-        title: 'ROI Dağılım Analizi',
-        icon: TrendingUp,
-      },
-      {
-        title: 'Planner Performans',
-        icon: Users,
-      },
-      {
-        title: 'Trade Spend Özeti',
-        icon: DollarSign,
-      },
-      {
-        title: 'Bütçe Kullanım Raporu',
-        icon: Wallet,
-      },
-      {
-        title: 'Anlaşma Durum Raporu',
-        icon: FileCheck,
       },
     ],
   },
@@ -719,16 +646,12 @@ export function Sidebar() {
         if (!user?.role) return false;
         return hasAnyRole(user.role as UserRole, item.roles as UserRole[]);
       })
-      .map((item) => {
-        if (item.children) {
-          return {
-            ...item,
-            children: filterNavigation(item.children),
-          };
-        }
-        return item;
-      })
-      .filter((item) => !item.children || item.children.length > 0);
+      .map<NavItem>((item) =>
+        isGroup(item)
+          ? { ...item, children: filterNavigation(item.children) }
+          : item
+      )
+      .filter((item) => !isGroup(item) || item.children.length > 0);
   };
 
   // Select navigation based on user role
@@ -769,7 +692,7 @@ export function Sidebar() {
   };
 
   const hasActiveChild = (item: NavItem): boolean => {
-    if (!item.children) return false;
+    if (!isGroup(item)) return false;
     return item.children.some(
       (child) => isActive(child.href) || hasActiveChild(child)
     );
@@ -788,12 +711,11 @@ export function Sidebar() {
 
     const checkAndExpand = (items: NavItem[]) => {
       items.forEach((item) => {
-        if (item.children && hasActiveChild(item)) {
+        if (!isGroup(item)) return;
+        if (hasActiveChild(item)) {
           newExpanded.add(item.title);
         }
-        if (item.children) {
-          checkAndExpand(item.children);
-        }
+        checkAndExpand(item.children);
       });
     };
 
@@ -815,15 +737,17 @@ export function Sidebar() {
 
   const renderNavItem = (item: NavItem, level = 0) => {
     const Icon = item.icon;
-    const hasChildren = item.children && item.children.length > 0;
     const isExpanded = expandedItems.has(item.title);
-    const active = item.href ? isActive(item.href) : false;
+    const active = isActive(item.href);
     const hasActive = hasActiveChild(item);
     const indentClass = level > 0 ? 'ml-6' : '';
     const isAdminHeader =
       item.title === 'Admin' && user?.role === UserRole.ADMIN;
 
-    if (hasChildren) {
+    // ⛔ `isGroup` bir TİP KORUYUCUSU: bu `if`'ten sonra `item` NavGroup,
+    // aşağısında NavLink'tir — yani `to={item.href}` artık `undefined`
+    // ALAMAZ. Eski `hasChildren` bir `boolean`'dı ve hiçbir şey daraltmıyordu.
+    if (isGroup(item)) {
       return (
         <div
           key={item.title}
@@ -873,24 +797,10 @@ export function Sidebar() {
       );
     }
 
-    // If no href, render as disabled/non-clickable item (e.g., report items without links)
-    if (!item.href) {
-      return (
-        <div
-          key={item.title}
-          className={cn(
-            'group flex items-center rounded-lg px-3 py-2.5 text-sm font-medium',
-            'text-gray-400 dark:text-gray-500 cursor-not-allowed',
-            indentClass
-          )}
-        >
-          <Icon className="mr-3 h-5 w-5 flex-shrink-0" />
-          <span className={cn('flex-1', !sidebarOpen && 'sr-only')}>
-            {item.title}
-          </span>
-        </div>
-      );
-    }
+    // ⛔ "href yoksa gri/tıklanamaz bas" DALI KALDIRILDI (`Q18`,
+    // 2026-08-31). Tek tüketicisi "Raporlar"ın altı kalemiydi; onlar ölünce
+    // dal da öldü, ve `NavItem` birleşimi (yukarı) bu hâlin YENİDEN
+    // DOĞMASINI derleme zamanında engelliyor.
 
     return (
       <TooltipProvider key={item.href} delayDuration={0}>

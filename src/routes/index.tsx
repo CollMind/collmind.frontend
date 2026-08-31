@@ -23,7 +23,6 @@ import { ProfilePage } from '@/components/features/users/ProfilePage';
 
 import { CustomersPage } from '@/components/features/customers/CustomersPage';
 import { CustomerDetailPage } from '@/components/features/customers/CustomerDetailPage';
-import { CustomerCreatePage } from '@/components/features/customers/CustomerCreatePage';
 import { CustomerEditPage } from '@/components/features/customers/CustomerEditPage';
 import { CustomerImportPage } from '@/components/features/customers/CustomerImportPage';
 // ⛔ `T-307-m2` / `Z46 §1` (2026-08-27) — tenant yaşam-döngüsü ekranları
@@ -146,18 +145,23 @@ export const routeConfig: RouteObject[] = [
       </ProtectedRoute>
     ),
   },
-  {
-    path: '/customers/new',
-    element: (
-      <ProtectedRoute requiredRole={['ADMIN', 'PLANNER']}>
-        <AppLayout>
-          <ErrorBoundary>
-            <CustomerCreatePage />
-          </ErrorBoundary>
-        </AppLayout>
-      </ProtectedRoute>
-    ),
-  },
+  // ⛔ `/customers/new` ROTASI ve `CustomerCreatePage` KALDIRILDI — `Q19`
+  // (`Q15` emsali, TEK-YOL ilkesi), 2026-08-31.
+  //
+  // Müşteri YARATMA ulaşılamaz değildi: `CustomersPage` "Yeni Müşteri"
+  // DIALOG'unu sunuyor (`CustomerList.tsx:164` → `CustomersPage`'in
+  // `handleCreate`'i → `CustomerForm`). Bu rota AYNI `CustomerForm`'un
+  // İKİNCİ SARMALAYICISIYDI ve hiçbir menüden/butondan LİNKLENMİYORDU
+  // (ölçüldü: tüm repoda `customers/new` → yalnız bu satır; poz. kontrol
+  // `customers/import` → 4 dosya).
+  //
+  // İki giriş noktası = iki doğruluk kaynağı = yarın İKİ FARKLI VALİDASYON.
+  // Dialog ad ve davranışça yeterli olduğu için ROTA öldü, dialog yaşıyor.
+  //
+  // ⚠️ DAVRANIŞ NOTU: `/customers/new` adresi artık `/customers/:id` ile
+  // eşleşir (`id === 'new'`) ⇒ eski bir yer imi 404 yerine "müşteri
+  // bulunamadı" detay ekranına düşer. Repoda o adrese giden hiçbir bağlantı
+  // olmadığı için bu yol yalnız elle yazılan/yer-imli bir URL ile açılır.
   {
     path: '/customers/:id',
     element: (
