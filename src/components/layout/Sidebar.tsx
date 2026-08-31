@@ -10,7 +10,6 @@ import {
   ChevronDown,
   FileText,
   BarChart3,
-  Calendar,
   Package,
   UserCog,
   Wallet,
@@ -72,7 +71,6 @@ const adminNavigation: NavItem[] = [
         title: 'Plan Onayları',
         href: '/plan-approvals',
         icon: CheckCircle2,
-        badge: 1, // TODO: Get from API
       },
     ],
   },
@@ -101,6 +99,19 @@ const adminNavigation: NavItem[] = [
     title: 'On-Invoice',
     href: '/on-invoice',
     icon: Receipt,
+  },
+  {
+    // `Z43` ÜÇÜNCÜ AYAK (2026-08-31): rota kapısı `{ADMIN,FINANCE,
+    // CATEGORY_MANAGER,READONLY}` (`routes/index.tsx`, `path: '/finance'`)
+    // ve backend `finance-reporting` uçları (beşi `SUMMARY_READ`, dördü
+    // `@Roles(ADMIN,FINANCE,READONLY)`) AÇIKTI; menüde HİÇBİR LİNK YOKTU —
+    // sekiz widget'lık panel hiçbir yerden tıklanamıyordu.
+    // CM için üç widget (`budget-at-risk`/`variance-analysis`/
+    // `cash-flow-projection`) zaten `FinanceDashboard.tsx`'te koşullu render
+    // ediliyor (`T-287 K3`), yani bu link CM'e `403` ÜRETMEZ.
+    title: 'Finans Paneli',
+    href: '/finance',
+    icon: TrendingUp,
   },
   {
     title: 'Bütçe',
@@ -153,7 +164,6 @@ const adminNavigation: NavItem[] = [
     title: 'Anlaşma Onayları',
     href: '/agreement-approvals',
     icon: CheckCircle2,
-    badge: 1, // TODO: Get from API
   },
   {
     title: 'Admin',
@@ -204,6 +214,36 @@ const adminNavigation: NavItem[] = [
         title: 'Mekanik Yönetimi',
         href: '/admin/mechanic-management',
         icon: Wrench,
+      },
+      // `Z43` ÜÇÜNCÜ AYAK (2026-08-31): beş `{ADMIN}` rotası
+      // (`routes/index.tsx`: brand/category/channel/generic-unit/region)
+      // menüde YOKTU — `EK_E E.8` bunları `✅` sayıyordu, ölçüm
+      // "hiçbir menüden ve hiçbir butondan gidilemiyor" dedi. Rol kapısı
+      // bu grubun kendi `roles: ['ADMIN']` alanıyla zaten aynı.
+      {
+        title: 'Marka Yönetimi',
+        href: '/admin/brand-management',
+        icon: Boxes,
+      },
+      {
+        title: 'Kategori Yönetimi',
+        href: '/admin/category-management',
+        icon: ClipboardList,
+      },
+      {
+        title: 'Kanal Yönetimi',
+        href: '/admin/channel-management',
+        icon: Factory,
+      },
+      {
+        title: 'Generic Unit Yönetimi',
+        href: '/admin/generic-unit-management',
+        icon: Package,
+      },
+      {
+        title: 'Bölge Yönetimi',
+        href: '/admin/region-management',
+        icon: UsersRound,
       },
       {
         title: 'Audit Log',
@@ -317,7 +357,6 @@ const categoryManagerNavigation: NavItem[] = [
         title: 'Plan Onayları',
         href: '/plan-approvals',
         icon: CheckCircle2,
-        badge: 1, // TODO: Get from API
       },
     ],
   },
@@ -336,6 +375,14 @@ const categoryManagerNavigation: NavItem[] = [
         icon: FileText,
       },
     ],
+  },
+  {
+    // `Z43` ÜÇÜNCÜ AYAK (2026-08-31) — bkz. `adminNavigation`'daki aynı kalem.
+    // Rota kapısı bu rolü sayıyor (`routes/index.tsx` `/finance`:
+    // `{ADMIN,FINANCE,CATEGORY_MANAGER,READONLY}`).
+    title: 'Finans Paneli',
+    href: '/finance',
+    icon: TrendingUp,
   },
   {
     title: 'Bütçe',
@@ -410,7 +457,6 @@ const financeManagerNavigation: NavItem[] = [
         title: 'Plan Onayları',
         href: '/plan-approvals',
         icon: CheckCircle2,
-        badge: 1, // TODO: Get from API
       },
     ],
   },
@@ -429,6 +475,29 @@ const financeManagerNavigation: NavItem[] = [
         icon: FileText,
       },
     ],
+  },
+  {
+    // `Z43` ÜÇÜNCÜ AYAK (2026-08-31): `/off-invoice` ve `/on-invoice` rota
+    // kapıları `{ADMIN,FINANCE,PLANNER,READONLY}`, ve YÜKLEME yetkisi
+    // (`MODES_ACTUALS_WRITE`) yalnız `{ADMIN,FINANCE}` — yani bu iki ekranın
+    // ASIL sahibi FINANCE'ti ve menüsünde ikisi de yoktu (ADMIN/PLANNER
+    // menüsünde vardı).
+    title: 'Off-Invoice',
+    href: '/off-invoice',
+    icon: DollarSign,
+  },
+  {
+    title: 'On-Invoice',
+    href: '/on-invoice',
+    icon: Receipt,
+  },
+  {
+    // `Z43` ÜÇÜNCÜ AYAK (2026-08-31) — bkz. `adminNavigation`'daki aynı kalem.
+    // Rota kapısı bu rolü sayıyor (`routes/index.tsx` `/finance`:
+    // `{ADMIN,FINANCE,CATEGORY_MANAGER,READONLY}`).
+    title: 'Finans Paneli',
+    href: '/finance',
+    icon: TrendingUp,
   },
   {
     title: 'Bütçe',
@@ -517,25 +586,120 @@ const defaultNavigation: NavItem[] = [
     href: '/budget',
     icon: Wallet,
   },
+  // ⛔ `/reports` · `/analytics` · `/calendar` · `/products` KALDIRILDI
+  // (`Z75 §5` `K5-3`, `D1` emsali, 2026-08-31). Dördünün de
+  // `routes/index.tsx`'te KARŞILIĞI YOKTU (ölçüldü: `path` girdisi 0) —
+  // tıklayan kullanıcı `path: '*'` üzerinden 404 sayfasına düşüyordu.
+  // Bir menü linki bir VAATTİR; karşılığı yoksa kaldırılır, "yakında" diye
+  // bırakılmaz. Rapor/analitik gerçeği geldiğinde LİNKİYLE DOĞAR.
+];
+
+/**
+ * `READONLY` menüsü — `Z43`'ün ÜÇÜNCÜ AYAĞI (2026-08-31).
+ *
+ * Backend `+READONLY` indi (`Z43 §2/§4`), `routes/index.tsx` kapıları
+ * `+READONLY` açıldı — ve MENÜ hiç açılmadı: `READONLY` bugüne kadar
+ * `defaultNavigation`'a düşüyordu ve `/plans` · `/plan-approvals` ·
+ * `/agreements` · `/agreement-approvals` · `/budget/ledger` ·
+ * `/off-invoice` · `/finance` ekranlarının HİÇBİRİNİ menüde göremiyordu.
+ *
+ * ⛔ Bu bir GÖRÜNÜRLÜK kararıdır, bir YETKİ kararı değil. Aşağıdaki her
+ * kalem için yetki İKİ YERDEN doğrulandı (2026-08-31 ölçümü):
+ *
+ * ```
+ * link                 rota kapısı (routes/index.tsx)      backend yeteneği (ROLE_CAPABILITIES[READONLY])
+ * /dashboard           requiredRole YOK (tüm roller)        dashboard/summary → MODES_READ            ✅
+ * /plans               {A,P,CM,F,RO}                        GET /plans → MODES_READ                   ✅
+ * /plan-approvals      {A,CM,RO}                            GET /plans/pending-approvals @Roles(A,CM,RO) ✅
+ * /agreements          {A,P,CM,F,RO}                        GET /agreements → MODES_READ              ✅
+ * /agreement-approvals {A,CM,F,RO}                          GET /agreements/pending-approvals → APPROVAL_QUEUE_READ ✅
+ * /off-invoice         {A,F,P,RO}                           agreement-transactions GET → MODES_LEDGER_READ ✅
+ * /budget              requiredRole YOK                     GET /budget/envelopes → SHARED_READ       ✅
+ * /budget/ledger       {A,F,P,RO}                           GET /ledger → MODES_LEDGER_READ           ✅
+ * /finance             {A,F,CM,RO}                          SUMMARY_READ (5 uç) + @Roles(A,F,RO) (4 uç) ✅
+ * /customers           requiredRole YOK                     GET /customers → CUSTOMER_READ            ✅
+ * ```
+ *
+ * ⛔ `/on-invoice` BİLİNÇLİ OLARAK YOK: rota kapısı `READONLY`'yi sayıyor
+ * ama o rota `OnInvoiceUploadPage`'i render ediyor — yani bir YÜKLEME
+ * yüzeyi, ve yükleme `MODES_ACTUALS_WRITE` ({ADMIN,FINANCE}) istiyor.
+ * Menüye koymak `READONLY`'ye çalışmayan bir yükleme formu göstermek olurdu
+ * (`T-278`/`T-281` "ölü buton" sınıfı). Ekranın okuma yüzeyi doğduğunda
+ * bu satır açılır.
+ */
+const readonlyNavigation: NavItem[] = [
   {
-    title: 'Reports',
-    href: '/reports',
-    icon: FileText,
+    title: 'Dashboard',
+    href: '/dashboard',
+    icon: LayoutDashboard,
   },
   {
-    title: 'Analytics',
-    href: '/analytics',
-    icon: BarChart3,
+    title: 'Planlama',
+    icon: Target,
+    children: [
+      {
+        title: 'Planlar',
+        href: '/plans',
+        icon: FileText,
+      },
+      {
+        title: 'Plan Onayları',
+        href: '/plan-approvals',
+        icon: CheckCircle2,
+      },
+    ],
   },
   {
-    title: 'Calendar',
-    href: '/calendar',
-    icon: Calendar,
+    title: 'Anlaşmalar',
+    icon: FileCheck,
+    children: [
+      {
+        title: 'STA (Short-Term)',
+        href: '/agreements?type=STA',
+        icon: FileText,
+      },
+      {
+        title: 'LTA (Long-Term)',
+        href: '/agreements?type=LTA',
+        icon: FileText,
+      },
+    ],
   },
   {
-    title: 'Products',
-    href: '/products',
-    icon: Package,
+    title: 'Anlaşma Onayları',
+    href: '/agreement-approvals',
+    icon: CheckCircle2,
+  },
+  {
+    title: 'Off-Invoice',
+    href: '/off-invoice',
+    icon: DollarSign,
+  },
+  {
+    title: 'Bütçe',
+    icon: Wallet,
+    children: [
+      {
+        title: 'Dashboard',
+        href: '/budget',
+        icon: LayoutDashboard,
+      },
+      {
+        title: 'Ledger (Read Only)',
+        href: '/budget/ledger',
+        icon: BarChart3,
+      },
+    ],
+  },
+  {
+    title: 'Finans Paneli',
+    href: '/finance',
+    icon: TrendingUp,
+  },
+  {
+    title: 'Müşteriler',
+    href: '/customers',
+    icon: UsersRound,
   },
 ];
 
@@ -585,6 +749,9 @@ export function Sidebar() {
     }
     if (user?.role === UserRole.FINANCE) {
       return financeManagerNavigation;
+    }
+    if (user?.role === UserRole.READONLY) {
+      return readonlyNavigation;
     }
     return defaultNavigation;
   }, [user?.role]);

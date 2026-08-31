@@ -3,6 +3,11 @@ import { BudgetEnvelope } from '@/types/budget.types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Loader2 } from 'lucide-react';
+import {
+  BUDGET_UTILIZATION_NOT_EVALUABLE_LABEL,
+  describeBudgetUtilizationGap,
+  evaluateBudgetUtilization,
+} from '@/utils/budgetUtilization';
 
 interface BudgetSummaryCardProps {
   envelope: BudgetEnvelope;
@@ -15,21 +20,29 @@ export function BudgetSummaryCard({
   reservedAmount,
   isLoadingReserved = false,
 }: BudgetSummaryCardProps) {
-  // Rezerve edilmiş tutar yüklenirken hesaplamaları yapma
-  const effectiveReservedAmount = isLoadingReserved
-    ? undefined
-    : (reservedAmount ?? 0);
-  const totalUsed =
-    effectiveReservedAmount !== undefined
-      ? envelope.consumedAmount + effectiveReservedAmount
-      : undefined;
-  const usagePercent =
-    totalUsed !== undefined && envelope.allocatedAmount > 0
-      ? (totalUsed / envelope.allocatedAmount) * 100
-      : undefined;
-
-  const isNearLimit = usagePercent !== undefined && usagePercent >= 80;
-  const isOverLimit = usagePercent !== undefined && usagePercent >= 100;
+  // ⛔ `reservedAmount ?? 0` KALDIRILDI (`§2.5`, 2026-08-31). `reservedAmount`
+  // `GET /budget/envelopes/:id/reserved`'dan geliyor ve sorgu BAŞARISIZ
+  // olduğunda `undefined` kalıyor — `isLoadingReserved` ise o durumda
+  // `false`. Yani eski kod, okunamayan bir rezervasyonu "₺0 rezerve" sayıp
+  // kullanım oranını EKSİK hesaplıyor ve sonucu gerçek bir sayı gibi
+  // basıyordu. Artık okunamayan rezervasyon `NOT_EVALUABLE` üretir.
+  //
+  // ⛔ Ve eşik merdiveni (`>=80` / `>=100`) KALDIRILDI: `100` bir "kritik"
+  // eşiği DEĞİLDİ — kanonik merdiven `>=80 AMBER · >=95 RED`
+  // (backend `budget-threshold.service.ts#toStatus`). Tek karar noktası:
+  // `utils/budgetUtilization.ts`.
+  const utilization = isLoadingReserved
+    ? null
+    : evaluateBudgetUtilization(
+        envelope.allocatedAmount,
+        reservedAmount === undefined || reservedAmount === null
+          ? null
+          : envelope.consumedAmount + reservedAmount
+      );
+  const usageStatus =
+    utilization !== null && utilization.kind === 'EVALUATED'
+      ? utilization.status
+      : null;
 
   return (
     <Card>
@@ -41,33 +54,42 @@ export function BudgetSummaryCard({
         <div>
           <div className="flex justify-between text-sm mb-2">
             <span className="text-gray-600">Kullanım Oranı</span>
-            {isLoadingReserved ? (
+            {utilization === null ? (
               <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
-            ) : usagePercent !== undefined ? (
+            ) : utilization.kind === 'EVALUATED' ? (
               <span
                 className={`font-medium ${
-                  isOverLimit
+                  usageStatus === 'RED'
                     ? 'text-red-600'
-                    : isNearLimit
+                    : usageStatus === 'AMBER'
                       ? 'text-yellow-600'
                       : ''
                 }`}
               >
-                {usagePercent.toFixed(1)}%
+                {utilization.percent.toFixed(1)}%
               </span>
             ) : (
-              <span className="text-gray-400">-</span>
+              <span
+                className="text-gray-400"
+                title={describeBudgetUtilizationGap(utilization.reason)}
+              >
+                {BUDGET_UTILIZATION_NOT_EVALUABLE_LABEL}
+              </span>
             )}
           </div>
-          {usagePercent !== undefined ? (
+          {utilization !== null && utilization.kind === 'EVALUATED' ? (
             <Progress
-              value={usagePercent}
+              value={utilization.percent}
               className={
-                isOverLimit ? 'bg-red-200' : isNearLimit ? 'bg-yellow-200' : ''
+                usageStatus === 'RED'
+                  ? 'bg-red-200'
+                  : usageStatus === 'AMBER'
+                    ? 'bg-yellow-200'
+                    : ''
               }
             />
           ) : (
-            <div className="h-2 bg-gray-200 rounded-full animate-pulse" />
+            <div className="h-2 bg-gray-200 rounded-full" />
           )}
         </div>
 
@@ -100,10 +122,18 @@ export function BudgetSummaryCard({
                 <Loader2 className="h-5 w-5 animate-spin text-yellow-600" />
                 <span className="text-sm text-gray-500">Yükleniyor...</span>
               </div>
+            ) : reservedAmount === undefined || reservedAmount === null ? (
+              // ⛔ `|| 0` KALDIRILDI: rezervasyon OKUNAMADIYSA "₺0" DEĞİL,
+              // "okunamadı" yazılır (`§2.5`).
+              <p
+                className="text-2xl font-bold text-gray-400"
+                title="Rezerve edilen tutar okunamadı."
+              >
+                {BUDGET_UTILIZATION_NOT_EVALUABLE_LABEL}
+              </p>
             ) : (
               <p className="text-2xl font-bold text-yellow-700">
-                {(effectiveReservedAmount || 0).toLocaleString('tr-TR')}{' '}
-                {envelope.currency}
+                {reservedAmount.toLocaleString('tr-TR')} {envelope.currency}
               </p>
             )}
           </div>

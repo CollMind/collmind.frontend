@@ -129,15 +129,18 @@ export function ForecastingUnitManagementPage() {
     return filteredFus.map((fu) => {
       const assignedSkus = allSkus.filter((sku: any) => sku.fuId === fu.id);
       const totalBaseVol = fu.defaultBaseVolume || 0;
-      // TODO: Calculate active plans from agreements
-      const activePlans = 0; // Placeholder - should come from agreements API
+      // ⛔ `activePlans` KALDIRILDI (`Z75 §5` `K5`, 2026-08-31): değeri
+      // `const activePlans = 0; // Placeholder` idi ve ekranda "AKTİF PLAN 0"
+      // olarak YEŞİL bir sayı gibi basılıyordu. Bir FU'nun kaç aktif planda
+      // kullanıldığını söyleyen bir uç FE'de YOK (ölçüldü) — yani bu bir
+      // ölçüm değil, ölçüm KILIĞINDA bir sabitti. Sayının kaynağı
+      // doğduğunda alan da rozetiyle birlikte geri gelir.
 
       return {
         ...fu,
         skus: assignedSkus,
         skuCount: assignedSkus.length,
         totalBaseVol,
-        activePlans,
       };
     });
   }, [filteredFus, allSkus]);
@@ -517,19 +520,13 @@ export function ForecastingUnitManagementPage() {
                     )}
                   </div>
                 )}
-                <div className="grid grid-cols-2 gap-4 mb-4">
+                <div className="grid grid-cols-1 gap-4 mb-4">
                   <div>
                     <div className="text-xs text-gray-500 mb-1">
                       TOPLAM BASE VOL
                     </div>
                     <div className="text-lg font-semibold">
                       {fu.totalBaseVol.toFixed(3)}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="text-xs text-gray-500 mb-1">AKTİF PLAN</div>
-                    <div className="text-lg font-semibold text-green-600">
-                      {fu.activePlans}
                     </div>
                   </div>
                 </div>

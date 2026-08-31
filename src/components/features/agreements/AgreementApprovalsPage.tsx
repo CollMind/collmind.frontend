@@ -9,7 +9,6 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import {
   Clock,
-  CheckCircle2,
   TrendingUp,
   AlertTriangle,
   Search,
@@ -137,7 +136,6 @@ export function AgreementApprovalsPage() {
 
   // Calculate summary statistics
   const pendingCount = agreements?.length || 0;
-  const approvedTodayCount = 0; // TODO: Calculate from approved agreements
 
   // Backend'den gelen decimal değerleri number'a dönüştür
   const avgSpend =
@@ -177,7 +175,7 @@ export function AgreementApprovalsPage() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-3 gap-4">
         <Card className="border-gray-200">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
@@ -194,21 +192,13 @@ export function AgreementApprovalsPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-gray-200">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-xs text-gray-500 uppercase mb-1">
-                  BUGÜN ONAYLANAN
-                </div>
-                <div className="text-2xl font-bold text-gray-900">
-                  {approvedTodayCount}
-                </div>
-              </div>
-              <CheckCircle2 className="h-8 w-8 text-green-600" />
-            </div>
-          </CardContent>
-        </Card>
+        {/* ⛔ "BUGÜN ONAYLANAN" KARTI KALDIRILDI (`Z75 §5` `K5`, `D1` emsali,
+            2026-08-31). Değeri `const approvedTodayCount = 0; // TODO` idi —
+            ÖLÇÜLMEYEN bir soruya UYDURULMUŞ bir cevap: kuyrukta bugün kaç
+            onay verildiğini SÖYLEYEN hiçbir uç yok (ölçüldü: backend'de
+            "approved today" döndüren rota YOK; `approval-queue` yalnız
+            BEKLEYENLERİ verir). Kullanıcı "bugün 0 onay" diye okuyordu.
+            Sayacın MEKANİZMASI doğduğu gün kart da onunla birlikte doğar. */}
 
         <Card className="border-gray-200">
           <CardContent className="p-4">

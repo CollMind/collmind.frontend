@@ -1,4 +1,11 @@
 import { toNumberOrZero } from '@/utils/numberUtils';
+import {
+  BUDGET_UTILIZATION_NOT_EVALUABLE_LABEL,
+  BudgetUtilizationStatus,
+  describeBudgetUtilizationGap,
+  evaluateBudgetUtilization,
+  usedFromAvailable,
+} from '@/utils/budgetUtilization';
 import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { BudgetEnvelope, BudgetEnvelopeStatus } from '@/types/budget.types';
@@ -22,34 +29,32 @@ interface BudgetEnvelopeListProps {
   isLoading?: boolean;
 }
 
-type RAGStatus = 'good' | 'warning' | 'critical';
-
-const getRAGStatus = (utilization: number): RAGStatus => {
-  if (utilization < 80) return 'good';
-  if (utilization < 95) return 'warning';
-  return 'critical';
+// ⛔ YEREL RAG MERDİVENİ KALDIRILDI (2026-08-31). Eşikler (`<80`/`<95`) ve
+// `allocated > 0 ? … : 0` sessiz sıfırı artık `utils/budgetUtilization.ts`'te,
+// TEK YERDE — backend `budget-threshold.service.ts#toStatus`'un aynası.
+// Bu dosyada bir daha eşik SAYISI yazılmaz (`CLAUDE.md §2.3`).
+const RAG_DOT_COLOR: Record<BudgetUtilizationStatus, string> = {
+  GREEN: 'bg-green-500',
+  AMBER: 'bg-yellow-500',
+  RED: 'bg-red-500',
 };
 
-const getRAGColor = (status: RAGStatus): string => {
-  switch (status) {
-    case 'good':
-      return 'bg-green-500';
-    case 'warning':
-      return 'bg-yellow-500';
-    case 'critical':
-      return 'bg-red-500';
-  }
+const RAG_LABEL: Record<BudgetUtilizationStatus, string> = {
+  GREEN: 'İyi',
+  AMBER: 'Uyarı',
+  RED: 'Kritik',
 };
 
-const getRAGLabel = (status: RAGStatus): string => {
-  switch (status) {
-    case 'good':
-      return 'İyi';
-    case 'warning':
-      return 'Uyarı';
-    case 'critical':
-      return 'Kritik';
-  }
+const RAG_TEXT_COLOR: Record<BudgetUtilizationStatus, string> = {
+  GREEN: 'text-green-600',
+  AMBER: 'text-yellow-600',
+  RED: 'text-red-600',
+};
+
+const RAG_BAR_COLOR: Record<BudgetUtilizationStatus, string> = {
+  GREEN: 'bg-green-200',
+  AMBER: 'bg-yellow-200',
+  RED: 'bg-red-200',
 };
 
 const formatCurrency = (amount: number, currency: string = 'TRY') => {
@@ -83,27 +88,37 @@ export function BudgetEnvelopeList({
       (sum, env) => sum + safeNumber(env.allocatedAmount),
       0
     );
-    const totalReserved = envelopes.reduce(
-      (sum, env) => sum + safeNumber(env.reservedAmount),
-      0
-    );
     const totalConsumed = envelopes.reduce(
       (sum, env) => sum + safeNumber(env.consumedAmount),
       0
     );
-    const totalAvailable = totalAllocated - totalReserved - totalConsumed;
+    // ⛔ `totalAvailable` ARTIK TÜRETİLMİYOR, KANONİK ALANDAN TOPLANIYOR.
+    // Eskisi `totalAllocated − totalReserved − totalConsumed` idi ve
+    // `totalReserved` HER ZAMAN 0 olduğu için (aşağı) rezervasyonları
+    // görmezden geliyordu. `availableAmount` `v_budget_summary`'den geliyor
+    // (`budget.service.ts#findAllEnvelopes`) — ledger türevli ve canlı.
+    const totalAvailable = envelopes.reduce(
+      (sum, env) => sum + safeNumber(env.availableAmount),
+      0
+    );
+    // ⛔ `totalReserved` KALDIRILDI, ve bu bir eksiklik değil bir ÖLÇÜM:
+    // `budget_envelopes` tablosunda `reserved_amount` KOLONU YOK
+    // (`budget-envelope.entity.ts`, ölçüldü 2026-08-31), yani
+    // `GET /budget/envelopes` yanıtında `reservedAmount` alanı HİÇ GELMİYOR.
+    // `safeNumber(undefined) === 0` bunu sessizce "₺0 rezerve" diye
+    // ekrana basıyordu — canlı bir finansal ekranda UYDURULMUŞ bir sayı.
+    // Zarf başına rezerve tutarı `GET /budget/envelopes/:id/reserved`
+    // veriyor (tek zarf), toplu listede karşılığı YOK. Alan backend'de
+    // doğduğu gün kart da geri gelir (iki-repo kalemi).
+    const percentOf = (part: number): number | null =>
+      totalAllocated > 0 ? (part / totalAllocated) * 100 : null;
 
     return {
       totalAllocated,
-      totalReserved,
       totalConsumed,
       totalAvailable,
-      reservedPercentage:
-        totalAllocated > 0 ? (totalReserved / totalAllocated) * 100 : 0,
-      consumedPercentage:
-        totalAllocated > 0 ? (totalConsumed / totalAllocated) * 100 : 0,
-      availablePercentage:
-        totalAllocated > 0 ? (totalAvailable / totalAllocated) * 100 : 0,
+      consumedPercentage: percentOf(totalConsumed),
+      availablePercentage: percentOf(totalAvailable),
     };
   }, [envelopes]);
 
@@ -130,16 +145,20 @@ export function BudgetEnvelopeList({
       const matchesCategory =
         categoryFilter === 'all' || envelope.category === categoryFilter;
 
-      // RAG
+      // RAG — ⛔ tek karar noktası (`utils/budgetUtilization.ts`).
+      // Eskiden okunamayan tahsis `%0` ⇒ `good` sayılıyordu, yani bir ÖLÇÜM
+      // YOKLUĞU "İyi" filtresine DÜŞÜYORDU. Artık ayrı bir kova var
+      // (`not-evaluable`); hiçbir renk kovası onu sessizce yutmaz.
       let matchesRAG = true;
       if (ragFilter !== 'all') {
-        const allocated = safeNumber(envelope.allocatedAmount);
-        const consumed = safeNumber(envelope.consumedAmount);
-        const reserved = safeNumber(envelope.reservedAmount);
-        const utilization =
-          allocated > 0 ? ((consumed + reserved) / allocated) * 100 : 0;
-        const ragStatus = getRAGStatus(utilization);
-        matchesRAG = ragFilter === ragStatus;
+        const evaluation = evaluateBudgetUtilization(
+          envelope.allocatedAmount,
+          usedFromAvailable(envelope.allocatedAmount, envelope.availableAmount)
+        );
+        matchesRAG =
+          evaluation.kind === 'EVALUATED'
+            ? ragFilter === evaluation.status
+            : ragFilter === 'not-evaluable';
       }
 
       return (
@@ -184,7 +203,7 @@ export function BudgetEnvelopeList({
   return (
     <div className="space-y-6">
       {/* Özet Kartları */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm font-medium text-gray-600">
@@ -198,21 +217,10 @@ export function BudgetEnvelopeList({
           </CardContent>
         </Card>
 
-        <Card className="bg-yellow-50 border-yellow-200">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-gray-700">
-              RESERVED
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-2xl font-bold text-yellow-700">
-              {formatCurrency(summary.totalReserved)}
-            </p>
-            <p className="text-xs text-gray-600 mt-1">
-              %{summary.reservedPercentage.toFixed(1)}
-            </p>
-          </CardContent>
-        </Card>
+        {/* ⛔ "RESERVED" KARTI KALDIRILDI (2026-08-31) — değeri her zaman
+            ₺0 / %0.0 idi, çünkü `GET /budget/envelopes` `reservedAmount`
+            alanını HİÇ döndürmüyor (kolon yok). Gerekçe ve iki-repo kalemi
+            için yukarıdaki `summary` bloğunun yorumuna bak. */}
 
         <Card className="bg-blue-50 border-blue-200">
           <CardHeader className="pb-3">
@@ -225,7 +233,9 @@ export function BudgetEnvelopeList({
               {formatCurrency(summary.totalConsumed)}
             </p>
             <p className="text-xs text-gray-600 mt-1">
-              %{summary.consumedPercentage.toFixed(1)}
+              {summary.consumedPercentage === null
+                ? BUDGET_UTILIZATION_NOT_EVALUABLE_LABEL
+                : `%${summary.consumedPercentage.toFixed(1)}`}
             </p>
           </CardContent>
         </Card>
@@ -241,7 +251,9 @@ export function BudgetEnvelopeList({
               {formatCurrency(summary.totalAvailable)}
             </p>
             <p className="text-xs text-gray-600 mt-1">
-              %{summary.availablePercentage.toFixed(1)}
+              {summary.availablePercentage === null
+                ? BUDGET_UTILIZATION_NOT_EVALUABLE_LABEL
+                : `%${summary.availablePercentage.toFixed(1)}`}
             </p>
           </CardContent>
         </Card>
@@ -305,9 +317,12 @@ export function BudgetEnvelopeList({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">RAG: Tümü</SelectItem>
-                <SelectItem value="good">İyi</SelectItem>
-                <SelectItem value="warning">Uyarı</SelectItem>
-                <SelectItem value="critical">Kritik</SelectItem>
+                <SelectItem value="GREEN">İyi</SelectItem>
+                <SelectItem value="AMBER">Uyarı</SelectItem>
+                <SelectItem value="RED">Kritik</SelectItem>
+                <SelectItem value="not-evaluable">
+                  Değerlendirilemedi
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -348,9 +363,6 @@ export function BudgetEnvelopeList({
                       Tahsis
                     </th>
                     <th className="text-right p-3 text-sm font-semibold text-gray-700">
-                      Reserved
-                    </th>
-                    <th className="text-right p-3 text-sm font-semibold text-gray-700">
                       Consumed
                     </th>
                     <th className="text-right p-3 text-sm font-semibold text-gray-700">
@@ -371,13 +383,14 @@ export function BudgetEnvelopeList({
                   {filteredEnvelopes.map((envelope) => {
                     const allocated = safeNumber(envelope.allocatedAmount);
                     const consumed = safeNumber(envelope.consumedAmount);
-                    const reserved = safeNumber(envelope.reservedAmount);
                     const available = safeNumber(envelope.availableAmount);
-                    const utilization =
-                      allocated > 0
-                        ? ((consumed + reserved) / allocated) * 100
-                        : 0;
-                    const ragStatus = getRAGStatus(utilization);
+                    const utilization = evaluateBudgetUtilization(
+                      envelope.allocatedAmount,
+                      usedFromAvailable(
+                        envelope.allocatedAmount,
+                        envelope.availableAmount
+                      )
+                    );
 
                     return (
                       <tr
@@ -391,48 +404,55 @@ export function BudgetEnvelopeList({
                           {formatCurrency(allocated, envelope.currency)}
                         </td>
                         <td className="p-3 text-right">
-                          {formatCurrency(reserved, envelope.currency)}
-                        </td>
-                        <td className="p-3 text-right">
                           {formatCurrency(consumed, envelope.currency)}
                         </td>
                         <td className="p-3 text-right text-green-600 font-medium">
                           {formatCurrency(available, envelope.currency)}
                         </td>
                         <td className="p-3">
-                          <div className="flex items-center gap-2">
+                          {utilization.kind === 'EVALUATED' ? (
+                            <div className="flex items-center gap-2">
+                              <span
+                                className={`text-sm font-medium ${RAG_TEXT_COLOR[utilization.status]}`}
+                              >
+                                %{utilization.percent.toFixed(1)}
+                              </span>
+                              <Progress
+                                value={utilization.percent}
+                                className={`flex-1 ${RAG_BAR_COLOR[utilization.status]}`}
+                              />
+                            </div>
+                          ) : (
                             <span
-                              className={`text-sm font-medium ${
-                                ragStatus === 'critical'
-                                  ? 'text-red-600'
-                                  : ragStatus === 'warning'
-                                    ? 'text-yellow-600'
-                                    : 'text-green-600'
-                              }`}
+                              className="text-sm text-gray-400"
+                              title={describeBudgetUtilizationGap(
+                                utilization.reason
+                              )}
                             >
-                              %{utilization.toFixed(1)}
+                              {BUDGET_UTILIZATION_NOT_EVALUABLE_LABEL}
                             </span>
-                            <Progress
-                              value={utilization}
-                              className={`flex-1 ${
-                                ragStatus === 'critical'
-                                  ? 'bg-red-200'
-                                  : ragStatus === 'warning'
-                                    ? 'bg-yellow-200'
-                                    : 'bg-green-200'
-                              }`}
-                            />
-                          </div>
+                          )}
                         </td>
                         <td className="p-3 text-center">
-                          <div className="flex items-center justify-center gap-1">
-                            <div
-                              className={`w-2 h-2 rounded-full ${getRAGColor(ragStatus)}`}
-                            />
-                            <span className="text-sm">
-                              {getRAGLabel(ragStatus)}
+                          {utilization.kind === 'EVALUATED' ? (
+                            <div className="flex items-center justify-center gap-1">
+                              <div
+                                className={`w-2 h-2 rounded-full ${RAG_DOT_COLOR[utilization.status]}`}
+                              />
+                              <span className="text-sm">
+                                {RAG_LABEL[utilization.status]}
+                              </span>
+                            </div>
+                          ) : (
+                            <span
+                              className="text-sm text-gray-400"
+                              title={describeBudgetUtilizationGap(
+                                utilization.reason
+                              )}
+                            >
+                              Değerlendirilemedi
                             </span>
-                          </div>
+                          )}
                         </td>
                         <td className="p-3 text-center">
                           <div className="flex justify-center gap-2">

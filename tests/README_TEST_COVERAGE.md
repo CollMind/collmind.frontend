@@ -16,8 +16,10 @@ This document provides an overview of test coverage for the CollMind Frontend ap
 ### Dashboard Components ✅
 - ✅ `MetricCard.test.tsx` - Title, value, subtitle rendering
 - ✅ `DashboardPage.test.tsx` - Page structure, metric cards, chart, transactions
-- ✅ `RecentTransactions.test.tsx` - Transaction list rendering
-- ✅ `ProfitabilityChart.test.tsx` - Chart title, legend, categories
+- ⛔ `RecentTransactions.test.tsx` — KALDIRILDI (`Z75 §5` `K5`, 2026-08-31):
+  bileşenin üretim tüketicisi SIFIRDI ve test `dummyTransactions`'ı ŞARTNAME
+  olarak pinliyordu. Bileşen + testi AYNI DIFF'te öldü.
+- ⛔ `ProfitabilityChart.test.tsx` — KALDIRILDI (aynı gerekçe, `dummyData`).
 
 ### Auth Components ✅
 - ✅ `LoginForm.test.tsx` - Form fields, validation (email, password)

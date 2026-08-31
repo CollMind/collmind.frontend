@@ -20,8 +20,8 @@ Comprehensive unit test suite for the CollMind Frontend application. All major c
 #### Dashboard Components
 6. `components/features/dashboard/MetricCard.test.tsx` ✅
 7. `components/features/dashboard/DashboardPage.test.tsx` ✅
-8. `components/features/dashboard/RecentTransactions.test.tsx` ✅
-9. `components/features/dashboard/ProfitabilityChart.test.tsx` ✅
+8. ~~`components/features/dashboard/RecentTransactions.test.tsx`~~ ⛔ KALDIRILDI (`Z75 §5` `K5`, 2026-08-31 — ölü bileşen + uydurma veri)
+9. ~~`components/features/dashboard/ProfitabilityChart.test.tsx`~~ ⛔ KALDIRILDI (aynı)
 
 #### Auth Components
 10. `components/features/auth/AuthLayout.test.tsx` ✅
