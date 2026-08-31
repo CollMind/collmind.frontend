@@ -21,8 +21,13 @@ export interface Kpi {
   showInGrid: boolean;
   columnOrder?: number;
   aggregationMethodFu?: 'sum' | 'avg' | 'min' | 'max' | 'weighted_avg';
-  ragGreenThreshold?: number;
-  ragAmberThreshold?: number;
+  /**
+   * `T-343` / `Z71 §3` — eski adı `ragGreenThreshold`. ⛔ Tüketicisi **RAG
+   * DEĞİL**, Target-ROI ekseni: "hedefin altında" uyarısı + Finance kovası.
+   * `ragAmberThreshold` bu sürümle **kaldırıldı** (migration 1820): kadran
+   * (`Z66 §2`) RAG'ı işaret-tabanlı yaptı, eşik girdisiz kaldı.
+   */
+  targetRoiThreshold?: number;
   isActive: boolean;
   metadata?: Record<string, any>;
   createdAt: string;
@@ -49,8 +54,8 @@ export interface CreateKpiDto {
   showInGrid?: boolean;
   columnOrder?: number;
   aggregationMethodFu?: 'sum' | 'avg' | 'min' | 'max' | 'weighted_avg';
-  ragGreenThreshold?: number;
-  ragAmberThreshold?: number;
+  /** `T-343`: bkz. `Kpi.targetRoiThreshold`. */
+  targetRoiThreshold?: number;
   isActive?: boolean;
 }
 

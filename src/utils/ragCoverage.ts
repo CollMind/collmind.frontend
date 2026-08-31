@@ -29,6 +29,48 @@ import { toNumber } from './numberUtils';
 
 export type RagStatus = 'RED' | 'AMBER' | 'GREEN';
 
+/**
+ * `T-342` / `Z68 §2` — **TANIMLI-YOKLUK.**
+ *
+ * `GRİ` bugüne kadar tek bir şeyi anlatıyordu: *"renk GÜVENİLİR DEĞİL"*
+ * (kısmi kapsama ya da hiç hesaplanmamış). Kadran indiğiyle **dördüncü**
+ * bir gerçek doğdu ve o bir eksiklik değil:
+ *
+ * ```
+ * "değerlendirilemedi"   eksik/kısmi VERİ        → GRİ, kapsama oranıyla
+ * "değerlendirme DIŞI"   meşru YOKLUK (LTA-only) → NÖTR rozet + gerekçe
+ * ```
+ *
+ * İkincisini birincisinin içine katlamak, kullanıcıya *"veri eksik"*
+ * dedirtir — oysa veri tam, **soru** o plan için tanımsızdır. Sınıfın
+ * kaynağı backend'de: `src/common/kpi/rag-quadrant.ts#RagExclusionReason`.
+ *
+ * 📌 `T-323` UI dersinin RAG hâli: *"yetkin yok" ≠ "kimse yok"* neyse,
+ * *"kötü değil" ≠ "değerlendirilmedi"* o.
+ */
+export type RagExclusionReason = 'LTA_ONLY';
+
+/** Bilinen her dışlama sebebi için kullanıcıya gösterilecek kısa rozet. */
+const EXCLUSION_BADGES: Record<RagExclusionReason, string> = {
+  LTA_ONLY: 'Değerlendirme dışı — LTA',
+};
+
+/** Rozetin yanındaki tek cümlelik gerekçe (tooltip). */
+const EXCLUSION_EXPLANATIONS: Record<RagExclusionReason, string> = {
+  LTA_ONLY:
+    'Bu planda incremental promosyon harcaması yok; RAG bir promosyon ' +
+    'değerlendirmesidir ve LTA-only planlar için tanımlı değildir.',
+};
+
+function asExclusionReason(
+  raw: string | null | undefined
+): RagExclusionReason | null {
+  // ⛔ Bilinmeyen bir sebep sessizce "dışlama" sayılmaz: backend yeni bir
+  // üye eklediğinde bu dosya da güncellenmelidir. Tanınmayan değer
+  // `null`'a düşer ⇒ mevcut `GRİ` davranışı korunur, uydurma etiket yok.
+  return raw === 'LTA_ONLY' ? 'LTA_ONLY' : null;
+}
+
 export interface RagPresentation {
   /** Gerçek bir renk — yalnız tam kapsamada dolu. */
   ragStatus: RagStatus | null;
@@ -36,24 +78,46 @@ export interface RagPresentation {
   coverageRatio: number | null;
   /** `ragStatus !== null` ile eşdeğer — okunabilirlik için. */
   isFullCoverage: boolean;
-  /** Ne renk ne oran var — hesaplama hiç çalışmamış. */
+  /**
+   * Ne renk ne oran var — hesaplama hiç çalışmamış.
+   * ⚠️ Dışlanmış bir sonuçta **her zaman `false`**: dışlama bir eksiklik
+   * değildir (`isExcluded` aşağıda).
+   */
   isNeverCalculated: boolean;
+  /** `T-342`: renk MEŞRU olarak yok — bir eksiklik değil, tanımlı yokluk. */
+  isExcluded: boolean;
+  /** Dışlama sebebi; yalnız `isExcluded` iken dolu. */
+  exclusionReason: RagExclusionReason | null;
+  /** Rozet metni (ör. "Değerlendirme dışı — LTA"); yoksa `null`. */
+  exclusionLabel: string | null;
+  /** Tooltip'te gösterilecek tek cümlelik gerekçe; yoksa `null`. */
+  exclusionExplanation: string | null;
 }
 
 export function resolveRagPresentation(
   ragStatus: RagStatus | string | null | undefined,
-  coverageRatio: number | string | null | undefined
+  coverageRatio: number | string | null | undefined,
+  ragExclusionReason?: string | null
 ): RagPresentation {
   const status: RagStatus | null =
     ragStatus === 'RED' || ragStatus === 'AMBER' || ragStatus === 'GREEN'
       ? ragStatus
       : null;
   const ratio = toNumber(coverageRatio ?? null);
+  // ⛔ Bir renk varken dışlama OLAMAZ — ikisi aynı anda doluysa taşıyıcı
+  // tutarsızdır; sunum katmanı rengi kazandırır ve dışlamayı yok sayar
+  // (uydurma bir üçüncü hâl üretmez).
+  const reason = status === null ? asExclusionReason(ragExclusionReason) : null;
   return {
     ragStatus: status,
     coverageRatio: ratio,
     isFullCoverage: status !== null,
-    isNeverCalculated: status === null && ratio === null,
+    isNeverCalculated: status === null && ratio === null && reason === null,
+    isExcluded: reason !== null,
+    exclusionReason: reason,
+    exclusionLabel: reason === null ? null : EXCLUSION_BADGES[reason],
+    exclusionExplanation:
+      reason === null ? null : EXCLUSION_EXPLANATIONS[reason],
   };
 }
 

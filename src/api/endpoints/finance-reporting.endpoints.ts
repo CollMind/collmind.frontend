@@ -103,8 +103,27 @@ export interface PlanPerformanceRow {
   offInvoiceSpend: number;
   onInvoicePercent: number;
   offInvoicePercent: number;
-  gpRoi: number;
-  ragStatus: 'RED' | 'AMBER' | 'GREEN';
+  /**
+   * ⛔ `T-172` / `INV-N-004` — `null` = **hesaplanamadı**, `0` DEĞİL.
+   * Backend bunu `number | null` gönderiyor (`risk-report.dto.ts` /
+   * `plan-performance.dto.ts`); bu tip `number` diyordu ve **tip kapısı
+   * yalanı örtüyordu** — `T-342` kapanış turunda düzeltildi
+   * (`§2.7`: bir kusur, bir başkasının gölgesinde yaşar).
+   */
+  gpRoi: number | null;
+  ragStatus: 'RED' | 'AMBER' | 'GREEN' | null;
+  /**
+   * `T-342` / `Z68 §2` — TANIMLI-YOKLUK. `ragStatus === null` iken
+   * `'LTA_ONLY'` = *"değerlendirme DIŞI"*, `null` = *"değerlendirilemedi"*.
+   */
+  ragExclusionReason?: string | null;
+  /**
+   * ⚠️ `T-216b`den beri BACKEND bunu gönderiyordu (`plan-performance.dto.ts`)
+   * ama BU TİP onu HİÇ BEYAN ETMEMİŞTİ — yani kapsama oranı tele biniyor,
+   * istemcide **tip düzeyinde görünmez** kalıyordu. `T-342` kapanış turunda
+   * tip kapısı yakaladı (`§2.7`: bir kusur, bir başkasının gölgesinde yaşar).
+   */
+  coverageRatio?: number | null;
   status: string;
   startDate: string;
   endDate: string;
@@ -121,19 +140,38 @@ export interface PaginatedPlanReport {
 export interface RiskPlan {
   planId: string;
   planName: string;
-  ragStatus: string;
+  ragStatus: string | null;
+  /** `T-342`/`Z68 §2` — bkz. `PlanPerformanceRow.ragExclusionReason`. */
+  ragExclusionReason?: string | null;
+  /** `Z71 §1` — karşılaştırıldığı hedef; `null` = bu eksende yargı yok. */
+  targetRoiThreshold?: number | null;
   totalSpend: number;
-  gpRoi: number;
+  /**
+   * ⛔ `T-172` / `INV-N-004` — `null` = **hesaplanamadı**, `0` DEĞİL.
+   * Backend bunu `number | null` gönderiyor (`risk-report.dto.ts` /
+   * `plan-performance.dto.ts`); bu tip `number` diyordu ve **tip kapısı
+   * yalanı örtüyordu** — `T-342` kapanış turunda düzeltildi
+   * (`§2.7`: bir kusur, bir başkasının gölgesinde yaşar).
+   */
+  gpRoi: number | null;
   riskLevel: string;
 }
 
 export interface RiskReport {
   redPlansSpend: number;
   amberPlansSpend: number;
+  /**
+   * `Z71 §1a` — kadran inişinin sessizleştireceği iki dilim
+   * (`0 < ROI < 10` ve `10 ≤ ROI < 20`, ölçülmüş geçiş matrisi).
+   * `GREEN` ama hedefin altında: iki eksen AYRI konuşur.
+   */
+  belowTargetRoiPlansSpend: number;
   totalAtRisk: number;
   riskPercentage: number;
   redPlans: RiskPlan[];
   amberPlans: RiskPlan[];
+  /** `Z71 §1` — `GREEN` ama hedefin altında. */
+  belowTargetRoiPlans: RiskPlan[];
   recommendations?: string[];
 }
 

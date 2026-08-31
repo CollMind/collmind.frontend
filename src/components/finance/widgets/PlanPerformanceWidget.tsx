@@ -1,3 +1,8 @@
+import {
+  RAG_NOT_CALCULATED_LABEL,
+  formatCoverageLabel,
+  resolveRagPresentation,
+} from '@/utils/ragCoverage';
 import { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -61,15 +66,51 @@ export function PlanPerformanceWidget({ filters }: PlanPerformanceWidgetProps) {
     }).format(amount);
   };
 
-  const getRagBadge = (status: string) => {
-    const colors: Record<string, string> = {
-      GREEN: 'bg-green-100 text-green-800',
-      AMBER: 'bg-amber-100 text-amber-800',
-      RED: 'bg-red-100 text-red-800',
-    };
+  /**
+   * `T-342` / `Z71 §2` — rozet artık TEK sunum noktasından geçiyor.
+   *
+   * ⛔ Eski hâli `status: string` alıyordu ve `colors[status] || gri` ile
+   * **etiket olarak `status`'un kendisini** basıyordu: `ragStatus` `null`
+   * geldiğinde ekranda gri bir kutuda `"null"` yazardı. Tip kapısı bunu
+   * ancak `ragStatus` beyanı dürüstleşince (`| null`) yakaladı —
+   * `§2.7`: bir kusur, başka bir kusur (yanlış tip beyanı) tarafından
+   * örtülebilir.
+   */
+  const getRagBadge = (
+    status: string | null | undefined,
+    coverageRatio: number | null | undefined,
+    ragExclusionReason: string | null | undefined
+  ) => {
+    const presentation = resolveRagPresentation(
+      status,
+      coverageRatio,
+      ragExclusionReason
+    );
+    if (presentation.ragStatus === 'GREEN') {
+      return <Badge className="bg-green-100 text-green-800">İYİ</Badge>;
+    }
+    if (presentation.ragStatus === 'AMBER') {
+      return <Badge className="bg-amber-100 text-amber-800">RİSKLİ</Badge>;
+    }
+    if (presentation.ragStatus === 'RED') {
+      return <Badge className="bg-red-100 text-red-800">KRİTİK</Badge>;
+    }
+    if (presentation.isExcluded) {
+      return (
+        <Badge
+          className="bg-gray-100 text-gray-700"
+          title={presentation.exclusionExplanation ?? undefined}
+        >
+          {presentation.exclusionLabel}
+        </Badge>
+      );
+    }
+    const coverageLabel = formatCoverageLabel(presentation.coverageRatio);
     return (
-      <Badge className={colors[status] || 'bg-gray-100 text-gray-800'}>
-        {status}
+      <Badge className="bg-gray-100 text-gray-600">
+        {presentation.isNeverCalculated
+          ? RAG_NOT_CALCULATED_LABEL
+          : `GRİ${coverageLabel ? ` · ${coverageLabel}` : ''}`}
       </Badge>
     );
   };
@@ -156,7 +197,13 @@ export function PlanPerformanceWidget({ filters }: PlanPerformanceWidgetProps) {
                     `${Number(row.gpRoi).toFixed(1)}%`
                   )}
                 </TableCell>
-                <TableCell>{getRagBadge(row.ragStatus)}</TableCell>
+                <TableCell>
+                  {getRagBadge(
+                    row.ragStatus,
+                    row.coverageRatio,
+                    row.ragExclusionReason
+                  )}
+                </TableCell>
                 <TableCell>
                   <Badge variant="outline">{row.status}</Badge>
                 </TableCell>

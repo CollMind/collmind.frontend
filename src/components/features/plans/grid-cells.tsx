@@ -553,10 +553,22 @@ interface RAGCellProps {
    * would have produced it has not run.
    */
   coverageRatio?: number | null;
-  thresholds?: {
-    green?: number;
-    amber?: number;
-  };
+  /**
+   * `T-342`: `calculated_kpis[kpiCode].ragExclusionReason` — renk MEŞRU
+   * olarak yoksa sebebi. `GRİ` ("veri eksik") ile karıştırılmamalıdır.
+   */
+  ragExclusionReason?: string | null;
+  /**
+   * `T-343` / `Z70 §2` — eski adı `thresholds: {green, amber}` idi ve
+   * **RAG eşiklerini** gösteriyordu. RAG artık eşikten gelmiyor (kadran,
+   * `Z66 §2`); geriye kalan tek konfigüre edilebilir sayı **Target-ROI
+   * hedefi**. `amber` alanı kaldırıldı — ölen bir kolonu tooltip'te
+   * yaşatmak, RAG'ın hâlâ konfigüre edildiği izlenimini verirdi.
+   * ⚠️ Bu prop'un bugün ÜRETİMDE bir çağıranı yok (ölçüldü: `RAGCell`'in
+   * dört çağrısının hiçbiri `thresholds` geçmiyor) — tip ve tooltip yine
+   * de doğru tutuluyor, çünkü yanlış bir tooltip bir gün doğru görünür.
+   */
+  targetRoiThreshold?: number | null;
   className?: string;
 }
 
@@ -564,13 +576,18 @@ export function RAGCell({
   status,
   value,
   coverageRatio,
-  thresholds,
+  ragExclusionReason,
+  targetRoiThreshold,
   className = '',
 }: RAGCellProps) {
   // K-2.4.22c/INV-N-004: a colour from the full-coverage palette is only
   // ever legitimate when `status` itself carries one — `resolveRagPresentation`
   // is the single place that decision is made (§7.1: don't re-derive it here).
-  const presentation = resolveRagPresentation(status, coverageRatio);
+  const presentation = resolveRagPresentation(
+    status,
+    coverageRatio,
+    ragExclusionReason
+  );
   const coverageLabel = formatCoverageLabel(presentation.coverageRatio);
 
   const getStatusColor = (): string => {
@@ -580,6 +597,9 @@ export function RAGCell({
       return 'bg-amber-100 text-amber-800 border-amber-300';
     if (presentation.ragStatus === 'RED')
       return 'bg-red-100 text-red-800 border-red-300';
+    // `T-342`: dışlanmış sonuç da NÖTR'dür — RAG paletinden hiçbir renk
+    // almaz. `GRİ`'den ayrımı METİNDE yapılır, renkte değil (bir renk
+    // vermek "az riskli" diye okunurdu).
     return 'bg-gray-100 text-gray-600 border-gray-300';
   };
 
@@ -589,6 +609,9 @@ export function RAGCell({
     if (presentation.ragStatus === 'RED') return '● KRİTİK';
     // GRİ (K-2.4.22a) — never "N/A": that erased the coverage ratio
     // (K-2.4.22b requires it to stay visible next to the badge).
+    // `T-342`: "değerlendirme dışı" bir eksiklik DEĞİL — kapsama oranı
+    // yazmak burada yanıltıcı olurdu (veri tam, soru tanımsız).
+    if (presentation.isExcluded) return `● ${presentation.exclusionLabel}`;
     if (presentation.isNeverCalculated) return `● ${RAG_NOT_CALCULATED_LABEL}`;
     return `● GRİ${coverageLabel ? ` · ${coverageLabel}` : ''}`;
   };
@@ -599,16 +622,20 @@ export function RAGCell({
       {value !== null && value !== undefined && (
         <div>Value: {value.toFixed(2)}</div>
       )}
-      {!presentation.isFullCoverage && (
+      {presentation.isExcluded && (
+        <div className="mt-1 max-w-[16rem]">
+          {presentation.exclusionExplanation}
+        </div>
+      )}
+      {!presentation.isFullCoverage && !presentation.isExcluded && (
         <div>
           Kapsama:{' '}
           {coverageLabel ?? 'bilinmiyor (hiç hesaplanmadı)'}
         </div>
       )}
-      {thresholds && (
+      {targetRoiThreshold !== null && targetRoiThreshold !== undefined && (
         <div className="mt-1">
-          {thresholds.green && <div>Green: &gt;= {thresholds.green}</div>}
-          {thresholds.amber && <div>Amber: &gt;= {thresholds.amber}</div>}
+          <div>Hedef ROI: &gt;= {targetRoiThreshold}</div>
         </div>
       )}
     </div>

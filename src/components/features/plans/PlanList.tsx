@@ -52,6 +52,13 @@ const getStatusBadge = (status: Plan['status']) => {
 
 /**
  * `K-2.4.22a`/`INV-N-004`: `ragStatus === null` used to render nothing at
+ *
+ * ⭐ `T-342` kapanışı / `Z71 §2` — **DIŞLAMA SEBEBİ ARTIK BURADA DA VAR.**
+ * İlk turda sebep yalnız FU/SKU'nun JSONB'sindeydi ve bu yüzey `GRİ`
+ * kalıyordu. O yarım hâli *"Faz-1: yalnız grid"* diye NOT DÜŞMEK tam
+ * `T-084` problemi olurdu — **bir kusuru belgelemek onu koruma altına
+ * alır.** Migration `1819000000000` `plans.rag_exclusion_reason` kolonunu
+ * getirdi; rozet artık üç yüzeyde de aynı ayrımı konuşuyor.
  * all — no colour AND no explanation, the reader could not tell "not
  * computed" from "no data in this cell". `GRİ` is a first-class fourth
  * state: it still shows a badge, and (`K-2.4.22b`) the coverage ratio next
@@ -59,9 +66,14 @@ const getStatusBadge = (status: Plan['status']) => {
  */
 const getRagBadge = (
   ragStatus: Plan['ragStatus'],
-  coverageRatio: Plan['coverageRatio']
+  coverageRatio: Plan['coverageRatio'],
+  ragExclusionReason: Plan['ragExclusionReason']
 ) => {
-  const presentation = resolveRagPresentation(ragStatus, coverageRatio);
+  const presentation = resolveRagPresentation(
+    ragStatus,
+    coverageRatio,
+    ragExclusionReason
+  );
 
   if (presentation.ragStatus === 'RED') {
     return <span className="text-red-600 font-medium">• KRİTİK</span>;
@@ -71,6 +83,19 @@ const getRagBadge = (
   }
   if (presentation.ragStatus === 'AMBER') {
     return <span className="text-yellow-600 font-medium">• RİSKLİ</span>;
+  }
+
+  // `S1` — MEŞRU YOKLUK: nötr renk, ama kapsama oranı YAZILMAZ (veri tam,
+  // soru tanımsız) ve gerekçe tooltip'te tek cümle olarak durur.
+  if (presentation.isExcluded) {
+    return (
+      <span
+        className="text-gray-500 font-medium"
+        title={presentation.exclusionExplanation ?? undefined}
+      >
+        • {presentation.exclusionLabel}
+      </span>
+    );
   }
 
   const coverageLabel = formatCoverageLabel(presentation.coverageRatio);
@@ -195,7 +220,11 @@ export function PlanList({
                     {formatCurrency(toNumberOrZero(plan.totalSpend))}
                   </TableCell>
                   <TableCell>
-                    {getRagBadge(plan.ragStatus, plan.coverageRatio)}
+                    {getRagBadge(
+                      plan.ragStatus,
+                      plan.coverageRatio,
+                      plan.ragExclusionReason
+                    )}
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center justify-center gap-1">

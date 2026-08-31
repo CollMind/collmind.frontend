@@ -1604,6 +1604,9 @@ export function FuRowEnhanced({
                   coverageRatio={
                     planFu.calculatedKpis?.['GP_ROI_PCT']?.coverageRatio
                   }
+                  ragExclusionReason={
+                    planFu.calculatedKpis?.['GP_ROI_PCT']?.ragExclusionReason
+                  }
                 />
               ) : (
                 <EditableCell
@@ -1640,6 +1643,9 @@ export function FuRowEnhanced({
             value={toNumber(planFu.gpRoi ?? null)}
             coverageRatio={
               planFu.calculatedKpis?.['GP_ROI_PCT']?.coverageRatio
+            }
+            ragExclusionReason={
+              planFu.calculatedKpis?.['GP_ROI_PCT']?.ragExclusionReason
             }
           />
         </TableCell>
@@ -1736,6 +1742,10 @@ export function FuRowEnhanced({
                       coverageRatio={
                         planSku.calculatedKpis?.['GP_ROI_PCT']?.coverageRatio
                       }
+                      ragExclusionReason={
+                        planSku.calculatedKpis?.['GP_ROI_PCT']
+                          ?.ragExclusionReason
+                      }
                     />
                   ) : (
                     <EditableCell
@@ -1773,6 +1783,9 @@ export function FuRowEnhanced({
                 value={toNumber(planSku.gpRoi ?? null)}
                 coverageRatio={
                   planSku.calculatedKpis?.['GP_ROI_PCT']?.coverageRatio
+                }
+                ragExclusionReason={
+                  planSku.calculatedKpis?.['GP_ROI_PCT']?.ragExclusionReason
                 }
               />
             </TableCell>

@@ -17,6 +17,14 @@ export interface CalculationResult {
    * T-177 — always read through `resolveRagPresentation`, not directly.
    */
   coverageRatio?: number | null;
+  /**
+   * `T-342` / `Z68 §2` — TANIMLI-YOKLUK. `ragStatus === null` iken
+   * *"değerlendirme DIŞI"* (`'LTA_ONLY'`) ile *"değerlendirilemedi"*
+   * (`null`/anahtar yok) ayrımını taşır. `plan_fus`/`plan_skus`'ın
+   * `calculated_kpis` JSONB'sinden gelir — `resolveRagPresentation`'ın
+   * üçüncü argümanı.
+   */
+  ragExclusionReason?: string | null;
 }
 
 export interface Plan {
@@ -58,8 +66,19 @@ export interface Plan {
    * directly.
    */
   overallRoi?: number | string | null;
-  /** `null` = coverage was not full; no colour is safe to show (`K-2.4.22a1`). */
+  /**
+   * `null` = coverage was not full; no colour is safe to show (`K-2.4.22a1`).
+   *
+   */
   ragStatus?: 'RED' | 'AMBER' | 'GREEN' | null;
+
+  /**
+   * `T-342` / `Z68 §2` + `Z71 §2` — TANIMLI-YOKLUK, plan seviyesinde.
+   * `ragStatus === null` iken: `'LTA_ONLY'` = *"değerlendirme DIŞI"*,
+   * `null`/yok = *"değerlendirilemedi"* (bkz. `coverageRatio`).
+   * ⛔ `resolveRagPresentation`'ın ÜÇÜNCÜ argümanı — doğrudan okunmaz.
+   */
+  ragExclusionReason?: string | null;
   /**
    * T-218: fraction of FUs that resolved into `overallRoi` — same
    * decimal-as-string caveat as `overallRoi` above. `null` = never

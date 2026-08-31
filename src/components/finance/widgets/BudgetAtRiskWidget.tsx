@@ -4,7 +4,7 @@ import {
   ReportFilters,
 } from '@/api/endpoints/finance-reporting.endpoints';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, Target } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
 interface BudgetAtRiskWidgetProps {
@@ -67,6 +67,32 @@ export function BudgetAtRiskWidget({ filters }: BudgetAtRiskWidgetProps) {
           <div className="text-sm text-amber-700">
             {data.amberPlans.length} plan
           </div>
+        </div>
+      </div>
+
+      {/*
+        `Z71 §1a` — KADRAN İNİŞİNİN SESSİZLEŞTİRECEĞİ İKİ DİLİM.
+        Ölçülmüş geçiş matrisi (`GP_ROI_PCT` `green=20 · amber=10`):
+          `0 < ROI < 10`   ÖNCE RED   → SONRA GREEN
+          `10 ≤ ROI < 20`  ÖNCE AMBER → SONRA GREEN
+        Bu kova olmasaydı o planlar bu ekrandan **düşerdi** — ve yerine
+        sessizlik değil, KARŞI YÖNDE GÜVENCE geçerdi ("İYİ").
+        ⛔ Rengi RAG paletinden DEĞİL: bunlar kadrana göre sağlıklı planlar,
+        ayrı bir eksende (Target-ROI) hedefin altındalar.
+      */}
+      <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
+        <div className="flex items-center gap-2 mb-2">
+          <Target className="h-5 w-5 text-slate-600" />
+          <span className="font-semibold text-slate-900">
+            Hedefin Altında (RAG yeşil)
+          </span>
+        </div>
+        <div className="text-2xl font-bold text-slate-700">
+          {formatCurrency(data.belowTargetRoiPlansSpend)}
+        </div>
+        <div className="text-sm text-slate-600">
+          {data.belowTargetRoiPlans.length} plan · kâr üretiyor ama hedeflenen
+          getirinin altında
         </div>
       </div>
 

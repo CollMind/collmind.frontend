@@ -34,6 +34,13 @@ const formatCurrency = (amount: number) => {
  * behaviour here) falsified the plan's confidence claim: a reader could not
  * tell "riskli" from "hesaplanamadı" — [[T-172]].
  *
+ *
+ * ⭐ `T-342` kapanışı / `Z71 §2` — **DIŞLAMA SEBEBİ ARTIK BURADA DA VAR.**
+ * İlk turda sebep yalnız FU/SKU'nun JSONB'sindeydi ve bu yüzey `GRİ`
+ * kalıyordu. O yarım hâli *"Faz-1: yalnız grid"* diye NOT DÜŞMEK tam
+ * `T-084` problemi olurdu — **bir kusuru belgelemek onu koruma altına
+ * alır.** Migration `1819000000000` `plans.rag_exclusion_reason` kolonunu
+ * getirdi; rozet artık üç yüzeyde de aynı ayrımı konuşuyor.
  * `RagPresentation.isNeverCalculated` (`@/utils/ragCoverage`) distinguishes
  * "never calculated" (`coverageRatio` also `null`) from "calculated with
  * partial/zero coverage" (`coverageRatio` a number `< 1`) — both real,
@@ -41,12 +48,22 @@ const formatCurrency = (amount: number) => {
  */
 const getRagDisplay = (
   ragStatus: Plan['ragStatus'],
-  coverageRatio: Plan['coverageRatio']
+  coverageRatio: Plan['coverageRatio'],
+  ragExclusionReason: Plan['ragExclusionReason']
 ) => {
-  const presentation = resolveRagPresentation(ragStatus, coverageRatio);
+  const presentation = resolveRagPresentation(
+    ragStatus,
+    coverageRatio,
+    ragExclusionReason
+  );
 
   if (presentation.ragStatus === 'RED')
-    return { text: '• KRİTİK', color: 'text-red-600', dotColor: 'bg-red-500' };
+    return {
+      text: '• KRİTİK',
+      color: 'text-red-600',
+      dotColor: 'bg-red-500',
+      title: undefined as string | undefined,
+    };
   if (presentation.ragStatus === 'GREEN')
     return { text: '• İyi', color: 'text-green-600', dotColor: 'bg-green-500' };
   if (presentation.ragStatus === 'AMBER')
@@ -55,6 +72,16 @@ const getRagDisplay = (
       color: 'text-yellow-600',
       dotColor: 'bg-yellow-500',
     };
+
+  // `S1` — meşru yokluk: nötr, kapsama oranı YOK, gerekçe ayrı taşınır.
+  if (presentation.isExcluded) {
+    return {
+      text: `• ${presentation.exclusionLabel}`,
+      color: 'text-gray-500',
+      dotColor: 'bg-gray-400',
+      title: presentation.exclusionExplanation ?? undefined,
+    };
+  }
 
   // GRİ (K-2.4.22a) — never a colour from the full-coverage palette.
   const coverageLabel = formatCoverageLabel(presentation.coverageRatio);
@@ -108,7 +135,11 @@ export function GrandTotals({ plan }: GrandTotalsProps) {
   const roiDiffAbs = roiDiff !== null ? Math.abs(roiDiff).toFixed(1) : null;
 
   // PLAN STATUS: RAG status with FU and SKU counts
-  const ragDisplay = getRagDisplay(plan.ragStatus, plan.coverageRatio);
+  const ragDisplay = getRagDisplay(
+    plan.ragStatus,
+    plan.coverageRatio,
+    plan.ragExclusionReason
+  );
   const fuCount = plan.planFus?.length || 0;
   const skuCount =
     plan.planFus?.reduce((sum, fu) => sum + (fu.planSkus?.length || 0), 0) || 0;
@@ -197,7 +228,15 @@ export function GrandTotals({ plan }: GrandTotalsProps) {
           <div className="text-xs text-gray-500 mb-1 uppercase">
             PLAN STATUS
           </div>
-          <div className="flex items-center gap-2">
+          {/*
+            ⛔ `T-343` review `S4` — `title` BAĞLANMAMIŞTI ⇒ ölü alan.
+            `getRagDisplay` dışlama durumunda bir `title` döndürüyordu ama
+            hiçbir öğeye verilmiyordu: `Z68 §2` *"nötr rozet + tooltip'te
+            tek cümle gerekçe"* diyor, ve gerekçe bu yüzeyde HİÇ
+            görünmüyordu (`PlanList`/`RAGCell`/`PlanPerformanceWidget`'te
+            görünüyordu). Yarım iniş — bağlandı.
+          */}
+          <div className="flex items-center gap-2" title={ragDisplay.title}>
             <div
               className={`w-2.5 h-2.5 rounded-full ${ragDisplay.dotColor}`}
             />

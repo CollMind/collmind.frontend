@@ -1,5 +1,6 @@
 import * as XLSX from 'xlsx';
 import { format } from 'date-fns';
+import type { RiskPlan } from '@/api/endpoints/finance-reporting.endpoints';
 
 export interface ExportOptions {
   filename?: string;
@@ -93,11 +94,18 @@ export function exportMultipleSheets(
  * backend change, flagged as a follow-up rather than worked around.
  */
 export function formatRagStatusForExport(
-  ragStatus: 'RED' | 'AMBER' | 'GREEN' | string | null | undefined
+  ragStatus: 'RED' | 'AMBER' | 'GREEN' | string | null | undefined,
+  /**
+   * `T-342` / `Z68 §2` — TANIMLI-YOKLUK. Bu argüman olmadan dışa aktarım
+   * *"değerlendirme dışı"*yı *"kapsama tam değil"* diye raporlardı: veri
+   * tamken veriyi suçlamak.
+   */
+  ragExclusionReason?: string | null
 ): string {
   if (ragStatus === 'RED') return 'KRİTİK';
   if (ragStatus === 'AMBER') return 'RİSKLİ';
   if (ragStatus === 'GREEN') return 'İYİ';
+  if (ragExclusionReason === 'LTA_ONLY') return 'Değerlendirme dışı — LTA';
   return 'GRİ — kapsama tam değil (oran bu raporda taşınmıyor)';
 }
 
@@ -200,8 +208,23 @@ export function exportFinanceReport(
         'Off-Invoice Spend': row.offInvoiceSpend,
         'On-Invoice %': `${row.onInvoicePercent.toFixed(1)}%`,
         'Off-Invoice %': `${row.offInvoicePercent.toFixed(1)}%`,
-        'GP ROI %': `${row.gpRoi.toFixed(1)}%`,
-        'RAG Status': formatRagStatusForExport(row.ragStatus),
+        // ⛔ `T-343` review `S3` — BU SATIR ARTIK ULAŞILABİLİR BİR ÇÖKMEYDİ.
+        // `gpRoi` `null` olabilir (`T-172`) ve `.toFixed` `null`'da patlar.
+        // Önceki turda komşu `redPlans`/`amberPlans` siteleri görülüp
+        // *"pre-existing, kapsam dışı"* denmişti — **ama bu site atlandı**,
+        // oysa `LTA_ONLY` planlar tam olarak `ragStatus=null ∧ gpRoi=null`
+        // üretir ve **bu rapora GİRER** (risk raporunun tersine, burada
+        // RAG filtresi yok). ⇒ Bu turun doğurduğu sınıf, satırı YENİ
+        // ULAŞILABİLİR kıldı; `row: any` olduğu için tip kapısı görmüyordu.
+        // ⛔ `?? 0` YAZILMADI: `null` = "hesaplanamadı", `%0` bir İŞ YARGISI.
+        'GP ROI %':
+          row.gpRoi === null || row.gpRoi === undefined
+            ? '—'
+            : `${Number(row.gpRoi).toFixed(1)}%`,
+        'RAG Status': formatRagStatusForExport(
+          row.ragStatus,
+          row.ragExclusionReason
+        ),
         Status: row.status,
         'Start Date': row.startDate,
         'End Date': row.endDate,
@@ -217,6 +240,9 @@ export function exportFinanceReport(
         {
           'RED Plans Spend': reports.budgetAtRisk.redPlansSpend,
           'AMBER Plans Spend': reports.budgetAtRisk.amberPlansSpend,
+          // `Z71 §1a`: kadran inişinin sessizleştireceği iki dilim.
+          'Below Target ROI Spend':
+            reports.budgetAtRisk.belowTargetRoiPlansSpend,
           'Total at Risk': reports.budgetAtRisk.totalAtRisk,
           'Risk Percentage': `${reports.budgetAtRisk.riskPercentage.toFixed(1)}%`,
         },
@@ -234,6 +260,27 @@ export function exportFinanceReport(
           'GP ROI': `${plan.gpRoi.toFixed(1)}%`,
           'Risk Level': plan.riskLevel,
         })),
+        // ⚠️ Komşu `redPlans`/`amberPlans` eşlemeleri `(plan: any)` taşıyor
+        // (pre-existing). Yeni kod o sayıyı ARTIRMAZ: burada `RiskPlan`
+        // tipi kullanılıyor — `ADR 0007` refleksinin lint tarafındaki hâli,
+        // "yeni kod tam doğar".
+        ...(reports.budgetAtRisk.belowTargetRoiPlans ?? []).map(
+          (plan: RiskPlan) => ({
+            Type: 'BELOW_TARGET',
+            'Plan Name': plan.planName,
+            'Total Spend': plan.totalSpend,
+            // ⛔ `?? 0` YAZILMADI (§2.5): `null` = "hesaplanamadı", `%0` ise
+            // bir İŞ YARGISI. `T-172`nin aynı hatası, dışa aktarım tarafında.
+            // ⚠️ Komşu `redPlans`/`amberPlans` eşlemeleri `plan.gpRoi.toFixed`
+            // çağırıyor ve `null`'da PATLAR — pre-existing, bu turun kapsamı
+            // dışı, Team Lead'e bildirildi.
+            'GP ROI':
+              plan.gpRoi === null || plan.gpRoi === undefined
+                ? '—'
+                : `${plan.gpRoi.toFixed(1)}%`,
+            'Risk Level': plan.riskLevel,
+          })
+        ),
       ],
     });
   }

@@ -83,8 +83,7 @@ const emptyForm: CreateKpiDto = {
   showInGrid: true,
   columnOrder: undefined,
   aggregationMethodFu: 'sum',
-  ragGreenThreshold: undefined,
-  ragAmberThreshold: undefined,
+  targetRoiThreshold: undefined,
   isActive: true,
 };
 
@@ -178,8 +177,7 @@ export function KpiManagementPage() {
       showInGrid: kpi.showInGrid,
       columnOrder: kpi.columnOrder,
       aggregationMethodFu: kpi.aggregationMethodFu || 'sum',
-      ragGreenThreshold: kpi.ragGreenThreshold,
-      ragAmberThreshold: kpi.ragAmberThreshold,
+      targetRoiThreshold: kpi.targetRoiThreshold,
       isActive: kpi.isActive,
     });
     setIsModalOpen(true);
@@ -332,14 +330,17 @@ export function KpiManagementPage() {
         <div className="bg-white rounded-lg border p-4">
           <div className="flex items-center gap-2">
             <TrendingUp className="h-5 w-5 text-amber-500" />
-            <span className="text-sm text-gray-500">RAG Eşikli</span>
+            {/* `T-343`/`Z71 §3`: bu sayaç RAG'ı DEĞİL, Target-ROI hedefini
+                sayıyor. Eski etiketi ("RAG Eşikli") kadran indikten sonra
+                YANLIŞ olurdu — RAG artık konfigüre edilmiyor. */}
+            <span className="text-sm text-gray-500">Hedef ROI Tanımlı</span>
           </div>
           <p className="text-2xl font-bold mt-1">
             {
               kpis.filter(
                 (k) =>
-                  k.ragGreenThreshold !== null &&
-                  k.ragGreenThreshold !== undefined
+                  k.targetRoiThreshold !== null &&
+                  k.targetRoiThreshold !== undefined
               ).length
             }
           </p>
@@ -472,13 +473,15 @@ export function KpiManagementPage() {
                       )}
                     </td>
                     <td className="px-4 py-3 text-center">
-                      {kpi.ragGreenThreshold !== null &&
-                      kpi.ragGreenThreshold !== undefined ? (
-                        <div className="flex items-center justify-center gap-0.5">
-                          <span className="w-2 h-2 rounded-full bg-red-500" />
-                          <span className="w-2 h-2 rounded-full bg-amber-500" />
-                          <span className="w-2 h-2 rounded-full bg-green-500" />
-                        </div>
+                      {/* `T-343`: üç RAG noktası KALDIRILDI — bu kolon artık
+                          bir renk merdivenini değil, TEK bir hedefi gösterir
+                          (`Z71 §3`). Üç nokta bırakmak, RAG'ın hâlâ eşikten
+                          geldiği izlenimini verirdi. */}
+                      {kpi.targetRoiThreshold !== null &&
+                      kpi.targetRoiThreshold !== undefined ? (
+                        <span className="text-sm tabular-nums text-gray-700">
+                          %{kpi.targetRoiThreshold}
+                        </span>
                       ) : (
                         <span className="text-gray-300">—</span>
                       )}
@@ -815,45 +818,37 @@ export function KpiManagementPage() {
               </div>
               <div className="space-y-3">
                 <h4 className="text-sm font-semibold text-gray-700">
-                  RAG Eşikleri
+                  Hedef ROI
                 </h4>
+                {/* ⛔ `T-343` / `Z70 §2` — "RAG Eşikleri" bloğu ÖLDÜ.
+                    Kadran (`Z66 §2`) RAG'ı İŞARET tabanlı yaptı (`iTO`/`iGP`
+                    sıfır çizgileri); `İlke 3` sorusu soruldu ve cevap HAYIR:
+                    "sıfırdan büyük" konfigüre edilecek bir DEĞER değil,
+                    kavramın kendisidir. `ragAmberThreshold` kaldırıldı,
+                    `ragGreenThreshold` → `targetRoiThreshold` oldu.
+                    Kalan alan RAG'ı DEĞİL, "hedefin altında" uyarısını ve
+                    Finance kovasını besler (`Z71 §1`). */}
                 <div>
                   <label className="block text-sm text-gray-600 mb-1">
-                    <span className="w-2 h-2 rounded-full bg-green-500 inline-block mr-1" />
-                    Green ≥
+                    Hedef GP ROI %
                   </label>
                   <Input
                     type="number"
-                    value={form.ragGreenThreshold ?? ''}
+                    value={form.targetRoiThreshold ?? ''}
                     onChange={(e) =>
                       setForm((f) => ({
                         ...f,
-                        ragGreenThreshold: e.target.value
+                        targetRoiThreshold: e.target.value
                           ? parseFloat(e.target.value)
                           : undefined,
                       }))
                     }
                     placeholder="Ör: 20"
                   />
-                </div>
-                <div>
-                  <label className="block text-sm text-gray-600 mb-1">
-                    <span className="w-2 h-2 rounded-full bg-amber-500 inline-block mr-1" />
-                    Amber ≥
-                  </label>
-                  <Input
-                    type="number"
-                    value={form.ragAmberThreshold ?? ''}
-                    onChange={(e) =>
-                      setForm((f) => ({
-                        ...f,
-                        ragAmberThreshold: e.target.value
-                          ? parseFloat(e.target.value)
-                          : undefined,
-                      }))
-                    }
-                    placeholder="Ör: 10"
-                  />
+                  <p className="mt-1 text-xs text-gray-500">
+                    RAG rengini belirlemez. Bu hedefin altındaki planlar
+                    yeşil kalır, ayrıca “hedefin altında” olarak işaretlenir.
+                  </p>
                 </div>
               </div>
             </div>
