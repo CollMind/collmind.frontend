@@ -1,6 +1,8 @@
 import { Plan } from '@/api/endpoints/plans.endpoints';
 import { Card, CardContent } from '@/components/ui/card';
-import { toNumber, toNumberOrZero } from '@/utils/numberUtils';
+import { toNumberOrZero } from '@/utils/numberUtils';
+import { resolveBelowTarget } from '@/utils/targetRoi';
+import { useTargetRoiThreshold } from './useTargetRoiThreshold';
 import {
   formatCoverageLabel,
   RAG_NOT_CALCULATED_LABEL,
@@ -129,9 +131,27 @@ export function GrandTotals({ plan }: GrandTotalsProps) {
   // is a `decimal` column (arrives as a STRING from `pg` — measured), so
   // `.toFixed` was never safe to call on it directly either; `toNumber`
   // handles both facts in one place.
-  const gpRoi = toNumber(plan.overallRoi ?? null);
-  const targetRoi = 20.0; // Default target ROI (will be configurable from KPI config)
-  const roiDiff = gpRoi !== null ? gpRoi - targetRoi : null;
+  // ⛔ `T-344` II. TUR — `B3`'ÜN **BEŞİNCİ KOPYASI**, ve ilk turda kaçtı.
+  //
+  // Eski satır: `const targetRoi = 20.0; // ... will be configurable`.
+  // Bir `TODO` bir uygulama değildir — ve bu kopya `roi < 20` desenine
+  // TAKILMAZDI, çünkü eşik bir **yerel sabitin adı** arkasındaydı
+  // (`gpRoi < targetRoi`). `§7` taraması KARARLA yapılınca çıktı:
+  // *"bir ROI, bir eşikle karşılaştırılıyor."*
+  //
+  // ⚠️ Bu kopya `null` konusunda ZATEN dürüsttü (`toNumber`, `—`) ama
+  // **renk-kördü** ve **eşiği koddaydı** — üç kusurdan ikisi.
+  const targetRoiThreshold = useTargetRoiThreshold();
+  const roiDecision = resolveBelowTarget(
+    plan.ragStatus,
+    plan.overallRoi ?? null,
+    targetRoiThreshold
+  );
+  const gpRoi = roiDecision.roi;
+  const roiDiff =
+    gpRoi !== null && targetRoiThreshold !== null
+      ? gpRoi - targetRoiThreshold
+      : null;
   const roiDiffAbs = roiDiff !== null ? Math.abs(roiDiff).toFixed(1) : null;
 
   // PLAN STATUS: RAG status with FU and SKU counts
@@ -205,16 +225,29 @@ export function GrandTotals({ plan }: GrandTotalsProps) {
         <CardContent className="p-4">
           <div className="text-xs text-gray-500 mb-1 uppercase">GP ROI</div>
           <div
-            className={`text-2xl font-bold ${gpRoi !== null && gpRoi < targetRoi ? 'text-red-600' : 'text-gray-900'}`}
+            className={`text-2xl font-bold ${roiDecision.isBelowTarget ? 'text-red-600' : 'text-gray-900'}`}
+            data-testid={
+              roiDecision.isBelowTarget ? 'grandtotals-below-target' : 'grandtotals-roi'
+            }
+            title={roiDecision.message ?? undefined}
           >
             {gpRoi !== null ? `${gpRoi.toFixed(1)}%` : '—'}
           </div>
           <div className="text-xs text-gray-500 mt-1">
-            {gpRoi !== null && roiDiff !== null ? (
+            {/*
+              ⛔ Hedef konfigüre değilse "Target: %20" YAZILMAZ — uydurulmuş
+              bir hedefi ekrana yazmak, `§2.5`'in en görünür hâli olurdu.
+            */}
+            {gpRoi !== null &&
+            roiDiff !== null &&
+            targetRoiThreshold !== null ? (
               <>
-                Target: %{targetRoi.toFixed(0)} ({roiDiff >= 0 ? '▲' : '▼'}
+                Target: %{targetRoiThreshold.toFixed(0)} (
+                {roiDiff >= 0 ? '▲' : '▼'}
                 {roiDiffAbs}pp)
               </>
+            ) : gpRoi !== null ? (
+              'Hedef ROI tanımlı değil'
             ) : (
               RAG_NOT_CALCULATED_LABEL
             )}

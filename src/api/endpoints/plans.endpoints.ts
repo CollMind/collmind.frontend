@@ -220,6 +220,46 @@ export interface SubmitPlanDto {
    * stale value → 409 STALE_VERSION.
    */
   version?: number;
+
+  /**
+   * `T-344`: ölen `POST /plans/:id/submit-for-approval` rotasından taşındı.
+   * Bugün UI bunu göndermiyor; alan sözleşmede duruyor.
+   */
+  submissionNotes?: string;
+}
+
+/**
+ * `T-344` / `Z73 §1` — **`POST /plans/:id/submit`'İN YENİ DÖNÜŞ ŞEKLİ.**
+ *
+ * ⛔ **`Plan` DEĞİL.** Bu, bu dalganın var-oluş cümlesinin taşıyıcısıdır:
+ * *"uyarı kullanıcıya **ULAŞIR**."*
+ *
+ * `Q13` uyarı katmanı (`RED` *"ciro kaybı"* · `AMBER` *"kârsız büyüme"* ·
+ * `LTA_ONLY` *"değerlendirme dışı"* · *"hedefin altında"*) `2026-08-02`'den
+ * beri backend'de VARDI — ama frontend'in **hiç çağırmadığı** bir rotanın
+ * içinde. `T-344` rotayı öldürdü ve uyarıları buraya bağladı.
+ *
+ * ```
+ * validationErrors      BLOKLAR      success:false, plan DRAFT kalır
+ * budgetCheck.warnings  BLOKLAMAZ    submit OLDU, karar desteği konuşuyor
+ * ```
+ * ⛔ İkisini aynı kutuda göstermek `K-2.2.7c`'yi kırar: uyarı bir RED
+ * DEĞİLDİR ve kullanıcıya öyle okutulmamalıdır.
+ */
+export interface SubmissionResult {
+  success: boolean;
+  planId: string;
+  status: string;
+  budgetCheck: {
+    onInvoice: { available: number; requested: number; sufficient: boolean };
+    offInvoice: { available: number; requested: number; sufficient: boolean };
+    overallSufficient: boolean;
+    /** BLOKLAMAYAN karar-desteği cümleleri (`Z70 §1` · `Z71 §1`). */
+    warnings?: string[];
+  };
+  /** BLOKLAYAN kalemler — doluysa `success` `false`'tur. */
+  validationErrors?: string[];
+  approvalRequestId: string;
 }
 
 export interface PlanMechanicValue {
@@ -353,8 +393,10 @@ export const planEndpoints = {
   // T-034f: submit() is the one status transition that ALSO requires
   // `version` (see SubmitPlanDto). approve/reject deliberately do NOT take
   // version — do not add it there.
+  // T-344 (`Z73 §1`): dönüş tipi `Plan` → `SubmissionResult`. Tek submit
+  // yolu; `POST /plans/:id/submit-for-approval` KALDIRILDI ([[T-058]]).
   submit: (id: string, data: SubmitPlanDto) =>
-    apiClient.post<Plan>(`/plans/${id}/submit`, data),
+    apiClient.post<SubmissionResult>(`/plans/${id}/submit`, data),
 
   approve: (
     id: string,

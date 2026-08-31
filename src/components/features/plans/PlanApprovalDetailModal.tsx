@@ -22,6 +22,8 @@ import {
 } from 'lucide-react';
 import { userEndpoints } from '@/api/endpoints/users.endpoints';
 import { toNumberOrZero } from '@/utils/numberUtils';
+import { resolveBelowTarget } from '@/utils/targetRoi';
+import { useTargetRoiThreshold } from './useTargetRoiThreshold';
 
 interface PlanApprovalDetailModalProps {
   plan: Plan;
@@ -102,15 +104,29 @@ export function PlanApprovalDetailModal({
   const incrementalPercent =
     baseVolume > 0 ? (incremental / baseVolume) * 100 : 0;
   const incrementalGp = planData.totalGp - baseVolume * 0; // Simplified - should calculate base GP properly
-  // `overallRoi` is a `decimal` column (arrives as STRING from `pg`) and
-  // `null` when a dependency is missing (§2.5) — `toNumberOrZero` handles
-  // both. ⚠️ Still silently reads "not computed" as "0% ROI, below
-  // target" here, same class as [[T-172]]; that redesign is out of this
-  // task's touches (`PlanApprovalDetailModal.tsx` is not in
-  // T-216a/T-216b/T-172's touches lists) — flagged as a follow-up, not
-  // silently fixed.
-  const roi = toNumberOrZero(planData.overallRoi);
-  const isLowRoi = roi < 20;
+  // ⛔ `T-344` — `B3`'ÜN **DÖRDÜNCÜ KOPYASI**, ve `§7` taramasıyla bulundu.
+  //
+  // Bu satır dalganın brief'inde YAZILI DEĞİLDİ (`B3` yalnız
+  // `PlanApprovalsPage.tsx`'i adlandırıyordu) — ama aynı sınıf, aynı üç
+  // kusur, ve **aynı ekrandan açılan modal**:
+  // ```
+  // 1  eşik KODDAN (`< 20`)            → §2.3
+  // 2  toNumberOrZero ⇒ null ROI = 0   → §2.5 ("hesaplanamadı" ≠ "%0")
+  // 3  RAG rengi HİÇ okunmuyor         → RED/AMBER/LTA çifte sayım
+  // ```
+  // Yukarıdaki eski yorum bunu *"T-172 sınıfı, kapsam dışı, follow-up"*
+  // diye **kayda geçirmişti** — ve `§7.1 T-084`: *"bir hatayı belgelemek,
+  // onu koruma altına alır."* Kapsam dışı DEĞİLDİ; kapsam **bir dosya
+  // adıyla** tanımlanmıştı, sınıfla değil.
+  //
+  // ⛔ İkinci bir kopya bırakmak dalgayı kapatmaz — tek sözleşme:
+  // `utils/targetRoi.ts` (backend `common/kpi/target-roi.ts` ikizi).
+  const targetRoiThreshold = useTargetRoiThreshold();
+  const planRoiDecision = resolveBelowTarget(
+    planData.ragStatus,
+    planData.overallRoi,
+    targetRoiThreshold
+  );
 
   const handleApprove = () => {
     onApprove();
@@ -220,16 +236,22 @@ export function PlanApprovalDetailModal({
                 <div className="flex justify-between">
                   <span className="text-gray-600">GP ROI:</span>
                   <span
-                    className={`font-medium ${isLowRoi ? 'text-red-600' : ''}`}
+                    className={`font-medium ${planRoiDecision.isBelowTarget ? 'text-red-600' : ''}`}
                   >
-                    {formatPercentage(roi)}
+                    {/* Hesaplanamayan ROI için `%0,0` YAZILMAZ (`§2.5`). */}
+                    {planRoiDecision.roi === null
+                      ? '—'
+                      : formatPercentage(planRoiDecision.roi)}
                   </span>
                 </div>
-                {isLowRoi && (
-                  <div className="mt-3 p-2 bg-yellow-50 border border-yellow-200 rounded flex items-start gap-2">
+                {planRoiDecision.message && (
+                  <div
+                    className="mt-3 p-2 bg-yellow-50 border border-yellow-200 rounded flex items-start gap-2"
+                    data-testid="modal-below-target-roi"
+                  >
                     <AlertTriangle className="h-4 w-4 text-yellow-600 mt-0.5" />
                     <span className="text-xs text-yellow-800">
-                      GP ROI {formatPercentage(roi)} - Hedefin altında.
+                      {planRoiDecision.message}
                     </span>
                   </div>
                 )}
@@ -257,10 +279,22 @@ export function PlanApprovalDetailModal({
                   const fuIncremental = fuPlannedVolume - fuBaseVolume;
                   const fuUplift =
                     fuBaseVolume > 0 ? (fuIncremental / fuBaseVolume) * 100 : 0;
-                  // Same decimal-as-string/silent-zero caveat as `roi`
-                  // above.
-                  const fuRoi = toNumberOrZero(planFu.gpRoi);
-                  const isFuLowRoi = fuRoi < 20;
+                  // ⛔ `T-344` II. TUR — `B3`'ün **FU SEVİYESİ**, ve bu
+                  // satır ilk turda KAÇTI: `§7` taraması `roi < 20` /
+                  // `isLowRoi` desenine bağlıydı, `fu` ÖN EKİ deseni
+                  // bozdu (`fuRoi < 20` · `isFuLowRoi`).
+                  //
+                  // > Bir sınıfı ararken DEĞİŞKEN ADINI değil, KARARI ara.
+                  //
+                  // Üç kusur FU seviyesinde de aynen duruyordu: eşik
+                  // koddan (`§2.3`) · `toNumberOrZero` ⇒ `null` ROI `0`
+                  // (`§2.5`) · `planFu.ragStatus` HİÇ okunmuyor (çifte
+                  // sayım). Karar artık plan seviyesiyle AYNI fonksiyonda.
+                  const fuRoiDecision = resolveBelowTarget(
+                    planFu.ragStatus,
+                    planFu.gpRoi,
+                    targetRoiThreshold
+                  );
 
                   return (
                     <Card key={planFu.id} className="border-gray-200">
@@ -287,14 +321,26 @@ export function PlanApprovalDetailModal({
                           <div className="flex justify-between items-center">
                             <span className="text-gray-600">ROI</span>
                             <Badge
-                              variant={isFuLowRoi ? 'destructive' : 'default'}
+                              variant={
+                                fuRoiDecision.isBelowTarget
+                                  ? 'destructive'
+                                  : 'default'
+                              }
                               className={
-                                isFuLowRoi
+                                fuRoiDecision.isBelowTarget
                                   ? 'bg-yellow-100 text-yellow-800'
                                   : ''
                               }
+                              data-testid={
+                                fuRoiDecision.isBelowTarget
+                                  ? 'fu-below-target-roi'
+                                  : 'fu-roi'
+                              }
+                              title={fuRoiDecision.message ?? undefined}
                             >
-                              {formatPercentage(fuRoi)}
+                              {fuRoiDecision.roi === null
+                                ? '—'
+                                : formatPercentage(fuRoiDecision.roi)}
                             </Badge>
                           </div>
                         </div>
@@ -350,9 +396,16 @@ export function PlanApprovalDetailModal({
                           fuBaseVolume > 0
                             ? (fuIncremental / fuBaseVolume) * 100
                             : 0;
-                        // Same decimal-as-string/silent-zero caveat as
-                        // `roi` above.
-                        const fuRoi = toNumberOrZero(planFu.gpRoi);
+                        // ⛔ `T-344` II. TUR — kart ızgarasındaki ikizle
+                        // AYNI karar, AYNI fonksiyon. İkinci bir
+                        // `toNumberOrZero(...) < 20` yazmak `§7`'nin
+                        // kapattığı sınıftır (ve tam bu dosyada iki kez
+                        // yazılmıştı).
+                        const fuRoiDecision = resolveBelowTarget(
+                          planFu.ragStatus,
+                          planFu.gpRoi,
+                          targetRoiThreshold
+                        );
 
                         return (
                           <>
@@ -372,9 +425,13 @@ export function PlanApprovalDetailModal({
                               </td>
                               <td className="px-4 py-2 text-right">-</td>
                               <td
-                                className={`px-4 py-2 text-right ${fuRoi < 20 ? 'text-red-600' : ''}`}
+                                className={`px-4 py-2 text-right ${fuRoiDecision.isBelowTarget ? 'text-red-600' : ''}`}
                               >
-                                {formatPercentage(fuRoi)}
+                                {/* Aynı karar, ikinci render yüzeyi —
+                                    kendi `< 20`'sini YAZMAZ (`§7`). */}
+                                {fuRoiDecision.roi === null
+                                  ? '—'
+                                  : formatPercentage(fuRoiDecision.roi)}
                               </td>
                             </tr>
                             {/* SKU Rows */}

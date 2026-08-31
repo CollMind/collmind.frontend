@@ -96,8 +96,29 @@ export function BudgetAtRiskWidget({ filters }: BudgetAtRiskWidgetProps) {
         </div>
       </div>
 
+      {/*
+        ⛔ `S9` / `Z72 §3` — **AD DOĞRU, TANIMI BÜYÜDÜ.**
+
+        `totalAtRisk` bu sürümle below-target harcamasını **DA** içeriyor
+        (`Z71 §1`: *"Finance'ın evreni KÜÇÜLMEZ, DAHA DOĞRU ADLANIR"*).
+        Yani `riskPercentage` **aynı adla farklı bir sayı** üretiyor:
+        Finance dünden bugüne aynı grafikte **büyümüş bir "risk"** görecek.
+
+        > ### **GÖRÜNMEZ BÜYÜYEN BİR TANIM, SESSİZ-SÜRPRİZ SINIFIDIR.**
+
+        Bu bir **ad-borcu DEĞİL** — yeniden adlandırma YAPILMADI. Tanım
+        genişlemesi üç katmanda görünür kılındı: beklenen-değişim listesi ·
+        `Z72 §3` kaydı · ve **bu etiket** (`Z73 §3` şart 4).
+      */}
       <div className="p-4 bg-gray-50 rounded-lg">
-        <div className="text-sm text-gray-600 mb-2">Total at Risk</div>
+        <div className="text-sm text-gray-600 mb-1">Total at Risk</div>
+        <div
+          className="text-xs text-gray-500 mb-2"
+          title="Risk = zarar (RAG kırmızı) + kârsız büyüme (RAG sarı) + hedef-altı (RAG yeşil ama Target ROI altında)"
+          data-testid="at-risk-definition"
+        >
+          Risk = zarar + kârsız-büyüme + hedef-altı
+        </div>
         <div className="text-2xl font-bold">
           {formatCurrency(data.totalAtRisk)}
         </div>

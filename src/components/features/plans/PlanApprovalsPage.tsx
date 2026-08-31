@@ -25,6 +25,8 @@ import { BudgetApprovalModal } from './BudgetApprovalModal';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { userEndpoints } from '@/api/endpoints/users.endpoints';
 import { toNumberOrZero } from '@/utils/numberUtils';
+import { resolveBelowTarget } from '@/utils/targetRoi';
+import { useTargetRoiThreshold } from './useTargetRoiThreshold';
 import { useMe } from '@/services/users.service';
 import { UserRole } from '@/types/user.types';
 import { hasRole } from '@/utils/roleUtils';
@@ -67,6 +69,9 @@ export function PlanApprovalsPage() {
     queryKey: ['pending-approval-plans'],
     queryFn: () => planEndpoints.getPendingApprovals().then((res) => res.data),
   });
+
+  // `T-344`: hedef eşiği KONFİGÜRASYONDAN (`§2.3`) — `GET /master-data/kpis`.
+  const targetRoiThreshold = useTargetRoiThreshold();
 
   const approveMutation = useMutation({
     mutationFn: ({
@@ -145,8 +150,24 @@ export function PlanApprovalsPage() {
       ? plans.reduce((sum, p) => sum + toNumberOrZero(p.overallRoi), 0) /
         plans.length
       : 0;
-  const lowRoiCount =
-    plans?.filter((p) => toNumberOrZero(p.overallRoi) < 20).length || 0;
+  // ⛔ `T-344` / `Z73 §3` şart 3 — `B3` ÖLDÜ. Eski satır:
+  //     plans.filter((p) => toNumberOrZero(p.overallRoi) < 20)
+  // Üç kusur birden taşıyordu: eşik KODDAN (`§2.3`), `null` ROI `0`
+  // sayılıyor (`§2.5` — "hesaplanamadı" ≠ "%0 ROI"), ve RAG rengi HİÇ
+  // okunmuyordu (⇒ `RED`/`AMBER`/`LTA_ONLY` planlar da sayılıyordu, yani
+  // `Z71 §1`'in engellemek için yazdığı ÇİFTE SAYIM canlıydı).
+  //
+  // ⚠️ Eşik okunamıyorsa sayı `null`'dır — `0` DEĞİL. `0` "hedefin altında
+  // plan yok" diye okunurdu; bu, ölçülemeyen bir soruya uydurulmuş bir
+  // cevaptır.
+  const belowTargetPlans =
+    targetRoiThreshold === null
+      ? null
+      : (plans ?? []).filter(
+          (p) =>
+            resolveBelowTarget(p.ragStatus, p.overallRoi, targetRoiThreshold)
+              .isBelowTarget
+        );
 
   if (isLoading) return <LoadingSpinner />;
 
@@ -227,11 +248,23 @@ export function PlanApprovalsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-xs text-gray-500 uppercase mb-1">
-                  ROI &lt; %20
+                  {targetRoiThreshold === null
+                    ? 'HEDEF ALTI'
+                    : `ROI < %${targetRoiThreshold}`}
                 </div>
                 <div className="text-2xl font-bold text-gray-900">
-                  {lowRoiCount}
+                  {/*
+                    ⛔ Eşik yoksa `0` YAZMA. `0` bir ÖLÇÜMDÜR ("hiç yok");
+                    burada ölçüm YAPILAMADI. `S1`'in bu karttaki hâli:
+                    üçüncü durum, tanımlı ve görünür.
+                  */}
+                  {belowTargetPlans === null ? '—' : belowTargetPlans.length}
                 </div>
+                {belowTargetPlans === null && (
+                  <div className="text-xs text-gray-500">
+                    Hedef ROI tanımlı değil
+                  </div>
+                )}
               </div>
               <AlertTriangle className="h-8 w-8 text-red-600" />
             </div>
@@ -267,6 +300,7 @@ export function PlanApprovalsPage() {
               key={plan.id}
               plan={plan}
               userRole={user?.role}
+              targetRoiThreshold={targetRoiThreshold}
               onReview={() => setSelectedPlan(plan)}
               onApprove={() => setBudgetApprovalPlan(plan)}
               onReject={() => setRejectPlan(plan)}
@@ -347,6 +381,12 @@ export function PlanApprovalsPage() {
 interface PlanApprovalCardProps {
   plan: Plan;
   userRole?: UserRole;
+  /**
+   * `T-344`: `kpis.target_roi_threshold` (`GP_ROI_PCT`), konfigürasyondan.
+   * `null` = okunamadı/tanımlı değil ⇒ **hiçbir yargı verilmez**, bir
+   * varsayılana düşülmez (`§2.5`).
+   */
+  targetRoiThreshold?: number | null;
   onReview: () => void;
   onApprove: () => void;
   onReject: () => void;
@@ -358,6 +398,7 @@ interface PlanApprovalCardProps {
 export function PlanApprovalCard({
   plan,
   userRole,
+  targetRoiThreshold = null,
   onReview,
   onApprove,
   onReject,
@@ -384,9 +425,15 @@ export function PlanApprovalCard({
   const fuCount = plan.planFus?.length || 0;
   const skuCount =
     plan.planFus?.reduce((sum, fu) => sum + (fu.planSkus?.length || 0), 0) || 0;
-  // Same decimal-as-string/silent-zero caveat as `avgRoi` above.
-  const roi = toNumberOrZero(plan.overallRoi);
-  const isLowRoi = roi < 20;
+  // ⛔ `T-344` — `B3` ÖLDÜ. Eski hâli `toNumberOrZero(plan.overallRoi) < 20`
+  // idi ve `null` ROI'yi `0` sayıp *"hedefin altında"* diyordu; RAG rengini
+  // de hiç okumuyordu. Şimdi tek sözleşme: `evaluateTargetRoi` +
+  // `isBelowTargetRoi` (backend `common/kpi/target-roi.ts` ikizi).
+  const roiDecision = resolveBelowTarget(
+    plan.ragStatus,
+    plan.overallRoi,
+    targetRoiThreshold
+  );
 
   return (
     <Card className="border-gray-200">
@@ -436,7 +483,14 @@ export function PlanApprovalCard({
           <div>
             <div className="text-xs text-gray-500 mb-1">GP ROI</div>
             <div className="text-sm font-semibold text-gray-900">
-              {formatPercentage(roi)}
+              {/*
+                ⛔ `T-344`: hesaplanamayan bir ROI için `%0,0` YAZILMAZ.
+                `toNumberOrZero` tam bunu yapıyordu ve kullanıcı
+                "hesaplanamadı" ile "sıfır getiri"yi ayırt edemiyordu.
+              */}
+              {roiDecision.roi === null
+                ? '—'
+                : formatPercentage(roiDecision.roi)}
             </div>
           </div>
           <div>
@@ -453,13 +507,15 @@ export function PlanApprovalCard({
           </div>
         </div>
 
-        {/* Warning Banner */}
-        {isLowRoi && (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4 flex items-start gap-2">
+        {/* Warning Banner — `Z71 §1` TARGET-ROI ekseni (RAG'dan AYRI) */}
+        {roiDecision.message && (
+          <div
+            className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-4 flex items-start gap-2"
+            data-testid="below-target-roi-banner"
+          >
             <AlertTriangle className="h-5 w-5 text-yellow-600 mt-0.5" />
             <div className="text-sm text-yellow-800">
-              ROI hedefin altında ({formatPercentage(roi)} &lt; %20).
-              Taktiklerin gözden geçirilmesi önerilir.
+              {roiDecision.message} Taktiklerin gözden geçirilmesi önerilir.
             </div>
           </div>
         )}

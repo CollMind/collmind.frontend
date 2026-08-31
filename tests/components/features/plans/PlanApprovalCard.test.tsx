@@ -125,3 +125,87 @@ describe('PlanApprovalCard — T-182 role gating', () => {
     ).toBeInTheDocument();
   });
 });
+
+/**
+ * ⛔ `T-344` / `Z73 §3` **ŞART 3 — `B3` ÖLÜMÜ, BEKLENEN-DEĞİŞİM PİNLİ.**
+ *
+ * Banner eskiden `toNumberOrZero(plan.overallRoi) < 20` ile karar veriyordu.
+ * Üç kusur birden:
+ * ```
+ * 1  eşik KODDAN        → §2.3 ihlali
+ * 2  null ROI ⇒ 0       → "hesaplanamadı" olan HER plan uyarı alıyordu (§2.5)
+ * 3  RAG rengi OKUNMUYOR→ RED/AMBER/LTA planlar da banner görüyordu, yani
+ *                         `Z71 §1`'in ENGELLEMEK için yazdığı ÇİFTE SAYIM
+ * ```
+ * Aşağıdaki `banner-sız` vakaların HEPSİ **dün banner GÖRÜYORDU**. Bu bir
+ * düzeltme, ama **görünür bir değişimdir** — ve pin onu bir randevuya
+ * çevirir: biri `B3`'ü geri getirirse burası kırmızıya döner.
+ */
+function renderCardWith(
+  overrides: Partial<Plan>,
+  targetRoiThreshold: number | null
+) {
+  return renderWithClient(
+    <PlanApprovalCard
+      plan={{ ...basePlan, ...overrides }}
+      userRole={UserRole.CATEGORY_MANAGER}
+      targetRoiThreshold={targetRoiThreshold}
+      onReview={noop}
+      onApprove={noop}
+      onReject={noop}
+      isApproving={false}
+      isRejecting={false}
+    />
+  );
+}
+
+describe('PlanApprovalCard — T-344: below-target banner (B3 ölümü)', () => {
+  it('⭐ GREEN ∧ ROI < hedef ⇒ banner VAR, ve eşik KONFİGÜRASYONDAN gelir', () => {
+    renderCardWith({ ragStatus: 'GREEN', overallRoi: 10.5 }, 20);
+    expect(screen.getByTestId('below-target-roi-banner')).toBeInTheDocument();
+    // ⛔ Metin okunuyor, kutunun varlığı değil (T-332).
+    expect(screen.getByText(/hedef %20\.0/i)).toBeInTheDocument();
+  });
+
+  it('⭐ eşik 15 ise ROI 10.5 yine altta — ve METİN 15 der (hardcode `20` ÖLDÜ)', () => {
+    // ⛔ AYIRT EDİCİ VAKA: `20` sabiti kalsaydı bu test yine YEŞİL olurdu
+    // (10.5 < 20 de doğru), ama metin `%20.0` derdi. Assertion metni okuyor.
+    renderCardWith({ ragStatus: 'GREEN', overallRoi: 10.5 }, 15);
+    expect(screen.getByText(/hedef %15\.0/i)).toBeInTheDocument();
+  });
+
+  it('⭐ eşik 5 ise ROI 10.5 hedefin ÜSTÜNDE ⇒ banner YOK (sabit `20` olsaydı VARDI)', () => {
+    renderCardWith({ ragStatus: 'GREEN', overallRoi: 10.5 }, 5);
+    expect(screen.queryByTestId('below-target-roi-banner')).not.toBeInTheDocument();
+  });
+
+  it('⛔ BEKLENEN DEĞİŞİM — `null` ROI: DÜN banner vardı, BUGÜN YOK', () => {
+    renderCardWith({ ragStatus: 'GREEN', overallRoi: null }, 20);
+    expect(screen.queryByTestId('below-target-roi-banner')).not.toBeInTheDocument();
+    // Ve ROI hücresi `%0,0` DEĞİL, "—" gösterir.
+    expect(screen.getByText('—')).toBeInTheDocument();
+  });
+
+  it('⛔ BEKLENEN DEĞİŞİM — RED: DÜN banner vardı, BUGÜN YOK (kadran konuşuyor)', () => {
+    renderCardWith({ ragStatus: 'RED', overallRoi: 1 }, 20);
+    expect(screen.queryByTestId('below-target-roi-banner')).not.toBeInTheDocument();
+  });
+
+  it('⛔ BEKLENEN DEĞİŞİM — AMBER: DÜN banner vardı, BUGÜN YOK', () => {
+    renderCardWith({ ragStatus: 'AMBER', overallRoi: 1 }, 20);
+    expect(screen.queryByTestId('below-target-roi-banner')).not.toBeInTheDocument();
+  });
+
+  it('⛔ BEKLENEN DEĞİŞİM — LTA_ONLY (renk YOK): DÜN banner vardı, BUGÜN YOK', () => {
+    renderCardWith(
+      { ragStatus: null, ragExclusionReason: 'LTA_ONLY', overallRoi: 1 },
+      20
+    );
+    expect(screen.queryByTestId('below-target-roi-banner')).not.toBeInTheDocument();
+  });
+
+  it('⛔ eşik KONFİGÜRE DEĞİLSE hiçbir yargı verilmez (varsayılan `20` YOK)', () => {
+    renderCardWith({ ragStatus: 'GREEN', overallRoi: 1 }, null);
+    expect(screen.queryByTestId('below-target-roi-banner')).not.toBeInTheDocument();
+  });
+});

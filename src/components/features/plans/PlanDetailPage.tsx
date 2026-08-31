@@ -1,7 +1,12 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { planEndpoints, UpdatePlanDto } from '@/api/endpoints/plans.endpoints';
+import {
+  planEndpoints,
+  UpdatePlanDto,
+  SubmissionResult,
+} from '@/api/endpoints/plans.endpoints';
+import { SubmissionFeedback } from './SubmissionFeedback';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { ConfirmDialog } from '@/components/common/ConfirmDialog';
 import { Card, CardContent } from '@/components/ui/card';
@@ -56,6 +61,11 @@ export function PlanDetailPage() {
   const [activeTab, setActiveTab] = useState<'grid' | 'analysis'>('grid');
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isSubmitDialogOpen, setIsSubmitDialogOpen] = useState(false);
+  // `T-344` / `Z73 §3` şart 2 — submit'in DÖNÜŞ GÖVDESİ ekranda yaşar.
+  // ⛔ Bir `toast` yeterli DEĞİL: kaybolur, kopyalanamaz, listelenemez —
+  // ve `Q13` uyarıları "gözden geçirin" diyen KARAR DESTEĞİ cümleleridir.
+  const [submissionResult, setSubmissionResult] =
+    useState<SubmissionResult | null>(null);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   // T-034f: shared 409 STALE_VERSION/MISSING_VERSION UX (update/delete).
   const versionConflict = useVersionConflict([['plan', id], ['plans']]);
@@ -103,15 +113,31 @@ export function PlanDetailPage() {
   // only) — it commits the plan's current totalSpend to a budget reserve.
   // Send the version we last loaded; on 409 STALE_VERSION/MISSING_VERSION
   // route through the shared conflict dialog, never auto-retry.
+  //
+  // ⛔ `T-344` / `Z73 §1` — DÖNÜŞ TİPİ `Plan` DEĞİL, `SubmissionResult`.
+  // `200` artık "gönderildi" demek DEĞİLDİR: `success:false` bloklayan
+  // `validationErrors` taşır ve plan `DRAFT` kalır. Bunu `onSuccess`'te
+  // ayırmamak, kullanıcıya GÖNDERİLMEMİŞ bir planı "gönderildi" diye
+  // bildiren sessiz bir yanlış olurdu.
   const submitMutation = useMutation({
-    mutationFn: () => planEndpoints.submit(id!, { version: plan?.version }),
-    onSuccess: () => {
+    mutationFn: (submissionNotes?: string) =>
+      planEndpoints
+        .submit(id!, { version: plan?.version, submissionNotes })
+        .then((res) => res.data),
+    onSuccess: (result) => {
+      setSubmissionResult(result);
+      if (!result.success) {
+        toast.error('Plan gönderilemedi — düzeltilmesi gereken kalemler var');
+        setIsSubmitDialogOpen(false);
+        return;
+      }
       toast.success('Plan onaya gönderildi');
       queryClient.invalidateQueries({ queryKey: ['plan', id] });
       queryClient.invalidateQueries({ queryKey: ['plans'] });
       setIsSubmitDialogOpen(false);
     },
     onError: (error: any) => {
+      setSubmissionResult(null);
       if (versionConflict.handleError(error)) {
         setIsSubmitDialogOpen(false);
         return;
@@ -342,6 +368,13 @@ export function PlanDetailPage() {
         </div>
       )}
 
+      {/*
+        `T-344` / `Z73 §3` şart 2 — UYARI KULLANICIYA ULAŞIR.
+        Sekmelerin ÜSTÜNDE, çünkü `Q13` uyarıları planın tamamı hakkındadır
+        ve bir sekmenin içine gömülmek "görünür" sayılmaz.
+      */}
+      {submissionResult && <SubmissionFeedback result={submissionResult} />}
+
       {/* Tabs */}
       <div className="flex gap-2 border-b">
         <Button
@@ -387,7 +420,17 @@ export function PlanDetailPage() {
       <ConfirmDialog
         isOpen={isSubmitDialogOpen}
         onClose={() => setIsSubmitDialogOpen(false)}
-        onConfirm={() => submitMutation.mutate()}
+        // ⛔ `T-344`: `ConfirmDialog` bu notu ZATEN topluyordu ve
+        // `onConfirm` onu ZATEN veriyordu — burası onu ATIYORDU. Kullanıcı
+        // onaylayıcıya not yazıyor, not hiçbir yere gitmiyordu ("mekanizma
+        // var, yol yok" sınıfı). Backend `submissionNotes`'u ölen rotadan
+        // devraldı; yol artık bağlı.
+        // ⛔ `🟡-6` — BOŞ NOT `''` OLARAK KALICILAŞMASIN.
+        // `ConfirmDialog`'un `note` state'i `''` ile başlar ve backend'de
+        // `@IsOptional` boş dizgeyi **geçirir** ⇒ `plans.submission_notes = ''`.
+        // O da *"not yok"* ile *"boş not"* ayrımını siler — `S1`'in bu
+        // alandaki hâli. `undefined` gönderilir, `''` değil.
+        onConfirm={(note) => submitMutation.mutate(note?.trim() || undefined)}
         title="Planı Onaya Gönder"
         description={`"${plan.planCode}: ${plan.planName}" planını onaya göndermek istediğinize emin misiniz? Onaya gönderildikten sonra plan üzerinde düzenleme yapılamaz.`}
         confirmText="Onaya Gönder"
