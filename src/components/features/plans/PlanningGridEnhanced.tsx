@@ -86,9 +86,127 @@ interface PlanningGridProps {
 }
 
 /**
+ * `T-349` / `Z79 §8` — null-safe BASE-chain arithmetic (SKU + FU).
+ *
+ * ⛔ `baseVolume` missing (`null`/`undefined`) is `NOT_EVALUABLE` (`Q20`,
+ * `Z78 §1`), not "0 units sold". The `?? 0` this file used to fall back to
+ * silently turned a missing baseline into a real zero everywhere it was
+ * multiplied or summed — `Q20`'s backend null-propagation (`Z77`) undone in
+ * the display layer (`docs/process/BL_BASELINE_HATTI_BRIEF.md §9b`). The
+ * emsal for the null-vs-value split is `src/utils/targetRoi.ts`
+ * (`TargetRoiEvaluation`); the render side already renders `null` as `-`
+ * (`grid-cells.tsx` `formatValue`) — this file only needed to stop
+ * MANUFACTURING a `0` before that render happens.
+ *
+ * ⚠️ **Deliberately narrow.** Only the `baseVolume` axis is closed here.
+ * `unitPrice`/`cogs`/`plannedVolume` keep their existing `?? 0` fallback —
+ * a sibling, unfixed instance of the same class (reported to Team Lead in
+ * the `T-349` handoff, not fixed in this task: 46/12/23 sites, spanning
+ * both BASE and PLAN sides, out of this task's `touches:` scope).
+ */
+function mulBaseVolume(
+  baseVolume: number | null | undefined,
+  factor: number | null | undefined
+): number | null {
+  if (baseVolume === null || baseVolume === undefined) return null;
+  return baseVolume * (factor ?? 0);
+}
+
+function subOrNull(
+  a: number | null,
+  b: number | null | undefined
+): number | null {
+  if (a === null) return null;
+  return a - (b ?? 0);
+}
+
+interface BaseChain {
+  gsv: number | null;
+  niv: number | null;
+  to: number | null;
+  cogs: number | null;
+  gp: number | null;
+}
+
+/** SKU-level base chain: GSV → NIV → TO → GP, `null`-propagating from `baseVolume`. */
+function computeBaseChain(
+  baseVolume: number | null | undefined,
+  unitPrice: number | null | undefined,
+  cogs: number | null | undefined,
+  baseLtaOn: number | null | undefined,
+  baseLtaOff: number | null | undefined
+): BaseChain {
+  const gsv = mulBaseVolume(baseVolume, unitPrice);
+  const niv = subOrNull(gsv, baseLtaOn);
+  const to = subOrNull(niv, baseLtaOff);
+  const cogsAmt = mulBaseVolume(baseVolume, cogs);
+  const gp = to === null || cogsAmt === null ? null : to - cogsAmt;
+  return { gsv, niv, to, cogs: cogsAmt, gp };
+}
+
+/**
+ * FU-level base volume rollup across SKUs.
+ *
+ * ⚠️ **Row classification is sourced, not invented** (`Z78 §1`, `Q20`, `1a`
+ * — *"satırın girdi-alanları evreni iki kolondur: `base_volume`,
+ * `planned_volume`"*):
+ * - **DOKUNULMAMIŞ** (`baseVolume` AND `plannedVolume` both missing): row
+ *   was never planned. Contributes nothing and does not block — matches
+ *   `Q20`'s *"katılmıyor, 0 değil"*, which for a SUM is the same number but
+ *   NOT the same reasoning (a real, counted zero vs. a row that opts out).
+ * - **KISMİ** (`plannedVolume` set, `baseVolume` missing): partial row —
+ *   the SKU was touched but its baseline is unknown. The whole FU-level
+ *   aggregate becomes `NOT_EVALUABLE` (`null`); it is not silently summed
+ *   as if the missing baseline were zero.
+ */
+function baseVolSum(
+  skus: readonly Pick<PlanSku, 'baseVolume' | 'plannedVolume'>[]
+): number | null {
+  let sum = 0;
+  for (const sku of skus) {
+    if (sku.baseVolume === null || sku.baseVolume === undefined) {
+      if (sku.plannedVolume === null || sku.plannedVolume === undefined) {
+        continue;
+      }
+      return null;
+    }
+    sum += sku.baseVolume;
+  }
+  return sum;
+}
+
+/** FU-level base chain rollup. Same DOKUNULMAMIŞ/KISMİ classification as {@link baseVolSum}. */
+function computeBaseChainAgg(skus: readonly PlanSku[]): BaseChain {
+  let gsvSum = 0;
+  let cogsSum = 0;
+  for (const sku of skus) {
+    if (sku.baseVolume === null || sku.baseVolume === undefined) {
+      if (sku.plannedVolume === null || sku.plannedVolume === undefined) {
+        continue;
+      }
+      return { gsv: null, niv: null, to: null, cogs: null, gp: null };
+    }
+    gsvSum += sku.baseVolume * (sku.sku?.unitPrice ?? 0);
+    cogsSum += sku.baseVolume * (sku.sku?.cogs ?? 0);
+  }
+  const ltaOnSum = skus.reduce(
+    (s, sku) => s + (sku.baseLtaOnInvoiceSpend ?? 0),
+    0
+  );
+  const ltaOffSum = skus.reduce(
+    (s, sku) => s + (sku.baseLtaOffInvoiceSpend ?? 0),
+    0
+  );
+  const niv = gsvSum - ltaOnSum;
+  const to = niv - ltaOffSum;
+  const gp = to - cogsSum;
+  return { gsv: gsvSum, niv, to, cogs: cogsSum, gp };
+}
+
+/**
  * Get cell value for SKU based on column code
  */
-function getSkuCellValue(
+export function getSkuCellValue(
   planSku: PlanSku,
   colCode: string,
   planFu?: PlanFu
@@ -110,24 +228,25 @@ function getSkuCellValue(
     case 'INCR_VOL':
       return planSku.incrementalVolume ?? null;
     case 'VOL_UPLIFT_PCT': {
-      const base = planSku.baseVolume ?? 0;
+      // `planSku.baseVolume` NOT defaulted to 0 — `!base` already returns
+      // `null` for missing/zero alike, so the old `?? 0` changed nothing
+      // here except the misleading appearance of a silent-zero.
+      const base = planSku.baseVolume;
       if (!base) return null;
       return (((planSku.plannedVolume ?? 0) - base) / base) * 100;
     }
 
     // GSV
-    case 'BASE_GSV': {
-      const baseVol = planSku.baseVolume ?? 0;
-      const listPrice = sku?.unitPrice ?? 0;
-      return baseVol * listPrice;
-    }
+    case 'BASE_GSV':
+      return mulBaseVolume(planSku.baseVolume, sku?.unitPrice);
     case 'PLAN_GSV': {
       const planVol = planSku.plannedVolume ?? 0;
       const listPrice = sku?.unitPrice ?? 0;
       return planVol * listPrice;
     }
     case 'INCR_GSV': {
-      const baseGsv = (planSku.baseVolume ?? 0) * (sku?.unitPrice ?? 0);
+      const baseGsv = mulBaseVolume(planSku.baseVolume, sku?.unitPrice);
+      if (baseGsv === null) return null;
       const planGsv = (planSku.plannedVolume ?? 0) * (sku?.unitPrice ?? 0);
       return planGsv - baseGsv;
     }
@@ -219,10 +338,14 @@ function getSkuCellValue(
     }
 
     // NIV & Turnover
-    case 'BASE_NIV': {
-      const baseGsv = (planSku.baseVolume ?? 0) * (sku?.unitPrice ?? 0);
-      return baseGsv - (planSku.baseLtaOnInvoiceSpend ?? 0);
-    }
+    case 'BASE_NIV':
+      return computeBaseChain(
+        planSku.baseVolume,
+        sku?.unitPrice,
+        sku?.cogs,
+        planSku.baseLtaOnInvoiceSpend,
+        planSku.baseLtaOffInvoiceSpend
+      ).niv;
     case 'PLAN_NIV': {
       const planGsv = (planSku.plannedVolume ?? 0) * (sku?.unitPrice ?? 0);
       const totalOnInv =
@@ -231,9 +354,14 @@ function getSkuCellValue(
       return planGsv - totalOnInv;
     }
     case 'INCR_NIV': {
-      const baseNiv =
-        (planSku.baseVolume ?? 0) * (sku?.unitPrice ?? 0) -
-        (planSku.baseLtaOnInvoiceSpend ?? 0);
+      const baseNiv = computeBaseChain(
+        planSku.baseVolume,
+        sku?.unitPrice,
+        sku?.cogs,
+        planSku.baseLtaOnInvoiceSpend,
+        planSku.baseLtaOffInvoiceSpend
+      ).niv;
+      if (baseNiv === null) return null;
       const planGsv = (planSku.plannedVolume ?? 0) * (sku?.unitPrice ?? 0);
       const totalOnInv =
         (planSku.plannedLtaOnInvoiceSpend ?? 0) +
@@ -241,11 +369,14 @@ function getSkuCellValue(
       const planNiv = planGsv - totalOnInv;
       return planNiv - baseNiv;
     }
-    case 'BASE_TO': {
-      const baseGsv = (planSku.baseVolume ?? 0) * (sku?.unitPrice ?? 0);
-      const baseNiv = baseGsv - (planSku.baseLtaOnInvoiceSpend ?? 0);
-      return baseNiv - (planSku.baseLtaOffInvoiceSpend ?? 0);
-    }
+    case 'BASE_TO':
+      return computeBaseChain(
+        planSku.baseVolume,
+        sku?.unitPrice,
+        sku?.cogs,
+        planSku.baseLtaOnInvoiceSpend,
+        planSku.baseLtaOffInvoiceSpend
+      ).to;
     case 'PLAN_TO': {
       const planGsv = (planSku.plannedVolume ?? 0) * (sku?.unitPrice ?? 0);
       const totalOnInv =
@@ -258,9 +389,14 @@ function getSkuCellValue(
       return planNiv - totalOffInv;
     }
     case 'INCR_TO': {
-      const baseGsv = (planSku.baseVolume ?? 0) * (sku?.unitPrice ?? 0);
-      const baseNiv = baseGsv - (planSku.baseLtaOnInvoiceSpend ?? 0);
-      const baseTo = baseNiv - (planSku.baseLtaOffInvoiceSpend ?? 0);
+      const baseTo = computeBaseChain(
+        planSku.baseVolume,
+        sku?.unitPrice,
+        sku?.cogs,
+        planSku.baseLtaOnInvoiceSpend,
+        planSku.baseLtaOffInvoiceSpend
+      ).to;
+      if (baseTo === null) return null;
       const planGsv = (planSku.plannedVolume ?? 0) * (sku?.unitPrice ?? 0);
       const totalOnInv =
         (planSku.plannedLtaOnInvoiceSpend ?? 0) +
@@ -273,9 +409,13 @@ function getSkuCellValue(
       return planTo - baseTo;
     }
     case 'TO_UPLIFT_PCT': {
-      const baseGsv = (planSku.baseVolume ?? 0) * (sku?.unitPrice ?? 0);
-      const baseNiv = baseGsv - (planSku.baseLtaOnInvoiceSpend ?? 0);
-      const baseTo = baseNiv - (planSku.baseLtaOffInvoiceSpend ?? 0);
+      const baseTo = computeBaseChain(
+        planSku.baseVolume,
+        sku?.unitPrice,
+        sku?.cogs,
+        planSku.baseLtaOnInvoiceSpend,
+        planSku.baseLtaOffInvoiceSpend
+      ).to;
       if (!baseTo) return null;
       const planGsv = (planSku.plannedVolume ?? 0) * (sku?.unitPrice ?? 0);
       const totalOnInv =
@@ -291,37 +431,45 @@ function getSkuCellValue(
 
     // Profit
     case 'BASE_COGS':
-      return (planSku.baseVolume ?? 0) * (sku?.cogs ?? 0);
+      return mulBaseVolume(planSku.baseVolume, sku?.cogs);
     case 'PLAN_COGS':
       return (planSku.plannedVolume ?? 0) * (sku?.cogs ?? 0);
     case 'BASE_GP': {
-      const baseGsv = (planSku.baseVolume ?? 0) * (sku?.unitPrice ?? 0);
-      const baseNiv = baseGsv - (planSku.baseLtaOnInvoiceSpend ?? 0);
-      const baseTo = baseNiv - (planSku.baseLtaOffInvoiceSpend ?? 0);
-      const baseCogs = (planSku.baseVolume ?? 0) * (sku?.cogs ?? 0);
-      return baseTo - baseCogs;
+      const chain = computeBaseChain(
+        planSku.baseVolume,
+        sku?.unitPrice,
+        sku?.cogs,
+        planSku.baseLtaOnInvoiceSpend,
+        planSku.baseLtaOffInvoiceSpend
+      );
+      return chain.gp;
     }
     case 'PLAN_GP':
       return planSku.plannedGp ?? null;
     case 'INCR_GP': {
-      const baseGsv = (planSku.baseVolume ?? 0) * (sku?.unitPrice ?? 0);
-      const baseNiv = baseGsv - (planSku.baseLtaOnInvoiceSpend ?? 0);
-      const baseTo = baseNiv - (planSku.baseLtaOffInvoiceSpend ?? 0);
-      const baseCogs = (planSku.baseVolume ?? 0) * (sku?.cogs ?? 0);
-      const baseGp = baseTo - baseCogs;
+      const baseGp = computeBaseChain(
+        planSku.baseVolume,
+        sku?.unitPrice,
+        sku?.cogs,
+        planSku.baseLtaOnInvoiceSpend,
+        planSku.baseLtaOffInvoiceSpend
+      ).gp;
+      if (baseGp === null) return null;
       const planGp = planSku.plannedGp ?? 0;
       return planGp - baseGp;
     }
 
     // Margin
     case 'BASE_GM_PCT': {
-      const baseGsv = (planSku.baseVolume ?? 0) * (sku?.unitPrice ?? 0);
-      const baseNiv = baseGsv - (planSku.baseLtaOnInvoiceSpend ?? 0);
-      const baseTo = baseNiv - (planSku.baseLtaOffInvoiceSpend ?? 0);
-      if (!baseTo) return null;
-      const baseCogs = (planSku.baseVolume ?? 0) * (sku?.cogs ?? 0);
-      const baseGp = baseTo - baseCogs;
-      return (baseGp / baseTo) * 100;
+      const chain = computeBaseChain(
+        planSku.baseVolume,
+        sku?.unitPrice,
+        sku?.cogs,
+        planSku.baseLtaOnInvoiceSpend,
+        planSku.baseLtaOffInvoiceSpend
+      );
+      if (!chain.to || chain.gp === null) return null;
+      return (chain.gp / chain.to) * 100;
     }
     case 'PLAN_GM_PCT': {
       const planGsv = (planSku.plannedVolume ?? 0) * (sku?.unitPrice ?? 0);
@@ -347,15 +495,19 @@ function getSkuCellValue(
         (planSku.plannedLtaOffInvoiceSpend ?? 0) +
         (planSku.promoOffInvoiceSpend ?? 0);
       const planTo = planNiv - totalOffInv;
-      const baseGsv = (planSku.baseVolume ?? 0) * (sku?.unitPrice ?? 0);
-      const baseNiv = baseGsv - (planSku.baseLtaOnInvoiceSpend ?? 0);
-      const baseTo = baseNiv - (planSku.baseLtaOffInvoiceSpend ?? 0);
-      const incrTo = planTo - baseTo;
+      const baseChain = computeBaseChain(
+        planSku.baseVolume,
+        sku?.unitPrice,
+        sku?.cogs,
+        planSku.baseLtaOnInvoiceSpend,
+        planSku.baseLtaOffInvoiceSpend
+      );
+      if (baseChain.to === null) return null;
+      const incrTo = planTo - baseChain.to;
       if (!incrTo) return null;
-      const baseCogs = (planSku.baseVolume ?? 0) * (sku?.cogs ?? 0);
-      const baseGp = baseTo - baseCogs;
+      if (baseChain.gp === null) return null;
       const planGp = planSku.plannedGp ?? 0;
-      const incrGp = planGp - baseGp;
+      const incrGp = planGp - baseChain.gp;
       return (incrGp / incrTo) * 100;
     }
 
@@ -373,9 +525,14 @@ function getSkuCellValue(
         (planSku.promoOnInvoiceSpend ?? 0) +
         (planSku.promoOffInvoiceSpend ?? 0);
       if (!incrSpend || incrSpend <= 0) return null;
-      const baseGsv = (planSku.baseVolume ?? 0) * (sku?.unitPrice ?? 0);
-      const baseNiv = baseGsv - (planSku.baseLtaOnInvoiceSpend ?? 0);
-      const baseTo = baseNiv - (planSku.baseLtaOffInvoiceSpend ?? 0);
+      const baseTo = computeBaseChain(
+        planSku.baseVolume,
+        sku?.unitPrice,
+        sku?.cogs,
+        planSku.baseLtaOnInvoiceSpend,
+        planSku.baseLtaOffInvoiceSpend
+      ).to;
+      if (baseTo === null) return null;
       const planGsv = (planSku.plannedVolume ?? 0) * (sku?.unitPrice ?? 0);
       const totalOnInv =
         (planSku.plannedLtaOnInvoiceSpend ?? 0) +
@@ -397,7 +554,7 @@ function getSkuCellValue(
 /**
  * Get cell value for FU (aggregated from SKUs or from FU-level tactics)
  */
-function getFuCellValue(planFu: PlanFu, colCode: string): number | null {
+export function getFuCellValue(planFu: PlanFu, colCode: string): number | null {
   const skus = planFu.planSkus || [];
 
   switch (colCode) {
@@ -408,16 +565,17 @@ function getFuCellValue(planFu: PlanFu, colCode: string): number | null {
 
     // Volume Metrics - Aggregated
     case 'BASE_VOL':
-      return skus.reduce((sum, sku) => sum + (sku.baseVolume ?? 0), 0);
+      return baseVolSum(skus);
     case 'PLAN_VOL':
       return toNumberOrNull(planFu.totalPlannedVolume);
     case 'INCR_VOL': {
-      const baseVol = skus.reduce((sum, sku) => sum + (sku.baseVolume ?? 0), 0);
+      const baseVol = baseVolSum(skus);
+      if (baseVol === null) return null;
       const plannedVol = toNumberOrZero(planFu.totalPlannedVolume);
       return plannedVol - baseVol;
     }
     case 'VOL_UPLIFT_PCT': {
-      const baseVol = skus.reduce((sum, sku) => sum + (sku.baseVolume ?? 0), 0);
+      const baseVol = baseVolSum(skus);
       if (!baseVol) return null;
       const plannedVol = toNumberOrZero(planFu.totalPlannedVolume);
       return ((plannedVol - baseVol) / baseVol) * 100;
@@ -425,11 +583,7 @@ function getFuCellValue(planFu: PlanFu, colCode: string): number | null {
 
     // GSV - Aggregated
     case 'BASE_GSV':
-      return skus.reduce((sum, sku) => {
-        const baseVol = sku.baseVolume ?? 0;
-        const listPrice = sku.sku?.unitPrice ?? 0;
-        return sum + baseVol * listPrice;
-      }, 0);
+      return computeBaseChainAgg(skus).gsv;
     case 'PLAN_GSV':
       return skus.reduce((sum, sku) => {
         const planVol = sku.plannedVolume ?? 0;
@@ -437,11 +591,8 @@ function getFuCellValue(planFu: PlanFu, colCode: string): number | null {
         return sum + planVol * listPrice;
       }, 0);
     case 'INCR_GSV': {
-      const baseGsv = skus.reduce((sum, sku) => {
-        const baseVol = sku.baseVolume ?? 0;
-        const listPrice = sku.sku?.unitPrice ?? 0;
-        return sum + baseVol * listPrice;
-      }, 0);
+      const baseGsv = computeBaseChainAgg(skus).gsv;
+      if (baseGsv === null) return null;
       const planGsv = skus.reduce((sum, sku) => {
         const planVol = sku.plannedVolume ?? 0;
         const listPrice = sku.sku?.unitPrice ?? 0;
@@ -558,10 +709,7 @@ function getFuCellValue(planFu: PlanFu, colCode: string): number | null {
 
     // NIV & Turnover - Aggregated
     case 'BASE_NIV':
-      return skus.reduce((sum, sku) => {
-        const baseGsv = (sku.baseVolume ?? 0) * (sku.sku?.unitPrice ?? 0);
-        return sum + baseGsv - (sku.baseLtaOnInvoiceSpend ?? 0);
-      }, 0);
+      return computeBaseChainAgg(skus).niv;
     case 'PLAN_NIV':
       return skus.reduce((sum, sku) => {
         const planGsv = (sku.plannedVolume ?? 0) * (sku.sku?.unitPrice ?? 0);
@@ -570,10 +718,8 @@ function getFuCellValue(planFu: PlanFu, colCode: string): number | null {
         return sum + planGsv - totalOnInv;
       }, 0);
     case 'INCR_NIV': {
-      const baseNiv = skus.reduce((sum, sku) => {
-        const baseGsv = (sku.baseVolume ?? 0) * (sku.sku?.unitPrice ?? 0);
-        return sum + baseGsv - (sku.baseLtaOnInvoiceSpend ?? 0);
-      }, 0);
+      const baseNiv = computeBaseChainAgg(skus).niv;
+      if (baseNiv === null) return null;
       const planNiv = skus.reduce((sum, sku) => {
         const planGsv = (sku.plannedVolume ?? 0) * (sku.sku?.unitPrice ?? 0);
         const totalOnInv =
@@ -583,11 +729,7 @@ function getFuCellValue(planFu: PlanFu, colCode: string): number | null {
       return planNiv - baseNiv;
     }
     case 'BASE_TO':
-      return skus.reduce((sum, sku) => {
-        const baseGsv = (sku.baseVolume ?? 0) * (sku.sku?.unitPrice ?? 0);
-        const baseNiv = baseGsv - (sku.baseLtaOnInvoiceSpend ?? 0);
-        return sum + baseNiv - (sku.baseLtaOffInvoiceSpend ?? 0);
-      }, 0);
+      return computeBaseChainAgg(skus).to;
     case 'PLAN_TO':
       return skus.reduce((sum, sku) => {
         const planGsv = (sku.plannedVolume ?? 0) * (sku.sku?.unitPrice ?? 0);
@@ -600,11 +742,8 @@ function getFuCellValue(planFu: PlanFu, colCode: string): number | null {
         return sum + planNiv - totalOffInv;
       }, 0);
     case 'INCR_TO': {
-      const baseTo = skus.reduce((sum, sku) => {
-        const baseGsv = (sku.baseVolume ?? 0) * (sku.sku?.unitPrice ?? 0);
-        const baseNiv = baseGsv - (sku.baseLtaOnInvoiceSpend ?? 0);
-        return sum + baseNiv - (sku.baseLtaOffInvoiceSpend ?? 0);
-      }, 0);
+      const baseTo = computeBaseChainAgg(skus).to;
+      if (baseTo === null) return null;
       const planTo = skus.reduce((sum, sku) => {
         const planGsv = (sku.plannedVolume ?? 0) * (sku.sku?.unitPrice ?? 0);
         const totalOnInv =
@@ -618,11 +757,7 @@ function getFuCellValue(planFu: PlanFu, colCode: string): number | null {
       return planTo - baseTo;
     }
     case 'TO_UPLIFT_PCT': {
-      const baseTo = skus.reduce((sum, sku) => {
-        const baseGsv = (sku.baseVolume ?? 0) * (sku.sku?.unitPrice ?? 0);
-        const baseNiv = baseGsv - (sku.baseLtaOnInvoiceSpend ?? 0);
-        return sum + baseNiv - (sku.baseLtaOffInvoiceSpend ?? 0);
-      }, 0);
+      const baseTo = computeBaseChainAgg(skus).to;
       if (!baseTo) return null;
       const planTo = skus.reduce((sum, sku) => {
         const planGsv = (sku.plannedVolume ?? 0) * (sku.sku?.unitPrice ?? 0);
@@ -639,53 +774,28 @@ function getFuCellValue(planFu: PlanFu, colCode: string): number | null {
 
     // Profit - Aggregated
     case 'BASE_COGS':
-      return skus.reduce(
-        (sum, sku) => sum + (sku.baseVolume ?? 0) * (sku.sku?.cogs ?? 0),
-        0
-      );
+      return computeBaseChainAgg(skus).cogs;
     case 'PLAN_COGS':
       return skus.reduce(
         (sum, sku) => sum + (sku.plannedVolume ?? 0) * (sku.sku?.cogs ?? 0),
         0
       );
     case 'BASE_GP':
-      return skus.reduce((sum, sku) => {
-        const baseGsv = (sku.baseVolume ?? 0) * (sku.sku?.unitPrice ?? 0);
-        const baseNiv = baseGsv - (sku.baseLtaOnInvoiceSpend ?? 0);
-        const baseTo = baseNiv - (sku.baseLtaOffInvoiceSpend ?? 0);
-        const baseCogs = (sku.baseVolume ?? 0) * (sku.sku?.cogs ?? 0);
-        return sum + (baseTo - baseCogs);
-      }, 0);
+      return computeBaseChainAgg(skus).gp;
     case 'PLAN_GP':
       return planFu.totalGp ?? null;
     case 'INCR_GP': {
-      const baseGp = skus.reduce((sum, sku) => {
-        const baseGsv = (sku.baseVolume ?? 0) * (sku.sku?.unitPrice ?? 0);
-        const baseNiv = baseGsv - (sku.baseLtaOnInvoiceSpend ?? 0);
-        const baseTo = baseNiv - (sku.baseLtaOffInvoiceSpend ?? 0);
-        const baseCogs = (sku.baseVolume ?? 0) * (sku.sku?.cogs ?? 0);
-        return sum + (baseTo - baseCogs);
-      }, 0);
+      const baseGp = computeBaseChainAgg(skus).gp;
+      if (baseGp === null) return null;
       const planGp = planFu.totalGp ?? 0;
       return planGp - baseGp;
     }
 
     // Margin - Weighted Average
     case 'BASE_GM_PCT': {
-      const baseTo = skus.reduce((sum, sku) => {
-        const baseGsv = (sku.baseVolume ?? 0) * (sku.sku?.unitPrice ?? 0);
-        const baseNiv = baseGsv - (sku.baseLtaOnInvoiceSpend ?? 0);
-        return sum + baseNiv - (sku.baseLtaOffInvoiceSpend ?? 0);
-      }, 0);
-      if (!baseTo) return null;
-      const baseGp = skus.reduce((sum, sku) => {
-        const baseGsv = (sku.baseVolume ?? 0) * (sku.sku?.unitPrice ?? 0);
-        const baseNiv = baseGsv - (sku.baseLtaOnInvoiceSpend ?? 0);
-        const baseToSku = baseNiv - (sku.baseLtaOffInvoiceSpend ?? 0);
-        const baseCogs = (sku.baseVolume ?? 0) * (sku.sku?.cogs ?? 0);
-        return sum + (baseToSku - baseCogs);
-      }, 0);
-      return (baseGp / baseTo) * 100;
+      const chain = computeBaseChainAgg(skus);
+      if (!chain.to || chain.gp === null) return null;
+      return (chain.gp / chain.to) * 100;
     }
     case 'PLAN_GM_PCT': {
       const planTo = skus.reduce((sum, sku) => {
@@ -703,11 +813,7 @@ function getFuCellValue(planFu: PlanFu, colCode: string): number | null {
       return (planGp / planTo) * 100;
     }
     case 'INCR_GM_PCT': {
-      const baseTo = skus.reduce((sum, sku) => {
-        const baseGsv = (sku.baseVolume ?? 0) * (sku.sku?.unitPrice ?? 0);
-        const baseNiv = baseGsv - (sku.baseLtaOnInvoiceSpend ?? 0);
-        return sum + baseNiv - (sku.baseLtaOffInvoiceSpend ?? 0);
-      }, 0);
+      const baseChain = computeBaseChainAgg(skus);
       const planTo = skus.reduce((sum, sku) => {
         const planGsv = (sku.plannedVolume ?? 0) * (sku.sku?.unitPrice ?? 0);
         const totalOnInv =
@@ -718,17 +824,12 @@ function getFuCellValue(planFu: PlanFu, colCode: string): number | null {
           (sku.promoOffInvoiceSpend ?? 0);
         return sum + planNiv - totalOffInv;
       }, 0);
-      const incrTo = planTo - baseTo;
+      if (baseChain.to === null) return null;
+      const incrTo = planTo - baseChain.to;
       if (!incrTo) return null;
-      const baseGp = skus.reduce((sum, sku) => {
-        const baseGsv = (sku.baseVolume ?? 0) * (sku.sku?.unitPrice ?? 0);
-        const baseNiv = baseGsv - (sku.baseLtaOnInvoiceSpend ?? 0);
-        const baseToSku = baseNiv - (sku.baseLtaOffInvoiceSpend ?? 0);
-        const baseCogs = (sku.baseVolume ?? 0) * (sku.sku?.cogs ?? 0);
-        return sum + (baseToSku - baseCogs);
-      }, 0);
+      if (baseChain.gp === null) return null;
       const planGp = planFu.totalGp ?? 0;
-      const incrGp = planGp - baseGp;
+      const incrGp = planGp - baseChain.gp;
       return (incrGp / incrTo) * 100;
     }
 
@@ -745,11 +846,8 @@ function getFuCellValue(planFu: PlanFu, colCode: string): number | null {
         0
       );
       if (!incrSpend || incrSpend <= 0) return null;
-      const baseTo = skus.reduce((sum, sku) => {
-        const baseGsv = (sku.baseVolume ?? 0) * (sku.sku?.unitPrice ?? 0);
-        const baseNiv = baseGsv - (sku.baseLtaOnInvoiceSpend ?? 0);
-        return sum + baseNiv - (sku.baseLtaOffInvoiceSpend ?? 0);
-      }, 0);
+      const baseTo = computeBaseChainAgg(skus).to;
+      if (baseTo === null) return null;
       const planTo = skus.reduce((sum, sku) => {
         const planGsv = (sku.plannedVolume ?? 0) * (sku.sku?.unitPrice ?? 0);
         const totalOnInv =
