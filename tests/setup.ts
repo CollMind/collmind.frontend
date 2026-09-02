@@ -1,5 +1,55 @@
 import { afterEach, beforeAll, afterAll } from 'vitest';
 import { cleanup } from '@testing-library/react';
+
+// T-355 — ÇİFT-YÜKLEME KORUMASI (ZORUNLU, §2.5 sessiz sıfır yasağı).
+//
+// Bir konfigürasyon `vitest.config.ts`'i `mergeConfig` ile genişletip
+// `test.setupFiles: ['./tests/setup.ts']` eklerse, `mergeConfig` array
+// alanlarını REPLACE değil BİRLEŞTİRİR (concat) — sonuç
+// `setupFiles: ['./tests/setup.ts', './tests/setup.ts']`, yani bu dosya
+// AYNI çalışan process içinde İKİ KEZ evaluate edilir (ölçüldü, T-355:
+// `console.error` ile pid bazlı izlendi — aynı pid'de modül gövdesi iki kez
+// çalıştı).
+//
+// Sonuç sessiz değil, SESSİZCE YANLIŞTIR: her evaluate kendi
+// `setupServer(...handlers)` örneğini, kendi `beforeAll`/`afterEach`/
+// `afterAll` kancalarını kurar. İkinci `server.listen()` MSW'nin node
+// interceptor'ını devraldığı için testin `server.use(...)` ile yaptığı
+// override'lar İLK (ve testin import ettiği) `server` nesnesine uygulanır
+// ama gerçek isteği KESEN interceptor artık İKİNCİ örneğe ait — override
+// hiçbir zaman devreye girmez. Ölçülen belirti: "promise resolved instead
+// of rejecting" / bayat (stale) payload, sessizce — hiçbir hata, hiçbir
+// uyarı. Reprodüksiyon turunda bu tam olarak 19/120 testi düşürdü (14
+// `server.use()` içeren dosya üzerinde; bkz. T-355 QA notu).
+//
+// Düzeltme: BİR mekanizmanın "belki iki kez çalışır" ihtimaline karşı
+// sessizce dayanıklı (idempotent) hâle getirmek YERİNE — ki bu, ikinci
+// örneği sessizce yutar ve KENDİSİ yeni bir sessiz-sıfır sınıfı üretirdi —
+// bu modülün ASLA iki kez evaluate edilmemesi gerektiğini AÇIKÇA sınıyoruz.
+// İkinci evaluate anında process'i loud bir hata ile durdurmak, "her testte
+// 1'den fazla server.use() override'ı sessizce ölür" sınıfını, "config
+// yanlış, hemen düzelt" sınıfına indirger.
+declare global {
+  // eslint-disable-next-line no-var
+  var __COLLMIND_TESTS_SETUP_LOADED__: boolean | undefined;
+}
+
+if (globalThis.__COLLMIND_TESTS_SETUP_LOADED__) {
+  throw new Error(
+    'tests/setup.ts AYNI vitest process içinde İKİNCİ KEZ yükleniyor (T-355). ' +
+      'Bunun tek bilinen sebebi: bir konfigürasyon vitest.config.ts\'i ' +
+      '`mergeConfig` ile genişletip `test.setupFiles: ["./tests/setup.ts"]` ' +
+      'ekliyor — mergeConfig array alanlarını REPLACE değil BİRLEŞTİRİR, ' +
+      'sonuç setupFiles dizisinde bu dosya iki kez geçer. Çift yükleme iki ayrı ' +
+      'MSW server örneği kurar; ikinci server.listen() interceptor\'ı devralır ' +
+      've testlerin server.use() override\'ları SESSİZCE etkisiz kalır ' +
+      '("promise resolved instead of rejecting" / bayat payload). Düzelt: ' +
+      'genişleten configde setupFiles\'ı ELLE override et (mergeConfig\'in ' +
+      'birleştirdiği sonucu tekilleştir — `[...new Set(merged.test.setupFiles)]` ' +
+      '— ya da mergeConfig kullanma).',
+  );
+}
+globalThis.__COLLMIND_TESTS_SETUP_LOADED__ = true;
 // `@testing-library/jest-dom/vitest` (not `/matchers`) does two things the
 // previous `import * as matchers from '.../matchers'; expect.extend(matchers)`
 // pair only did the first of: (1) the runtime `expect.extend` call, and
