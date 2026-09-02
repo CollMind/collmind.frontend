@@ -274,6 +274,8 @@ case "${1:-}" in
     fi
     CUR="$(counts_by_file)"
     RC=0
+    # Z82 iş 1: "improved" used to be a note, exit 0. Now a gate — see below.
+    IMPROVED_COUNT=0
     while read -r file count; do
       case "$file" in ''|\#*) continue ;; esac
       # A MALFORMED COUNT IS A SETUP FAILURE, not a zero.
@@ -318,6 +320,7 @@ case "${1:-}" in
         RC=1
       elif [ "$now" -lt "$count" ]; then
         echo "-- [$GUARD_NAME] improved: $file $count -> $now (update baseline explicitly)"
+        IMPROVED_COUNT=$((IMPROVED_COUNT + 1))
       fi
     done < "$BASELINE"
 
@@ -329,6 +332,17 @@ case "${1:-}" in
         RC=1
       fi
     done <<< "$CUR"
+
+    # Z82 iş 1: an "improved" note is now a gate, distinct from RATCHET
+    # VIOLATION / OUT OF SCOPE / NEW — same exit code (1), different label
+    # (Z77 §1a emsali).
+    if [ "$IMPROVED_COUNT" -gt 0 ]; then
+      echo
+      echo "!! [$GUARD_NAME] BASELINE STALE: $IMPROVED_COUNT file(s) improved vs baseline but the baseline was not lowered." >&2
+      echo "!! Fix (in a SEPARATE commit, AFTER this one):" >&2
+      echo "!!   bash scripts/guards/money-float.sh --baseline > scripts/guards/money-float-baseline.txt" >&2
+      RC=1
+    fi
 
     exit "$RC"
     ;;
