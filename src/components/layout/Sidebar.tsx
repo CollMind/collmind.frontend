@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -13,7 +13,6 @@ import {
   Package,
   UserCog,
   Wallet,
-  Upload,
   TrendingUp,
   Factory,
   Boxes,
@@ -637,22 +636,25 @@ export function Sidebar() {
   const { data: user } = useMe();
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
 
-  const filterNavigation = (items: NavItem[]): NavItem[] => {
-    return items
-      .filter((item) => {
-        // If no role restriction, show to everyone
-        if (!item.roles) return true;
-        // Admin has access to everything
-        if (!user?.role) return false;
-        return hasAnyRole(user.role as UserRole, item.roles as UserRole[]);
-      })
-      .map<NavItem>((item) =>
-        isGroup(item)
-          ? { ...item, children: filterNavigation(item.children) }
-          : item
-      )
-      .filter((item) => !isGroup(item) || item.children.length > 0);
-  };
+  const filterNavigation = useCallback(
+    (items: NavItem[]): NavItem[] => {
+      return items
+        .filter((item) => {
+          // If no role restriction, show to everyone
+          if (!item.roles) return true;
+          // Admin has access to everything
+          if (!user?.role) return false;
+          return hasAnyRole(user.role as UserRole, item.roles as UserRole[]);
+        })
+        .map<NavItem>((item) =>
+          isGroup(item)
+            ? { ...item, children: filterNavigation(item.children) }
+            : item
+        )
+        .filter((item) => !isGroup(item) || item.children.length > 0);
+    },
+    [user?.role]
+  );
 
   // Select navigation based on user role
   // T-182: ham string karşılaştırması (`'CATEGORY_MANAGER'`) `UserRole` enum
@@ -681,22 +683,28 @@ export function Sidebar() {
 
   const filteredNavigation = useMemo(
     () => filterNavigation(navigation),
-    [navigation, user?.role]
+    [navigation, filterNavigation]
   );
 
-  const isActive = (href?: string) => {
-    if (!href) return false;
-    return (
-      location.pathname === href || location.pathname.startsWith(`${href}/`)
-    );
-  };
+  const isActive = useCallback(
+    (href?: string) => {
+      if (!href) return false;
+      return (
+        location.pathname === href || location.pathname.startsWith(`${href}/`)
+      );
+    },
+    [location.pathname]
+  );
 
-  const hasActiveChild = (item: NavItem): boolean => {
-    if (!isGroup(item)) return false;
-    return item.children.some(
-      (child) => isActive(child.href) || hasActiveChild(child)
-    );
-  };
+  const hasActiveChild = useCallback(
+    (item: NavItem): boolean => {
+      if (!isGroup(item)) return false;
+      return item.children.some(
+        (child) => isActive(child.href) || hasActiveChild(child)
+      );
+    },
+    [isActive]
+  );
 
   // Auto-expand items with active children, and always expand Admin menu for ADMIN users
   useEffect(() => {
@@ -721,7 +729,13 @@ export function Sidebar() {
 
     checkAndExpand(filteredNavigation);
     setExpandedItems(newExpanded);
-  }, [location.pathname, sidebarOpen, filteredNavigation, user?.role]);
+  }, [
+    location.pathname,
+    sidebarOpen,
+    filteredNavigation,
+    user?.role,
+    hasActiveChild,
+  ]);
 
   const toggleExpand = (title: string) => {
     setExpandedItems((prev) => {

@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   getSkuCellValue,
   getFuCellValue,
-} from '@/components/features/plans/PlanningGridEnhanced';
+} from '@/components/features/plans/gridCellValue';
 import type { PlanSku, PlanFu } from '@/api/endpoints/plans.endpoints';
 
 /**

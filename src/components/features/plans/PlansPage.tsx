@@ -2,6 +2,7 @@ import { toNumberOrZero } from '@/utils/numberUtils';
 import { useState, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import type { AxiosError } from 'axios';
 import {
   planEndpoints,
   Plan,
@@ -23,7 +24,7 @@ import {
 } from '@/components/ui/dialog';
 import { CreatePlanForm } from './CreatePlanForm';
 import { PlanList } from './PlanList';
-import { Plus, Download, FileText, Copy, AlertTriangle } from 'lucide-react';
+import { Plus, FileText, Copy, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/useToast';
 import { useVersionConflict } from '@/hooks/useVersionConflict';
 import { VersionConflictDialog } from '@/components/common/VersionConflictDialog';
@@ -36,6 +37,14 @@ const formatCurrency = (amount: number, currency: string = 'TRY') => {
     maximumFractionDigits: 0,
   }).format(amount);
 };
+
+// API'den dönen hata gövdesinin şekli — backend'in error filter'ı
+// `{ message }` ya da `{ error }` verebilir, bkz. handleCreate/handleCopyConfirm/
+// handleDeleteConfirm'deki geri dönüştürme sırası (davranış değişmedi, yalnız tip).
+interface ApiErrorResponse {
+  message?: string;
+  error?: string;
+}
 
 export function PlansPage() {
   const { data: user } = useMe();
@@ -72,7 +81,10 @@ export function PlansPage() {
     queryFn: () => planEndpoints.getAll(filters).then((res) => res.data),
   });
 
-  const plansArray = Array.isArray(plans) ? plans : [];
+  const plansArray = useMemo(
+    () => (Array.isArray(plans) ? plans : []),
+    [plans]
+  );
 
   // Summary hesaplamaları
   const summary = useMemo(() => {
@@ -127,7 +139,9 @@ export function PlansPage() {
     );
   }
 
-  const handleCreate = async (data: any) => {
+  const handleCreate = async (
+    data: CreatePlanDto & { selectedFuIds?: string[] }
+  ) => {
     try {
       const { selectedFuIds, ...planData } = data;
       const result = await planEndpoints.create(planData);
@@ -165,15 +179,16 @@ export function PlansPage() {
         queryClient.invalidateQueries({ queryKey: ['plan', planId] });
         navigate(`/plans/${planId}`);
       }
-    } catch (error: any) {
+    } catch (error) {
+      const err = error as AxiosError<ApiErrorResponse>;
       let errorMessage = 'Plan oluşturulurken hata oluştu';
 
-      if (error?.response?.data?.message) {
-        errorMessage = error.response.data.message;
-      } else if (error?.response?.data?.error) {
-        errorMessage = error.response.data.error;
-      } else if (error?.message) {
-        errorMessage = error.message;
+      if (err?.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      } else if (err?.response?.data?.error) {
+        errorMessage = err.response.data.error;
+      } else if (err?.message) {
+        errorMessage = err.message;
       }
 
       toast.error(errorMessage);
@@ -213,9 +228,10 @@ export function PlansPage() {
       if (result.data?.id) {
         navigate(`/plans/${result.data.id}`);
       }
-    } catch (error: any) {
+    } catch (error) {
+      const err = error as AxiosError<ApiErrorResponse>;
       toast.error(
-        error?.response?.data?.message || 'Plan kopyalanırken hata oluştu'
+        err?.response?.data?.message || 'Plan kopyalanırken hata oluştu'
       );
     } finally {
       setIsCopying(false);
@@ -237,10 +253,11 @@ export function PlansPage() {
       toast.success('Plan başarıyla silindi');
       setDeleteTarget(null);
       refetch();
-    } catch (error: any) {
+    } catch (error) {
       if (versionConflict.handleError(error)) return;
+      const err = error as AxiosError<ApiErrorResponse>;
       toast.error(
-        error?.response?.data?.message || 'Plan silinirken hata oluştu'
+        err?.response?.data?.message || 'Plan silinirken hata oluştu'
       );
     } finally {
       setIsDeleting(false);

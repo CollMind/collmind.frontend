@@ -35,7 +35,7 @@ import {
   useCreateAgreement,
   useSubmitAgreement,
 } from '@/services/agreements.service';
-import { FileText, Plus, Download, ChevronDown } from 'lucide-react';
+import { Plus, ChevronDown } from 'lucide-react';
 import { toNumberOrZero } from '@/utils/numberUtils';
 
 const formatCurrency = (amount: number, currency: string = 'TRY') => {
@@ -71,7 +71,10 @@ export function AgreementsPage() {
   const createMutation = useCreateAgreement();
   const submitMutation = useSubmitAgreement();
 
-  const agreementsArray = Array.isArray(agreements) ? agreements : [];
+  const agreementsArray = useMemo(
+    () => (Array.isArray(agreements) ? agreements : []),
+    [agreements]
+  );
 
   // Summary hesaplamaları - Hook'lar her zaman aynı sırada çağrılmalı
   const summary = useMemo(() => {
