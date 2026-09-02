@@ -51,7 +51,9 @@ import {
   RefreshCw,
   Trash2,
   Settings2,
+  AlertTriangle,
 } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/useToast';
 import { useVersionConflict } from '@/hooks/useVersionConflict';
 import { VersionConflictDialog } from '@/components/common/VersionConflictDialog';
@@ -920,20 +922,33 @@ export function PlanningGridEnhanced({ plan, canEdit }: PlanningGridProps) {
     startTimestamp: number;
   } | null>(null);
 
-  // Fetch applicable mechanics for this plan context
-  const { data: applicableMechanics = [] } = useQuery({
-    queryKey: ['mechanics', 'applicable', plan.channelId, plan.categoryId],
+  // T-346 / `Z80` S3, S4 — REAL eligibility (`POST /master-data/mechanics/applicable`,
+  // `resolveMechanicEligibility` — CPL-first, then channel, then wildcard),
+  // not `getAll(true)` + a `TODO` that only checked `isActive`. `mechanic.applicableCpls`
+  // biliniyorsa `plan.cplId` GÖNDERİLİR — resolver `S4`'ün CPL kademesini
+  // `plan.cplId` olmadan değerlendiremez (§2.5, açık hata orada fırlar).
+  //
+  // ⛔ `catch { return [] }` KALDIRILDI: "yüklenemedi" (network/5xx) ile
+  // "bu eşleşmede tactic tanımlı değil" (gerçek boş sonuç) AYNI ŞEY DEĞİL —
+  // React Query'nin kendi `isError` durumu kullanılıyor, hata YUTULMUYOR.
+  const {
+    data: applicableMechanics = [],
+    isError: applicableMechanicsError,
+  } = useQuery({
+    queryKey: [
+      'mechanics',
+      'applicable',
+      plan.channelId,
+      plan.categoryId,
+      plan.cplId,
+    ],
     queryFn: async () => {
-      try {
-        const res = await mechanicEndpoints.getAll(true);
-        // Filter by plan context (channel, category)
-        return res.data.filter((m: any) => {
-          // TODO: Implement applicability rules check
-          return m.isActive;
-        });
-      } catch {
-        return [];
-      }
+      const res = await mechanicEndpoints.getApplicable({
+        channelId: plan.channelId,
+        categoryId: plan.categoryId,
+        cplId: plan.cplId,
+      });
+      return res.data;
     },
     staleTime: 60000,
   });
@@ -952,6 +967,25 @@ export function PlanningGridEnhanced({ plan, canEdit }: PlanningGridProps) {
     applicableMechanics.forEach((mechanic: any) => {
       // Skip if already in BASE_COLUMNS
       if (BASE_COLUMNS.find((c) => c.code === mechanic.code)) return;
+
+      // S6 (`Z80` HÜKÜM PAKETİ) — `spend_type = 'BOTH'`'ın grid-kolon
+      // karşılığı TANIMLI DEĞİL: aşağıdaki if/else-if zinciri bir mekaniği
+      // ya ON_INVOICE_PROMO ya OFF_INVOICE_PROMO grubuna yazar, ikisine
+      // birden değil — `spendingType === 'both'` bu zincirin İLK iki dalını
+      // (`on_invoice`/`off_invoice` eşitliği) hiç tetiklemez, ve mekaniğin
+      // `category`si `on_invoice_discount`/`off_invoice_discount` da OLURSA
+      // (OR koşulu) yalnız TEK yöne yazılıp diğer yön SESSİZCE kaybolurdu —
+      // §2.5 ihlali. Bütçe zarfı tarafında da BOTH'un karşılığı yok (S6
+      // notu — TL ölçtü: `main.tactics`/`main.agreements` BOTH bugün 0 satır).
+      // ⇒ sessizce tek-yöne düşürmek yerine AÇIK HATA. `BOTH` enum'unun
+      // kendisinin ölüp ölmeyeceği bir migration kararıdır (data-engineer).
+      if (mechanic.spendingType === 'both') {
+        throw new Error(
+          `Mechanic '${mechanic.code}' has spendingType='both' — grid kolonu ` +
+            'ON_INVOICE/OFF_INVOICE tekli grupları arasında tanımsız (S6, ' +
+            '`Z80` HÜKÜM PAKETİ). Sessizce tek yöne düşürülmez.'
+        );
+      }
 
       // Create column definition based on mechanic
       if (
@@ -1375,6 +1409,30 @@ export function PlanningGridEnhanced({ plan, canEdit }: PlanningGridProps) {
             </Button>
           </div>
         </div>
+
+        {/* S3 (`Z80`) — "yüklenemedi" ≠ "bu eşleşmede tactic tanımlı değil":
+            ikisi AYRI, görünür mesajlar. Boş liste bir hata değildir (`length
+            > 0` muhafızları TANIMLI-WILDCARD anlamına gelir — bkz.
+            `mechanic.service.ts#resolveMechanicEligibility`); ama SESSİZ de
+            değildir. */}
+        {applicableMechanicsError && (
+          <Alert variant="destructive" className="m-3">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>
+              Mekanik uygunluk kuralları yüklenemedi — grid yalnızca temel
+              kolonları gösteriyor. Sayfayı yenileyin veya destek ekibiyle
+              iletişime geçin.
+            </AlertDescription>
+          </Alert>
+        )}
+        {!applicableMechanicsError && applicableMechanics.length === 0 && (
+          <Alert className="m-3">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>
+              Bu eşleşmede (kanal/kategori/CPL) tanımlı bir tactic yok.
+            </AlertDescription>
+          </Alert>
+        )}
 
         {/* Table with grouped headers */}
         <div className="overflow-x-auto">

@@ -39,6 +39,50 @@ export default defineConfig({
     poolOptions: {
       forks: {
         execArgv: ['--max-old-space-size=4096'],
+        // T-353: bound the fan-out. Vitest's default for the forks pool is
+        // `availableParallelism() - 1`, i.e. 7 forked node processes on this
+        // 8-core / 8 GB machine, each carrying its own jsdom window. Measured:
+        // a single `vitest run` already peaks at ~1.2 GB RSS across 9
+        // processes with ~1.2 GB free and ~4.5 GB already swapped. The suite
+        // is memory-bound, not CPU-bound, so that fan-out buys almost nothing
+        // (capping to 3 costs ~14%: 20.1s -> 22.9s idle) while making the run
+        // fall over as soon as anything else runs beside it.
+        //
+        // What that looked like before the cap (all measured, T-353):
+        //
+        //   idle, 5 consecutive runs   19-24s    606/606 green, 5/5
+        //   +24 CPU hogs (4x oversub)  52s       606/606 green
+        //   2 concurrent `vitest run`  113-137s  5 failed / 606
+        //   3 concurrent `vitest run`  263s      18-22 failed, set varies
+        //
+        // Note the third row against the second: 24 busy loops add *more*
+        // runnable threads than a second suite does, yet stay green. The
+        // trigger is not CPU dilation, it is memory pressure — a second run
+        // doubles the process count to 18 and drives swap up by ~1.1 GB, and
+        // the resulting multi-second stalls blow the two wall-clock budgets
+        // in this suite: RTL's default `asyncUtilTimeout` (1000ms, symptom
+        // "expected false to be true" with a wait-for.js frame) and vitest's
+        // default `testTimeout` (5000ms). The tests that fail are simply the
+        // top of the idle duration distribution, which is why the failing set
+        // changed from run to run and was never reproducible in isolation.
+        //
+        // This is deliberately NOT fixed by raising those budgets. Raising
+        // them was run as a *diagnostic* (120s test / 60s waitFor under
+        // identical 3x contention) purely to rule out a product race: every
+        // assertion failure disappeared, leaving only vitest's own worker RPC
+        // timeout. So there is no race here — but a longer timeout would only
+        // have hidden the stalls, not removed them.
+        //
+        // With the cap, against the same reproduction:
+        //
+        //   2 concurrent runs          60s       606/606 green, both
+        //   3 concurrent runs          86s       606/606 green, all three
+        //
+        // Note it is also ~3x *faster* under contention than the uncapped
+        // run it replaces (263s -> 86s at 3x) — the classic thrashing
+        // signature, where less parallelism yields more throughput.
+        maxForks: 3,
+        minForks: 1,
       },
     },
   },
