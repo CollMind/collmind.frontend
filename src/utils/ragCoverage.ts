@@ -47,12 +47,25 @@ export type RagStatus = 'RED' | 'AMBER' | 'GREEN';
  *
  * 📌 `T-323` UI dersinin RAG hâli: *"yetkin yok" ≠ "kimse yok"* neyse,
  * *"kötü değil" ≠ "değerlendirilmedi"* o.
+ *
+ * `BASELINE_MISSING` — `Z90 §2/§3` (`docs/brd-v2/04_KARAR_KAYDI.md`).
+ * `LTA_ONLY`'den AYRI bir sınıf, biri diğerinin yerine geçmez:
+ * ```
+ * LTA_ONLY            "promosyon YOK"   — plan tanım gereği değerlendirme
+ *                                          dışı, yapılacak bir şey yok.
+ * BASELINE_MISSING     "referans YOK"    — SKU'nun baseline hacmi hiç
+ *                                          girilmemiş (NULL, 0 DEĞİL —
+ *                                          0 meşru bir değerdir ve bu
+ *                                          sebebi ÜRETMEZ). Baseline
+ *                                          girilirse hesap yapılabilir.
+ * ```
  */
-export type RagExclusionReason = 'LTA_ONLY';
+export type RagExclusionReason = 'LTA_ONLY' | 'BASELINE_MISSING';
 
 /** Bilinen her dışlama sebebi için kullanıcıya gösterilecek kısa rozet. */
 const EXCLUSION_BADGES: Record<RagExclusionReason, string> = {
   LTA_ONLY: 'Değerlendirme dışı — LTA',
+  BASELINE_MISSING: 'Baseline eksik',
 };
 
 /** Rozetin yanındaki tek cümlelik gerekçe (tooltip). */
@@ -60,6 +73,9 @@ const EXCLUSION_EXPLANATIONS: Record<RagExclusionReason, string> = {
   LTA_ONLY:
     'Bu planda incremental promosyon harcaması yok; RAG bir promosyon ' +
     'değerlendirmesidir ve LTA-only planlar için tanımlı değildir.',
+  BASELINE_MISSING:
+    'Bu SKU için baseline (taban hacim) girilmemiş; ROI/uplift hesaplanamaz. ' +
+    'Baseline girildiğinde RAG otomatik hesaplanır.',
 };
 
 function asExclusionReason(
@@ -68,7 +84,7 @@ function asExclusionReason(
   // ⛔ Bilinmeyen bir sebep sessizce "dışlama" sayılmaz: backend yeni bir
   // üye eklediğinde bu dosya da güncellenmelidir. Tanınmayan değer
   // `null`'a düşer ⇒ mevcut `GRİ` davranışı korunur, uydurma etiket yok.
-  return raw === 'LTA_ONLY' ? 'LTA_ONLY' : null;
+  return raw === 'LTA_ONLY' || raw === 'BASELINE_MISSING' ? raw : null;
 }
 
 export interface RagPresentation {

@@ -90,6 +90,41 @@ describe('resolveRagPresentation — dört durum', () => {
     });
   });
 
+  describe("⭐ `BASELINE_MISSING` — `Z90 §2/§3`, `LTA_ONLY`'den AYRI sınıf", () => {
+    it("'BASELINE_MISSING': kendi rozeti + kendi açıklaması, dışlanmış", () => {
+      const p = resolveRagPresentation(null, null, 'BASELINE_MISSING');
+      expect(p.isExcluded).toBe(true);
+      expect(p.exclusionReason).toBe('BASELINE_MISSING');
+      expect(p.exclusionLabel).toBe('Baseline eksik');
+      expect(p.exclusionExplanation).toContain('baseline');
+      // ⛔ AYIRT EDİCİ: "hesaplanmadı" DEĞİL — sebep tanımlı.
+      expect(p.isNeverCalculated).toBe(false);
+    });
+
+    it("'LTA_ONLY' rozeti/açıklaması BASELINE_MISSING eklenmesinden ETKİLENMEZ (regresyon pini)", () => {
+      const p = resolveRagPresentation(null, null, 'LTA_ONLY');
+      expect(p.exclusionReason).toBe('LTA_ONLY');
+      expect(p.exclusionLabel).toBe('Değerlendirme dışı — LTA');
+      expect(p.exclusionExplanation).toContain('promosyon');
+    });
+
+    it('BASELINE_MISSING ile LTA_ONLY rozetleri BİRBİRİNDEN FARKLIDIR (kullanıcı eylemi farklı)', () => {
+      const baselineMissing = resolveRagPresentation(null, null, 'BASELINE_MISSING');
+      const ltaOnly = resolveRagPresentation(null, null, 'LTA_ONLY');
+      expect(baselineMissing.exclusionLabel).not.toBe(ltaOnly.exclusionLabel);
+      expect(baselineMissing.exclusionExplanation).not.toBe(
+        ltaOnly.exclusionExplanation
+      );
+    });
+
+    it('tanınmayan bir dize (hâlâ) sessizce dışlama sayılmaz — uydurma etiket yok', () => {
+      const p = resolveRagPresentation(null, null, 'SOME_FUTURE_REASON');
+      expect(p.isExcluded).toBe(false);
+      expect(p.exclusionLabel).toBeNull();
+      expect(p.exclusionExplanation).toBeNull();
+    });
+  });
+
   describe('taşıyıcı biçimleri — `decimal` STRING olarak gelebilir', () => {
     it('coverageRatio string olarak gelirse sayıya çevrilir', () => {
       // `plans.coverage_ratio` bir `numeric` kolonudur ve `pg` sürücüsü
