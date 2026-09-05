@@ -306,7 +306,9 @@ case "${1:-}" in
       # This is the same distinction ADR 0007 E16 drew for the primitives list
       # ("it cannot tell a repayment from a relocation"), applied to the domain
       # list — where it had been left to convention.
-      if ! printf '%s\n' "$FILES" | grep -qxF "$file"; then
+      # [[T-359b]] sigpipe-hygiene: `printf ... | grep -q` yerine herestring —
+      # boru sağında erken kapanan bir tüketici SIGPIPE riski taşırdı (T-359).
+      if ! grep -qxF "$file" <<< "$FILES"; then
         echo "[$GUARD_NAME] $file"
         echo "  OUT OF SCOPE: still on disk but no longer covered by the domain list (baseline $count)"
         echo "  A scope removal is not a repayment. Restore it, or remove the baseline line in the same commit with a reason."

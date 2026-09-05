@@ -56,14 +56,17 @@ FAIL=0
 # two `no-unused-vars` + one `no-explicit-any`, measured directly with
 # `npx eslint <fixture> --format json`) must be COUNTED exactly.
 REPORT_OUT="$(run_report 2>&1)"
-if ! printf '%s\n' "$REPORT_OUT" | grep -qE "^\[lint-ratchet\] ${REL_ERROR}: 3 problems$"; then
+# [[T-359b]] sigpipe-hygiene: `printf ... | grep -q` yerine herestring — boru
+# sağında erken kapanan bir tüketici SIGPIPE riski taşırdı, pipefail altında
+# `141`e dönerdi (ölçüldü, T-359 ailesi). Girdinin TAMAMI tüketilir.
+if ! grep -qE "^\[lint-ratchet\] ${REL_ERROR}: 3 problems$" <<< "$REPORT_OUT"; then
   echo "!! self-test FAIL [case 1: detector]: expected '$REL_ERROR: 3 problems', got:"
   echo "$REPORT_OUT"
   FAIL=1
 fi
 
 # --- case 2: clean fixture reports zero — must not appear in findings at all.
-if printf '%s\n' "$REPORT_OUT" | grep -q "$REL_CLEAN"; then
+if grep -q "$REL_CLEAN" <<< "$REPORT_OUT"; then
   echo "!! self-test FAIL [case 2: clean]: $REL_CLEAN olmasa gereken bir bulguda göründü"
   echo "$REPORT_OUT"
   FAIL=1
