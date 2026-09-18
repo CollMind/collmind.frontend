@@ -4,8 +4,10 @@ import {
   CreateBudgetEnvelopeDto,
   BudgetEnvelopeStatus,
 } from '@/types/budget.types';
-import { CustomerChannel } from '@/types/customer.types';
-import { categoryEndpoints } from '@/api/endpoints/master-data.endpoints';
+import {
+  categoryEndpoints,
+  channelEndpoints,
+} from '@/api/endpoints/master-data.endpoints';
 import { userEndpoints } from '@/api/endpoints/users.endpoints';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -43,8 +45,6 @@ const MONTHS = [
   { value: '12', label: 'Aralık' },
 ];
 
-const CHANNELS = Object.values(CustomerChannel);
-
 // Radix `Select` bir `SelectItem`'ın `value=""` taşımasına izin vermez (uyarı fırlatır).
 // "Sahip seçilmedi" durumunu temsil etmek için ayrı bir sentinel kullanılır; gönderim
 // anında bu sentinel `undefined`'a çevrilir — asla boş string olarak backend'e gitmez.
@@ -61,8 +61,11 @@ export function BudgetEnvelopeForm({
     initialData?.fiscalYear || currentYear.toString()
   );
   const [month, setMonth] = useState(initialData?.month || '');
-  const [channel, setChannel] = useState(initialData?.channel || '');
-  const [category, setCategory] = useState(initialData?.category || '');
+  // `Z111 §55` K1 (i) / T-426 — bu state artık KOD değil, seçilen kanal/
+  // kategori entity'sinin ID'sidir (backend `channelId`/`categoryId`
+  // bekler; kod string'i sunucuda bundan türetilir).
+  const [channelId, setChannelId] = useState(initialData?.channelId || '');
+  const [categoryId, setCategoryId] = useState(initialData?.categoryId || '');
   const [allocatedAmount, setAllocatedAmount] = useState(
     initialData?.allocatedAmount || 0
   );
@@ -87,6 +90,23 @@ export function BudgetEnvelopeForm({
   const categories = useMemo(() => {
     return categoriesData?.data || [];
   }, [categoriesData]);
+
+  // Fetch channels from API — `Z111 §55` K1 (i) / T-426: kanal seçicisi de
+  // id taşır (`master-data/channels`, `CreatePlanForm.tsx`/`EditPlanDialog.tsx`
+  // ile AYNI desen). Eski hardcode `CustomerChannel` enum'u kaldırıldı; DB'deki
+  // 8 kanal kaydının kodları bu enum'un değerleriyle 1:1 örtüşüyor
+  // ([ÖLÇÜLDÜ TL, T-426: psql main.channels] NKA/TRADITIONAL_TRADE/E_COMMERCE/
+  // EXPORT/WHOLESALE/RETAIL/HORECA/DISTRIBUTOR) — kullanıcı davranışı değişmez,
+  // yalnız taşınan alan kod → id.
+  const { data: channelsData, isLoading: channelsLoading } = useQuery({
+    queryKey: ['channels', 'active'],
+    queryFn: () => channelEndpoints.getAll(true),
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const channels = useMemo(() => {
+    return channelsData?.data || [];
+  }, [channelsData]);
 
   // Fetch users from API (bütçe sahibi seçici) — §7: dedike bir "user picker" bileşeni
   // aranıp bulunamadı (grep: `UserSelect`/`UserPicker`/`UserCombobox` — sıfır sonuç).
@@ -121,13 +141,25 @@ export function BudgetEnvelopeForm({
     return '';
   }, [fiscalYear, month]);
 
-  // Ön izleme
+  // Ön izleme — gösterim amaçlı KOD, seçilen id'den çözülür (istekle
+  // gönderilen alan değildir, yalnız kullanıcıya önizleme metni içindir).
+  const selectedChannelCode = useMemo(() => {
+    return channels.find((ch: { id: string; code: string }) => ch.id === channelId)
+      ?.code;
+  }, [channels, channelId]);
+
+  const selectedCategoryCode = useMemo(() => {
+    return categories.find(
+      (cat: { id: string; code: string }) => cat.id === categoryId
+    )?.code;
+  }, [categories, categoryId]);
+
   const preview = useMemo(() => {
-    if (channel && category && period) {
-      return `${channel}/${category}/${period}`;
+    if (selectedChannelCode && selectedCategoryCode && period) {
+      return `${selectedChannelCode}/${selectedCategoryCode}/${period}`;
     }
     return '.../.../...';
-  }, [channel, category, period]);
+  }, [selectedChannelCode, selectedCategoryCode, period]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('tr-TR', {
@@ -149,12 +181,12 @@ export function BudgetEnvelopeForm({
       newErrors.month = 'Ay zorunludur';
     }
 
-    if (!channel) {
-      newErrors.channel = 'Kanal zorunludur';
+    if (!channelId) {
+      newErrors.channelId = 'Kanal zorunludur';
     }
 
-    if (!category) {
-      newErrors.category = 'Kategori zorunludur';
+    if (!categoryId) {
+      newErrors.categoryId = 'Kategori zorunludur';
     }
 
     if (allocatedAmount <= 0) {
@@ -177,8 +209,11 @@ export function BudgetEnvelopeForm({
         fiscalYear,
         period,
         month,
-        channel,
-        category,
+        // `Z111 §55` K1 (i) / T-426 — `channel`/`category` KOD string'leri
+        // GÖNDERİLMEZ; backend `channelId`/`categoryId`'den kodu türetir
+        // (`BudgetService#createEnvelope`, `budget.types.ts` DTO yorumu).
+        channelId,
+        categoryId,
         allocatedAmount,
         currency,
         status: BudgetEnvelopeStatus.DRAFT,
@@ -246,27 +281,40 @@ export function BudgetEnvelopeForm({
       <div className="grid grid-cols-2 gap-4">
         <div>
           <Label htmlFor="channel">Kanal *</Label>
-          <Select value={channel} onValueChange={setChannel}>
+          <Select
+            value={channelId}
+            onValueChange={setChannelId}
+            disabled={channelsLoading}
+          >
             <SelectTrigger id="channel">
-              <SelectValue placeholder="Seçiniz" />
+              {channelsLoading ? (
+                <div className="flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <span>Yükleniyor...</span>
+                </div>
+              ) : (
+                <SelectValue placeholder="Seçiniz" />
+              )}
             </SelectTrigger>
             <SelectContent>
-              {CHANNELS.map((ch) => (
-                <SelectItem key={ch} value={ch}>
-                  {ch}
-                </SelectItem>
-              ))}
+              {channels.map(
+                (ch: { id: string; code: string; name: string }) => (
+                  <SelectItem key={ch.id} value={ch.id}>
+                    {ch.name}
+                  </SelectItem>
+                )
+              )}
             </SelectContent>
           </Select>
-          {errors.channel && (
-            <p className="text-xs text-red-600 mt-1">{errors.channel}</p>
+          {errors.channelId && (
+            <p className="text-xs text-red-600 mt-1">{errors.channelId}</p>
           )}
         </div>
         <div>
           <Label htmlFor="category">Kategori *</Label>
           <Select
-            value={category}
-            onValueChange={setCategory}
+            value={categoryId}
+            onValueChange={setCategoryId}
             disabled={categoriesLoading}
           >
             <SelectTrigger id="category">
@@ -282,15 +330,15 @@ export function BudgetEnvelopeForm({
             <SelectContent>
               {categories.map(
                 (cat: { id: string; code: string; name: string }) => (
-                  <SelectItem key={cat.id} value={cat.code}>
+                  <SelectItem key={cat.id} value={cat.id}>
                     {cat.name}
                   </SelectItem>
                 )
               )}
             </SelectContent>
           </Select>
-          {errors.category && (
-            <p className="text-xs text-red-600 mt-1">{errors.category}</p>
+          {errors.categoryId && (
+            <p className="text-xs text-red-600 mt-1">{errors.categoryId}</p>
           )}
         </div>
       </div>

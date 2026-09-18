@@ -130,8 +130,11 @@ describe('useCreateBudgetEnvelope', () => {
       allocatedAmount: 100000,
       period: '2024-Q1',
       fiscalYear: '2024',
-      channel: 'NKA',
-      category: 'HAIR_CARE',
+      // T-426 (Z111 §55 K1 (i)): DTO artık kod değil id taşır. Fixture id'leri
+      // kasten kod-benzeri değerlerden AYRI (UUID) tutulur — testin ölçtüğü
+      // şey "id gönderiliyor", "kod gönderiliyor" ile ayırt edilebilsin.
+      channelId: '11111111-1111-4111-8111-111111111111',
+      categoryId: '22222222-2222-4222-8222-222222222222',
     });
 
     await waitFor(() => {
@@ -158,8 +161,8 @@ describe('useCreateBudgetEnvelope', () => {
         allocatedAmount: 100000,
         period: '2024-Q1',
         fiscalYear: '2024',
-        channel: 'NKA',
-        category: 'HAIR_CARE',
+        channelId: '11111111-1111-4111-8111-111111111111',
+        categoryId: '22222222-2222-4222-8222-222222222222',
       })
     ).rejects.toThrow();
 

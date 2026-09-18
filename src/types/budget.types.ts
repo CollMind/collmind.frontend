@@ -58,6 +58,11 @@ export interface BudgetEnvelope {
 
 /**
  * Budget Envelope Oluşturma DTO
+ *
+ * `Z111 §55` K1 (i) / T-426 — `channel`/`category` KOD string'leri artık
+ * gönderilmez (ölü alan; sunucu `categoryId`/`channelId`'den TÜRETİR —
+ * `collmind.backend` `BudgetService#createEnvelope`). Tek kaynak kimlik
+ * (id)'dir; kod/ad sunucu tarafı bir türetimdir, istemci girdisi değildir.
  */
 export interface CreateBudgetEnvelopeDto {
   code?: string; // Otomatik oluşturulacak: {channel}/{category}/{period}
@@ -66,8 +71,8 @@ export interface CreateBudgetEnvelopeDto {
   period: string; // Ay (örn: "01", "02", vb.) veya tam period (örn: "2026-01")
   month?: string; // Ay (örn: "01", "02", vb.)
   allocatedAmount: number;
-  channel: string; // Kanal (NKA, ECOM, DT, TT, vb.)
-  category: string; // Kategori (HAIR_CARE, COLOR, vb.)
+  categoryId: string; // Kategori entity ID'si (UUID) — kategori string ZORUNLU değil, ondan türer
+  channelId?: string; // Kanal entity ID'si (UUID) — kanal OPSİYONEL (K-2.2.1)
   status?: BudgetEnvelopeStatus;
   budgetOwnerId?: string;
   budgetOwnerEmail?: string;
